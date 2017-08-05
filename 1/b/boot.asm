@@ -17,7 +17,8 @@ DataSecNo	equ	33		; 数据区起始扇区号
 BaseOfFatBuf	equ	7e00h		; FAT1 专用读缓冲区基地址 (len = 9 * 512 = 0x1200)
 BaseOfRootBuf	equ	9000h		; 根目录区专用读缓冲区基地址 (len = 14 * 512 = 0x1c00)
 BaseOfExBuf	equ	0ac00h		; 扩展缓冲区基地址 (len = 0x200)
-BaseOfLoader	equ	0ae00h		; Loader 被加载到的地址(物理地址)
+BaseOfLoader	equ	0		; Loader 被加载到的地址(段地址)
+OffsetOfLoader	equ	0ae00h		; Loader 被加载到的地址(偏移地址)
 ;-----------------------------------------------------------
 	
 	org	7c00h
@@ -48,9 +49,11 @@ BaseOfLoader	equ	0ae00h		; Loader 被加载到的地址(物理地址)
 LABEL_START:
 	mov	ax, cs
 	mov	ds, ax
-	mov	es, ax
 	mov	ss, ax
 	mov	sp, ButtomOfStack
+
+	mov	ax, BaseOfLoader
+	mov	es, ax
 
 	; 清屏
 	mov	ax, 0600h
@@ -100,7 +103,7 @@ LABEL_START:
 	mov	al, 0			; 'Ready    '
 	mov	dh, 1			; 行号 1
 	call	DispMsg
-	jmp	BaseOfLoader		; 转交控制权, MBR 的使命结束
+	jmp	BaseOfLoader:OffsetOfLoader	; 转交控制权, MBR 的使命结束
 .next:
 	dec	byte [LoopCnt]
 	cmp	byte [LoopCnt], 0
@@ -152,7 +155,7 @@ ReadSector:
 ; LoadLoader 加载 LOADER.BIN
 ;-----------------------------------------------------------
 LoadLoader:
-	mov	word [ppDst], BaseOfLoader
+	mov	word [ppDst], OffsetOfLoader
 
 	; 加载 LOADER.BIN 的第 1 个簇
 	push	word [ppDst]		; pDst
@@ -245,9 +248,9 @@ LoadLoader:
 
 
 ;-----------------------------------------------------------
-; CopyCode (ClusNo, ds:pDst)
+; CopyCode (ClusNo, es:pDst)
 ; ClusNo	簇号
-; ds:pDst	目标地址
+; es:pDst	目标地址
 ;-----------------------------------------------------------
 CopyCode:
 	push	bp
