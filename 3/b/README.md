@@ -7,4 +7,4 @@
 
 ![b](screenshot/b.png)
 
-可以在`kernel/main.c`里修改`delay(...)`的参数来控制打印"A."的事件间隔.
+可以在`kernel/main.c`里修改`delay(...)`的参数来控制打印"A."的时间间隔.
