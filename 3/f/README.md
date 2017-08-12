@@ -6,7 +6,7 @@
 ![TaskC](screenshot/TaskC.png)
 
 ### 3. 在`include/proc.h`里添加函数声明，并定义新增进程的栈:
-![proc_h](screenshot/proc_h)
+![proc_h](screenshot/proc_h.png)
 
 ### 4. 在`task_table`里添加一项(`kernel/main.c`):
 ![task_table](screenshot/task_table.png)
