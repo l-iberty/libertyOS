@@ -9,7 +9,7 @@ void proc_begin();
 void println(char *sz);
 void print(char *sz);
 
-void get_ticks(); /* system call */
+int get_ticks(); /* system call */
 
 extern u8	GDT[GDT_DESC_NUM * DESC_SIZE];	/* kernel/kernel.asm */
 
