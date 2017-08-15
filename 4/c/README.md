@@ -10,7 +10,7 @@
 
 ![proc_table](screenshot/proc_table.png)
 
-用户进程和任务还是同一放到`proc_table`里.
+用户进程和任务还是统一放到`proc_table`里.
 
 - `kernel/main.c` 初始化进程表时区分用户进程和任务
 
