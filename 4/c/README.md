@@ -1,5 +1,5 @@
 # c. 区分用户进程和任务
-将终端任务`Task_tty`放在 ring0, 三个用户进程放在 ring3.
+将终端任务`Task_tty`放在 ring1, 三个用户进程放在 ring3.
 
 ## 步骤
 ### 1. 修改/添加变量定义(include/sysconst.h)
