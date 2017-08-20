@@ -23,6 +23,10 @@
 
 ![is_current_proc_done](screenshot/is_current_proc_done.png)
 
+- 修改时钟中断例程，判断当前进程是否结束
+
+![irq00_handler](screenshot/irq00_handler.png)
+
 - 本例只希望看到`Task_hd`的输出，需要在三个进程入口处添加如下代码:
 
 ![proc_entry](screenshot/proc_entry.png)
