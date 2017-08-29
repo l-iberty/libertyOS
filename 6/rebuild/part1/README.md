@@ -36,7 +36,7 @@
         - 如果 B 没有在向 A 发送消息，说明没有进程在给 A 发送消息，则将 A 标记为`RECEIVING`，从而阻塞之.
 
 ### 调度算法
-[kernel/clock.c](kernel/clock.c.)
+[kernel/clock.c](kernel/clock.c)
 
 如果进程的`flag`不等于0，就没有被执行的机会，"阻塞"便是通过这一点实现的.
 
