@@ -4,10 +4,11 @@
 
 /* 函数原型 */
 /* 库函数 */
-void println(char* sz);				/* lib/klib.asm */
+void _sprintf(char* buf, const char* fmt, ...);
 void printmsg(char* sz, u8 color, u32 pos);	/* lib/klib.asm */
+void println(char* sz);				/* lib/klib.asm */
 void init_8259A();				/* kernel/8259A.asm */
-void itoa(char* str, int v, int len, u8 flag);	/* lib/klib.asm */
+
 /* 0 ~ 19 中断处理例程 */
 void divide_error();
 void reserved();
@@ -57,52 +58,48 @@ extern fpPROC	TaskA;				/* kernel/main.c */
 extern u8	TSS[TSS_SIZE];			/* kernel/kernel.asm */
 
  
-#define ERR_MSG_LEN 18 /* 每条 err_msg 的固定长度 */
 char* err_msg_list[] = {
-		"#DE               ",
-		"#DB               ",
-		"--NMI             ",
-		"#BP               ",
-		"#OF               ",
-		"#BR               ",
-		"#UD               ",
-		"#NM               ",
-		"#DF               ",
+		"#DE",
+		"#DB",
+		"--NMI",
+		"#BP",
+		"#OF",
+		"#BR",
+		"#UD",
+		"#NM",
+		"#DF",
 		"--CO-PROCESS ERROR",
-		"#TS               ",
-		"#NP               ",
-		"#SS               ",
-		"#GP               ",
-		"#PF               ",
-		"-INTEL RESERVED   ",
-		"#MF               ",
-		"#AC               ",
-		"#MC               ",
-		"#XM               "
+		"#TS",
+		"#NP",
+		"#SS",
+		"#GP",
+		"#PF",
+		"-INTEL RESERVED",
+		"#MF",
+		"#AC",
+		"#MC",
+		"#XM"
 		};
 
 
 void excep_handler(int vecno, u32 err_code, u32 eip, u16 cs, u32 eflags)
 {
 	/* err_msg 格式: "err_msg CS:xxxx EIP:xxxxxxxx EFLAGS:xxxxxxxx ErrorCode:xxxxxxxx" 共 74 字符*/
-	char* err_msg = err_msg_list[vecno];
-	char err_info[75 - ERR_MSG_LEN] = "CS:xxxx EIP:xxxxxxxx EFLAGS:xxxxxxxx ErrorCode:xxxxxxxx";
-	itoa(err_info + 3, cs, 4, 0);
-	itoa(err_info + 12, eip, 8, 0);
-	itoa(err_info + 28, eflags, 8, 0);
-	itoa(err_info + 47, err_code, 8, 0);
-
+	char* err = err_msg_list[vecno];
+	char msg[80];
+	_sprintf(msg, "%s {CS:%.4x EIP:%.8x EFLAGS:%.8x, ERROR-CODE:%.8x}",
+		err, cs, eip, eflags, err_code);
+	
 	/* 0x74 => 0111 灰底, 0100 暗红 */
-	printmsg(err_msg, 0x74, (80 * 23 + 0) * 2);
-	printmsg(err_info, 0x74, (80 * 24 + 0) * 2);
+	printmsg(msg, 0x74, (80 * 24 + 0) * 2);
 }
 
 void irq_handler(int irqno)
 {
-	char msg[18] = "__8259A__ IRQ: ";
-	itoa(msg + 15, irqno, 2, 1);
+	char msg[32];
+	_sprintf(msg, "__8259A__ IRQ: %.2x", irqno);
 	/* 0000 黑底, 1111 白字 */
-	printmsg(msg, 0x0F, (80 * 22 + 0) * 2);
+	printmsg(msg, 0x0F, (80 * 23 + 0) * 2);
 }
 
 void init_idt_desc(int vecno, u16 selector, u32 proc_offset, u8 attr)
@@ -218,6 +215,6 @@ void cstart()
 	
 	/* 初始化 GDT 中的 TSS 描述符 */
 	init_desc(&GDT[INDEX_TSS_DESC * DESC_SIZE], (u32) TSS, sizeof(TSS) - 1, DA_TSS);
-
+	
 }
 

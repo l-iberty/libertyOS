@@ -4,7 +4,6 @@
 #include "sysconst.h"
 #include "proc.h"
 
-extern int is_current_proc_done;
 extern u32 PrintPos;
 extern u32 MainPrintPos;
 
@@ -17,8 +16,6 @@ void set_cursor_pos(u32 pos);
 /* Ring1 终端任务, 用户交互接口 */
 void Task_tty()
 {
-	is_current_proc_done = 0; /* 由 keyboard_read 将其置 1 */
-	
 	TTY* p_tty;
 	
 	/* 初始化所有 TTY */

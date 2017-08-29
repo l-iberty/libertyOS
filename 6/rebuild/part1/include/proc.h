@@ -40,19 +40,19 @@ typedef struct {
 } STACK_FRAME;
 
 struct mess1 {
-	int	i1;
-	int	i2;
-	int	i3;
-	int	i4;
-	int	i5;
+	int	m1i1;
+	int	m1i2;
+	int	m1i3;
+	int	m1i4;
+	int	m1i5;
 };
 
 struct mess2 {
-	void*	v1;
-	void*	v2;
-	void*	v3;
-	void*	v4;
-	void*	v5;
+	void*	m2p1;
+	void*	m2p2;
+	void*	m2p3;
+	void*	m2p4;
+	void*	m2p5;
 };
 
 typedef struct {
@@ -65,28 +65,39 @@ typedef struct {
 	} u;
 } MESSAGE;
 
-/* definition for Task_hd & Task_fs */
-#define DEVICE	u.m1.i1
-#define SECTOR	u.m1.i2
-#define LEN	u.m1.i3
-#define BUF	u.m2.v1
 
-typedef struct {
-	MESSAGE*	p_head;
-	MESSAGE*	p_tail;
+/* definition for message */
+#define VALUE	u.m1.m1i1
+#define DEVICE	u.m1.m1i1
+#define SECTOR	u.m1.m1i2
+#define LEN	u.m1.m1i3
+#define BUF	u.m2.m2p1
+
+typedef struct S_SEND_QUEUE	SEND_QUEUE;
+typedef struct S_PROCESS	PROCESS;
+
+struct S_SEND_QUEUE {
 	int		count;
-	MESSAGE		msg_buf[MAX_MSGSIZE];
-} MESSAGE_QUEUE;
+	PROCESS**	p_head;
+	PROCESS** 	p_tail;
+	PROCESS*	proc_queue[NR_PROCS + NR_TASKS];
+};
 
-typedef struct {
+struct S_PROCESS {
 	STACK_FRAME	regs;
 	u16		ldt_selector;
 	u8		LDT[LDT_DESC_NUM * DESC_SIZE];
 	u32		pid;
 	int		ticks;
 	int		priority;
-	MESSAGE_QUEUE	msg_queue;
-} PROCESS;
+	
+	MESSAGE*	p_msg;
+	int		flag;
+	u32		pid_recvfrom;	/* Whom does the process wanna receive message from? */
+	u32		pid_sendto;	/* Whom does the process wanna send message to? */
+	SEND_QUEUE	send_queue;
+	
+};
 
 typedef struct {
 	fpPROC		task_entry;
@@ -94,6 +105,10 @@ typedef struct {
 } TASK;
 
 PROCESS		proc_table[NR_PROCS + NR_TASKS];
+
+#define FIRST_PROC proc_table[0]
+//#define LAST_PROC proc_table[NR_PROCS + NR_TASKS - 1]
+#define LAST_PROC proc_table[NR_PROCS - 1]
 
 PROCESS*	p_current_proc;
 
@@ -104,6 +119,15 @@ PROCESS*	p_current_proc;
 #define PID_TASK_HD	3
 #define PID_TASK_FS	4
 #define PID_TASK_TTY	5
+
+/* flag */
+/* SENDING 和 RECEVING 的二进制串不能有重叠的 "1" */
+#define SENDING		1
+#define RECEIVING	2 
+
+/* pid_recvfrom & pid_sendto */
+#define	ANY		(u32) (-1)
+#define NONE		(u32) (-2)
 
 /* message value */
 #define DEV_OPEN	1001
@@ -121,12 +145,20 @@ void Task_tty();
 int sys_get_ticks();
 int sys_sendrecv(int func_type, int pid, MESSAGE* p_msg);
 
-u32 va2la(PROCESS* proc, void* va);
+u32	va2la(PROCESS* proc, void* va);
+int	msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg);
+int	msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg);
+void	block(PROCESS* p_proc);
+void	unblock(PROCESS* p_proc);
+void	reset_msg(MESSAGE* p_msg);
+void	init_send_queue(PROCESS* p_proc);
+void	enqueue_send(PROCESS* p, PROCESS* p_proc);
+PROCESS* dequeue_send(PROCESS* p);
+int	isEmpty(SEND_QUEUE* queue);
+void	dump_proc();
+void	dump_msg(MESSAGE* p_msg);
+void	failure(char* exp, char* file, int line);
 
-int msg_send(PROCESS* p_proc, MESSAGE* p_msg);
-int msg_recv(MESSAGE* p_msg);
-void reset_msg(MESSAGE* p_msg);
-void init_message_queue(MESSAGE_QUEUE* p_msg_queue);
-int isEmpty_msg_queue(PROCESS* p_proc);
+#define assert(exp) if(!exp) failure(#exp, __FILE__, __LINE__)
 
 #endif /* PROC_H */

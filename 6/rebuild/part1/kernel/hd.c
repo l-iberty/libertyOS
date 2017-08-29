@@ -13,7 +13,6 @@ void _memset(void* pDst, u8 value, int len);
 
 int sendrecv(int func_type, int pid, MESSAGE* p_msg); /* system call */
 
-extern int is_current_proc_done;
 
 #define SECTOR_SIZE 512
 
@@ -27,49 +26,9 @@ u16 hd_buf[SECTOR_SIZE];
 /* Ring1 */
 void Task_hd()
 {
-	is_current_proc_done = 0;
 	
 	_printf("-----Task_hd-----");
 	
-	MESSAGE msg;
-	int nr_msg_processed = 0;
-	
-	while (!isEmpty_msg_queue(p_current_proc))
-	{
-		if (!sendrecv(RECEIVE, 1, &msg))
-		{
-			switch (msg.value)
-			{
-				case DEV_OPEN:
-				{
-					init_hd();
-					get_hd_info(0); /* 0 = Master, 1 = Slave */
-					port_read(REG_DATA, hd_buf, SECTOR_SIZE);
-					disp_hd_info();
-				
-					nr_msg_processed++;
-					break;
-				}
-				case DEV_WRITE:
-				{
-					hd_write(msg.DEVICE, msg.SECTOR, msg.BUF, msg.LEN);
-					
-					nr_msg_processed++;
-					break;
-				}
-			}
-		}
-		else
-		{
-			_printf("error: sendrecv [pid: %.4x]", p_current_proc->pid);
-		}
-	}
-	_printf("nr_msg_processed: 0x%.2x", nr_msg_processed);
-/*	if (nr_msg_processed > 0)*/
-/*		while(1) {}*/
-	
-	is_current_proc_done = 1;
-	while(1) {}
 }
 
 void init_hd()

@@ -20,7 +20,6 @@ extern	kernel_main		; kernel/main.c
 extern	f_reenter		; kernel/main.c
 extern	clock_handler		; kernel/clock.c
 extern	syscall_table		; kernel/main.c
-extern	is_current_proc_done	; kernel/main.c
 extern	keyboard_handler	; kernel/keyboard.c
 extern	hd_handler		; kernel/hd.c
 
@@ -83,40 +82,37 @@ IDT:	times	IDT_SIZE db 0
 
 IdtPtr:	dw	IDT_SIZE - 1	; IDT 界限
 	dd	IDT		; IDT 线性基地址
-	
-szClockMsg1	db	"*", 0
-szClockMsg2	db	"+", 0
 
 ;-------------------------------------------------------------------------------------
 
 TSS:
-	dd	0				; PREV_TSS
-	dd	ButtomOfStack			; ESP0
-	dd	SELECTOR_FLATRW			; SS0
-	dd	0				; ESP1
-	dd	0				; SS1
-	dd	0				; ESP2
-	dd	0				; SS2
-	dd	0				; CR3
-	dd	0				; EIP
-	dd	0				; EFLAGS
-	dd	0				; EAX
-	dd	0				; ECX
-	dd	0				; EDX
-	dd	0				; EBX
-	dd	0				; ESP
-	dd	0				; EBP
-	dd	0				; ESI
-	dd	0				; EDI
-	dd	0				; ES
-	dd	0				; CS
-	dd	0				; SS
-	dd	0				; DS
-	dd	0				; FS
-	dd	0				; GS
-	dd	0				; LDT 选择子
-	dw	0				; 保留
-	dw	TSSLen				; I/O　许可位图基地址大于或等于 TSS 界限, 则表示没有 I/O 许可位图
+		dd	0			; PREV_TSS
+TSS_ESP0	dd	ButtomOfStack		; ESP0
+		dd	SELECTOR_FLATRW		; SS0
+		dd	0			; ESP1
+		dd	0			; SS1
+		dd	0			; ESP2
+		dd	0			; SS2
+		dd	0			; CR3
+		dd	0			; EIP
+		dd	0			; EFLAGS
+		dd	0			; EAX
+		dd	0			; ECX
+		dd	0			; EDX
+		dd	0			; EBX
+		dd	0			; ESP
+		dd	0			; EBP
+		dd	0			; ESI
+		dd	0			; EDI
+		dd	0			; ES
+		dd	0			; CS
+		dd	0			; SS
+		dd	0			; DS
+		dd	0			; FS
+		dd	0			; GS
+		dd	0			; LDT 选择子
+		dw	0			; 保留
+		dw	TSSLen			; I/O　许可位图基地址大于或等于 TSS 界限, 则表示没有 I/O 许可位图
 
 TSSLen	equ	$ - TSS
 
@@ -314,33 +310,21 @@ irq00_handler:				; 时钟
 	out	20h, al	; / 向主8259A发送 EOI
 	
 	sti
-	
 	inc	byte [gs:0]
-	
 	inc	dword [f_reenter]
 	cmp	dword [f_reenter], 1	; f_reenter = 1 则没有发生中断重入
 	je	.no_reenter
-;	push	szClockMsg2	;`.
-;	call	print		; | 嵌套(重入)的中断打印 "+"
-;	add	esp, 4		; /
 	jmp	.reenter	
 .no_reenter:
-;	push	szClockMsg1	;`.
-;	call	print		; | 非嵌套(非重入)的中断打印 "*"
-;	add	esp, 4		; /
-	
-;	mov	ecx, 01FFFFFh	; `.
-;.delay:	nop			; | 延时, 使得中断重入能够发生
-;	loop	.delay		; /
 	cli
+	mov	esp, ButtomOfStack	; 内核栈
+	call	clock_handler
 	
-	cmp	dword [is_current_proc_done], 0	; `.
-	je	.reenter			; / 如果被中断的进程未结束, 则不进行进程切换
-	
-	call	clock_handler			;`.
-	mov	esp, [p_current_proc]		; | 在非嵌套的中断内完成进程切换
-	mov	ax, [esp + LDT_SEL_OFFSET]	; |
-	lldt	ax				; /
+	mov	esp, [p_current_proc]			;`.
+	lea	eax, [esp + STACK_BUTTOM_OFFSET]	; |
+	mov	dword [TSS_ESP0], eax			; | 在非嵌套的中断内完成进程切换
+	mov	ax, [esp + LDT_SEL_OFFSET]		; |
+	lldt	ax					; /
 	
 .reenter:
 	dec	dword [f_reenter]
@@ -359,11 +343,27 @@ irq01_handler:				; 键盘
 	push	fs
 	push	gs
 	
-	call	keyboard_handler
-	
 	mov	al, 20h ; `.
 	out	20h, al	; / 向主8259A发送 EOI
 	
+	sti
+	inc	dword [f_reenter]
+	cmp	dword [f_reenter], 1	; f_reenter = 1 则没有发生中断重入
+	je	.no_reenter
+	jmp	.reenter	
+.no_reenter:
+	cli
+	mov	esp, ButtomOfStack	; 内核栈
+	call	keyboard_handler
+	
+	mov	esp, [p_current_proc]			;`.
+	lea	eax, [esp + STACK_BUTTOM_OFFSET]	; |
+	mov	dword [TSS_ESP0], eax			; | 在非嵌套的中断内完成进程切换
+	mov	ax, [esp + LDT_SEL_OFFSET]		; |
+	lldt	ax					; /
+	
+.reenter:
+	dec	dword [f_reenter]
 	pop	gs
 	pop	fs
 	pop	es
@@ -427,14 +427,30 @@ irq14_handler:				; AT 温盘
 	push	fs
 	push	gs
 	
-	call	hd_handler
-	
 	mov	al, 20h ; `.
 	out	20h, al	; / 向主8259A发送 EOI
 	
 	mov	al, 20h ; `.
 	out	0A0h, al; / 向从8259A发送 EOI
 	
+	sti
+	inc	dword [f_reenter]
+	cmp	dword [f_reenter], 1	; f_reenter = 1 则没有发生中断重入
+	je	.no_reenter
+	jmp	.reenter	
+.no_reenter:
+	cli
+	mov	esp, ButtomOfStack	; 内核栈
+	call	hd_handler
+	
+	mov	esp, [p_current_proc]			;`.
+	lea	eax, [esp + STACK_BUTTOM_OFFSET]	; |
+	mov	dword [TSS_ESP0], eax			; | 在非嵌套的中断内完成进程切换
+	mov	ax, [esp + LDT_SEL_OFFSET]		; |
+	lldt	ax					; /
+	
+.reenter:
+	dec	dword [f_reenter]
 	pop	gs
 	pop	fs
 	pop	es
@@ -442,7 +458,6 @@ irq14_handler:				; AT 温盘
 	popad
 	
 	iretd
-
 	
 Call_irq_handler:
 	call	irq_handler
@@ -466,12 +481,21 @@ sys_call:
 .no_reenter:
 	cli
 	
+	mov	esp, ButtomOfStack		; 内核栈
+	
 	push	edx
 	push	ecx
 	push	ebx
 	call	[syscall_table + eax * 4]
 	add	esp, 12
+	
+	mov	esp, [p_current_proc]
 	mov	[esp + EAX_OFFSET], eax
+	lea	eax, [esp + STACK_BUTTOM_OFFSET]
+	mov	dword [TSS_ESP0], eax
+	mov	ax, [esp + LDT_SEL_OFFSET]
+	lldt	ax
+	
 .reenter:
 	dec	dword [f_reenter]
 	pop	gs
@@ -498,6 +522,8 @@ proc_begin:
 	iretd
 
 ; STACK_FRAME 结构体内各个字段相对结构体首部的偏移
-EAX_OFFSET	equ	44
-SS_OFFSET	equ	64
-LDT_SEL_OFFSET	equ	68
+EAX_OFFSET		equ	44
+K_ESP_OFFSET		equ	28
+SS_OFFSET		equ	64
+STACK_BUTTOM_OFFSET	equ	68
+LDT_SEL_OFFSET		equ	68

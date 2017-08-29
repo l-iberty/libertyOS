@@ -7,7 +7,7 @@ CFLAGS=		-I include/ -c -m32 -fno-stack-protector
 
 KOBJS=		kernel.o klib.o start.o 8259A.o main.o protect.o clock.o \
 		syscall.o keyboard.o tty.o string.o printf.o vsprintf.o hd.o \
-		fs_main.o io.o console.o
+		fs_main.o io.o console.o proc.o
 
 all: boot.bin loader.bin kernel.bin
 
@@ -73,6 +73,9 @@ io.o: lib/io.c
 	gcc $(CFLAGS) $< -o $@
 
 console.o: kernel/console.c
+	gcc $(CFLAGS) $< -o $@
+
+proc.o: kernel/proc.c
 	gcc $(CFLAGS) $< -o $@
 
 ####################################################################

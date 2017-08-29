@@ -11,7 +11,6 @@ void set_cursor_pos();
 extern TTY	tty_table[NR_CONSOLES];
 extern CONSOLE	console_table[NR_CONSOLES];
 extern int 	nr_current_console;
-extern int	is_current_proc_done;
 
 TTY* p_current_tty;
 
@@ -77,9 +76,7 @@ void keyboard_read()
 			}
 			case MC_ESC:
 			{
-				/* 结束终端任务, 恢复进程调度 */
-				is_current_proc_done = 1;
-				while(1) {}
+
 			}
 			default:
 			{

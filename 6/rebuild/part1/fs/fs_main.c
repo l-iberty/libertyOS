@@ -14,21 +14,15 @@ void _strcpy(char* dst, const char* src);
 
 int sendrecv(int func_type, int pid, MESSAGE* p_msg); /* system call */
 
-extern int is_current_proc_done;
-
 u8 buf[BUFSIZE];
 
 /* Ring1 */
 void Task_fs()
 {
-	is_current_proc_done = 0;
-	
 	_printf("-----Task_fs-----");
 
 	mkfs();
 	
-	is_current_proc_done = 1;
-	while(1) {}
 }
 
 void mkfs()

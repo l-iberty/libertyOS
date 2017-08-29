@@ -102,8 +102,8 @@ println:
 	jz	.end	
 	cmp	al, 0Ah				; 是 '\n' 吗?
 	jnz	.1
-	add	dword [MainPrintPos], 160	; `.
-	mov	edi, dword [MainPrintPos]	; / 换行
+	call	newline
+	mov	dword [MainPrintPos], edi
 	jmp	.2
 .1:
 	mov	[gs:edi], ax
@@ -130,9 +130,7 @@ print:
 
 	push	edi
 	push	esi
-	push	ecx
 	
-	xor	ecx, ecx			; ecx 统计字符串长度
 	mov	esi, [ebp + 8]			; sz　字符串地址
 	mov	edi, dword [MainPrintPos]
 	mov	ah, 07h				; 0000 黑底, 0111 灰字
@@ -142,21 +140,18 @@ print:
 	jz	.end	
 	cmp	al, 0Ah				; 是 '\n' 吗?
 	jnz	.1
-	add	dword [MainPrintPos], 160	; `.
-	mov	edi, dword [MainPrintPos]	; / 换行
+	call	newline
+	mov	dword [MainPrintPos], edi
 	jmp	.2
 .1:
 	mov	[gs:edi], ax
 	add	edi, 2
 .2:
 	inc	esi
-	inc	ecx
 	jmp	.printc
 .end:
-	add	ecx, ecx			; ecx = ecx * 2
-	add	dword [MainPrintPos], ecx	; 不换行, 仅后移一个位置
+	mov	dword [MainPrintPos], edi
 
-	pop	ecx
 	pop	esi
 	pop	edi
 	pop	ebp
@@ -184,7 +179,7 @@ printmsg:
 	jz	.end	
 	cmp	al, 0Ah				; 是 '\n' 则回车换行
 	jnz	.1
-	add	edi, 160
+	call	newline
 	jmp	.2
 .1:
 	mov	[gs:edi], ax
@@ -196,6 +191,30 @@ printmsg:
 	pop	esi
 	pop	edi
 	pop	ebp
+	ret
+;-------------------------------------------------------------------------------
+
+
+;-------------------------------------------------------------------------------
+; newline 将显示位置移动到下一行行首.
+; 默认 edi 存放着显示位置, 该函数将改变 edi 的内容:
+; edi = (edi / 160) * 160
+;-------------------------------------------------------------------------------
+newline:
+	push	eax
+	push	ebx
+	
+	mov	eax, edi
+	mov	ebx, 160
+	div	bl ; 16 bits 被除数 AX, 8 bits 除数 BL
+		   ; AH = 余数, AL = 商
+	and	eax, 0FFh ; 取 AL
+	mul	ebx	  ; (EDX,EAX)<-(EAX)*(SRC)
+	mov	edi, eax  ; 当前行首
+	add	edi, 160  ; 下一行行首
+	
+	pop	ebx
+	pop	eax
 	ret
 ;-------------------------------------------------------------------------------
 
