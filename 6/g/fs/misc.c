@@ -7,25 +7,15 @@
 #include "string.h"
 
 
-void print_bytes(u8* buf, int len)
-{
-	for (int i = 0; i < len; i++)
-	{
-		_printf("%.2x ", buf[i]);
-		
-		if ((i + 1) % 16 == 0) _printf("\n");
-	}
-}
-
 /**
  * 查找根目录下的文件
  *
  * @param	filename 不含路径的纯文件名
- * @return	DIR_ENTRY::nr_inode, or (-1) if not found
+ * @return	DIR_ENTRY::nr_inode, or (0) if not found
  */
 int find_file(char* filename)
 {
-	int nr_inode = -1;
+	int nr_inode = 0;
 	
 	_memset(fsbuf, 0, BUFSIZE);
 	

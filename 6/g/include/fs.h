@@ -14,6 +14,7 @@ typedef struct {
 } SUPER_BLOCK;
 
 
+#define NR_DEFAULT_FILE_SECS	64	/* 64 * 512 Bytes = 32 KB */
 typedef struct {
 	u32	i_mode;			/* Access mode */
 	u32	i_size;			/* File size */
@@ -23,7 +24,7 @@ typedef struct {
 
 #define MAX_FILENAME_LEN	12
 typedef struct {
-	u32	nr_inode;		/* 文件的 i_node 号 */
+	int	nr_inode;		/* 文件的 i_node 号 */
 	char	name[MAX_FILENAME_LEN];
 } DIR_ENTRY;
 
@@ -82,9 +83,9 @@ int		open(const char* pathname, int flags);
 int		do_open();
 I_NODE*		create_file(char* filename, int flags);
 int		alloc_imap_bit();
-int		alloc_smap_bit();
-I_NODE*		alloc_inode(u32 mode, u32 size, u32 start_sector, u32 nr_sector);
+int		alloc_smap_bits(int nr_sectors);
+I_NODE*		alloc_inode(int nr_inode, u32 mode, u32 size, u32 start_sector, u32 nr_sector);
 void		alloc_dir_entry(int nr_inode, char* filename);
-I_NODE*		get_inode();
+I_NODE*		get_inode(int nr_inode);
 
 #endif /* FS_H */

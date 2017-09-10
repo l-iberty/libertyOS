@@ -95,7 +95,7 @@ void kernel_main()
 	_memset(f_desc_table, 0, sizeof(FILE_DESC) * NR_FILES);
 	_memset(inode_table, 0, sizeof(I_NODE) * NR_FILES);
 	
-	proc_table[0].ticks = proc_table[0].priority = MIN_PRIORITY;
+	proc_table[0].ticks = proc_table[0].priority = 105;
 	proc_table[1].ticks = proc_table[1].priority = MIN_PRIORITY;
 	proc_table[2].ticks = proc_table[2].priority = 100;
 	proc_table[3].ticks = proc_table[3].priority = MIN_PRIORITY;
@@ -123,9 +123,30 @@ void TaskA()
 	{
 		delay(5);
 		
-/*		int fd = open("/dev_tty2", O_CREAT);*/
-/*		_printf("\nfd: 0x%.8x", fd);*/
-/*		halt("TaskA");*/
+		int fd;
+		
+		init_video();
+		_printf("\n-----TaskA-----");
+		
+		fd = open("/taska-1", O_CREAT);
+		_printf("\nfd: 0x%.8x;\nfile_desc:\nfd_mode: 0x%.8x, fd_pos: 0x%.8x",
+			fd, p_current_proc->filp[fd]->fd_mode, p_current_proc->filp[fd]->fd_pos);
+		_printf("\ninode:\ni_mode: 0x%.8x, i_size: 0x%.8x,\
+				\ni_start_sector: 0x%.8x, i_nr_sectors: 0x%.8x\n",
+			p_current_proc->filp[fd]->fd_inode->i_mode,
+			p_current_proc->filp[fd]->fd_inode->i_size,
+			p_current_proc->filp[fd]->fd_inode->i_start_sector,
+			p_current_proc->filp[fd]->fd_inode->i_nr_sectors);
+			
+		fd = open("/taska-2", O_CREAT);
+		_printf("\nfd: 0x%.8x;\nfile_desc:\nfd_mode: 0x%.8x, fd_pos: 0x%.8x",
+			fd, p_current_proc->filp[fd]->fd_mode, p_current_proc->filp[fd]->fd_pos);
+		_printf("\ninode:\ni_mode: 0x%.8x, i_size: 0x%.8x,\
+				\ni_start_sector: 0x%.8x, i_nr_sectors: 0x%.8x",
+			p_current_proc->filp[fd]->fd_inode->i_mode,
+			p_current_proc->filp[fd]->fd_inode->i_size,
+			p_current_proc->filp[fd]->fd_inode->i_start_sector,
+			p_current_proc->filp[fd]->fd_inode->i_nr_sectors);
 	}
 }
 
@@ -144,31 +165,19 @@ void TaskC()
 		delay(5);
 		
 		int fd;
+		_printf("\n-----TaskC-----");
 		
-		init_video();
-		
-		fd = open("/blah", O_CREAT);
-		_printf("\ncreating file /blah:");
+		fd = open("/taska-2", O_RDWR);
 		_printf("\nfd: 0x%.8x;\nfile_desc:\nfd_mode: 0x%.8x, fd_pos: 0x%.8x",
 			fd, p_current_proc->filp[fd]->fd_mode, p_current_proc->filp[fd]->fd_pos);
-		_printf("\ninode:\ni_mode: 0x%.8x, i_size: 0x%.8x,\ni_start_sector: 0x%.8x, i_nr_sectors: 0x%.8x\n",
+		_printf("\ninode:\ni_mode: 0x%.8x, i_size: 0x%.8x,\
+				\ni_start_sector: 0x%.8x, i_nr_sectors: 0x%.8x\n",
 			p_current_proc->filp[fd]->fd_inode->i_mode,
 			p_current_proc->filp[fd]->fd_inode->i_size,
 			p_current_proc->filp[fd]->fd_inode->i_start_sector,
 			p_current_proc->filp[fd]->fd_inode->i_nr_sectors);
 			
-		fd = open("/testfile", O_CREAT);
-		_printf("\ncreating file /testfile:");
-		_printf("\nfd: 0x%.8x;\nfile_desc:\nfd_mode: 0x%.8x, fd_pos: 0x%.8x",
-			fd, p_current_proc->filp[fd]->fd_mode, p_current_proc->filp[fd]->fd_pos);
-		_printf("\ninode:\ni_mode: 0x%.8x, i_size: 0x%.8x,\ni_start_sector: 0x%.8x, i_nr_sectors: 0x%.8x",
-			p_current_proc->filp[fd]->fd_inode->i_mode,
-			p_current_proc->filp[fd]->fd_inode->i_size,
-			p_current_proc->filp[fd]->fd_inode->i_start_sector,
-			p_current_proc->filp[fd]->fd_inode->i_nr_sectors);
-		
 		halt("TaskC");
-		
 	}
 }
 

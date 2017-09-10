@@ -35,19 +35,27 @@ int open(const char* pathname, int flags)
 int do_open()
 {
 	int fd = -1;
-	
-	_printf("\npathname: %s, flags: 0x%.8x, namelen: 0x%.8x, caller pid: 0x%.4x",
-		fs_msg.PATHNAME, fs_msg.FLAGS, fs_msg.NAMELEN, fs_msg.src_pid);
-		
 	PROCESS* pcaller = proc_table + fs_msg.src_pid;
 	
+	_printf("\npathname: %s; ", fs_msg.PATHNAME);
+	if ((fs_msg.FLAGS & O_CREAT) && (fs_msg.FLAGS & O_RDWR))
+		_printf("flags: O_CREAT | O_RDWR; ");
+	else if (fs_msg.FLAGS & O_CREAT)
+		_printf("flags: O_CREAT; ");
+	else if (fs_msg.FLAGS & O_RDWR)
+		_printf("flags: O_RDWR; ");
+	_printf("namelen: 0x%.8x; caller pid: 0x%.4x", fs_msg.NAMELEN, fs_msg.src_pid);
+	
+	/* dump parameters */
 	int flags = fs_msg.FLAGS;
 	int namelen = fs_msg.NAMELEN;
 	char filename[MAX_FILENAME_LEN];
 	
 	if (*(char*) fs_msg.PATHNAME != '/')
 	{
-		halt("invalid pathname: %s (pathname should start with root dir \'/\')", fs_msg.PATHNAME);
+		_printf("\n#ERROR#-do_open: invalid pathname: %s (pathname should start with root dir \'/\')",
+			fs_msg.PATHNAME);
+		return -1;
 	}
 	
 	_memcpy(va2la(proc_table + PID_TASK_FS, filename),
@@ -56,7 +64,7 @@ int do_open()
 	filename[namelen] = 0;
 	
 	
-	/* Find a free slot in PROCESS::filp[] */
+	/* find a free slot in PROCESS::filp[] */
 	int i;
 	for (i = 0; i < NR_FILES; i++)
 	{
@@ -67,33 +75,37 @@ int do_open()
 		}
 	}
 	if (fd < 0 || fd >= NR_FILES)
-		halt("\nNo available slot in PROCESS::filp[] {PID:0x%.8x}", pcaller->pid);
+		halt("\n#ERROR#-do_open: No available slot in PROCESS::filp[] {PID:0x%.8x}", pcaller->pid);
 	
-	/* Find a free slot in f_desc_table[] */
+	/* find a free slot in f_desc_table[] */
 	for (i = 0; i < NR_FILES; i++)
 	{
 		if (f_desc_table[i].fd_inode == NULL)
 			break;
 	}
 	if (i < 0 || i >= NR_FILES)
-		halt("\nNo available slot in f_desc_table[] {PID:0x%.8x}", pcaller->pid);
+		halt("\n#ERROR#-do_open: No available slot in f_desc_table[] {PID:0x%.8x}", pcaller->pid);
 
 	/* Now, `i` is the index of a free slot in f_desc_table[] */		
 	
 	int nr_inode = find_file(filename);
 	
-	I_NODE* pin = NULL;	
+	I_NODE* pin = NULL; /* `pin` is ptr to the slot in inode_table[] */
 	if (flags & O_CREAT)
 	{
-		if (nr_inode != -1)
+		if (nr_inode != 0)
 		{
-			_printf("\nFile exists");
+			_printf("\n#ERROR#-do_open: File exists");
 			return -1;
 		}
 		else
 		{
 			pin = create_file(filename, flags);
 		}
+	}
+	if (flags & O_RDWR)
+	{
+		pin = get_inode(nr_inode);
 	}
 	
 	if (pin)
@@ -111,6 +123,13 @@ int do_open()
 	return fd;
 }
 
+/**
+ * 创建一个文件的步骤:
+ * 1. 在 inode_map 中分配一位 - alloc_imap_bit()
+ * 2. 在 sector_map 中分配多位, 从而为文件数据分配扇区 - alloc_smap_bits()
+ * 3. 在 inode_array 中创建一个 inode - alloc_inode()
+ * 4. 在 root dir 中创建一个目录项 - alloc_dir_entry()
+ */
 I_NODE* create_file(char* filename, int flags)
 {
 	I_NODE* pin;
@@ -119,9 +138,13 @@ I_NODE* create_file(char* filename, int flags)
 	inode_idx = alloc_imap_bit();
 	nr_inode = inode_idx + 1;
     
-	sec_idx = alloc_smap_bit();
+	sec_idx = alloc_smap_bits(NR_DEFAULT_FILE_SECS);
 	
-	pin = alloc_inode(I_MODE_NORMAL, 0, sec_idx, 0);
+	pin = alloc_inode(0,					/* inode does not exist */
+					I_MODE_NORMAL,			/* normal file */
+					0,						/* file size*/
+					sec_idx,				/* start_sector */
+					NR_DEFAULT_FILE_SECS);	/* num of sectors occupied */
 	
 	alloc_dir_entry(nr_inode, filename);
 	
@@ -169,11 +192,11 @@ int alloc_imap_bit()
 
 
 /**
- * Allocate a bit in sector_map.
+ * Allocate `nr_sectors` bits in sector_map.
  *
- * @return index of allocated bit in sector_map, or (-1) if failed.
+ * @return index of the 1st allocated bit in sector_map, or (-1) if failed.
  */
-int alloc_smap_bit()
+int alloc_smap_bits(int nr_sectors)
 {
     int idx = -1;
 
@@ -181,28 +204,37 @@ int alloc_smap_bit()
     int j; /* byte index */
     int k; /* bit index */
 
-    for (i = 0; i < NR_SMAP_SECTORS; i++)
+    for (i = 0; i < NR_SMAP_SECTORS && nr_sectors > 0; i++)
     {
         read_hd(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
         
-        for (j = 0; j < SECTOR_SIZE; j++)
+        for (j = 0; j < SECTOR_SIZE && nr_sectors > 0; j++)
         {
         	if (smap_buf[j] == 0xFF)
 				continue; /* skip "1111_1111" */
 		
 			/* skip "1" bit */
 			for (k = 0; (smap_buf[j] >> k) & 0x1; k++) {}
-			smap_buf[j] |= (1 << k);
-		
-			idx = (i * SECTOR_SIZE + j) * 8 + k; /* 1 Byte = 8 bit */
 			
-			write_hd(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
+			if (idx == -1)
+			{
+				/* set `idx`, and lock it */
+				idx = (i * SECTOR_SIZE + j) * 8 + k; /* 1 Byte = 8 bit */
+			}
 			
-			/* clear smap_buf */
-			_memset(smap_buf, 0, sizeof(smap_buf));
-			
-			return idx;
+			/* fill each byte bit by bit */
+			for (; k < 8; k++)
+			{
+				smap_buf[j] |= (1 << k);
+				if (--nr_sectors == 0)
+					break;
+			}
         }
+        
+		write_hd(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
+		
+		/* clear smap_buf */
+		_memset(smap_buf, 0, sizeof(smap_buf));
     }
     return idx;
 }
@@ -210,9 +242,9 @@ int alloc_smap_bit()
 /**
  * Use the parameters to create a new inode in inode_array.
  *
- * @return ptr to inode
+ * @return ptr to the slot in inode_table[]
  */
-I_NODE* alloc_inode(u32 mode, u32 size, u32 start_sector, u32 nr_sectors)
+I_NODE* alloc_inode(int nr_inode, u32 mode, u32 size, u32 start_sector, u32 nr_sectors)
 {
 	I_NODE *pin, *pin2;
 	
@@ -230,7 +262,7 @@ I_NODE* alloc_inode(u32 mode, u32 size, u32 start_sector, u32 nr_sectors)
 			pin->i_start_sector	= start_sector;
 			pin->i_nr_sectors	= nr_sectors;
 			
-			pin2 = get_inode();
+			pin2 = get_inode(nr_inode);
 			assert(pin2);
 			/* 填充 inode_table[] 的槽位 */
 			_memcpy(pin2, pin, sizeof(I_NODE));
@@ -276,16 +308,59 @@ void alloc_dir_entry(int nr_inode, char* filename)
 }
 
 /**
- * Find a free slot in inode_table[].
+ * 如果 nr_inode = 0, 则正在使用 O_CREAT 创建文件, get_inode() 返回指向 inode_table[]
+ * 的空槽位的指针, 调用者通过指针填充该槽位; 如果 nr_inode > 0, 则说明文件存在, 正在使用
+ * O_RDWR 打开文件, get_inode() 从硬盘的 inode_array 里找到下标为 (nr_inode - 1) --
+ * 注意文件的 inode 号从 1 开始 -- 的 inode 结构, 将其拷贝到 inode_table[] 的空槽位,
+ * 返回指向该槽位的指针.
  *
- * @return ptr to the available slot, or NULL if failed
+ * @return ptr to the slot in inode_table[], or NULL if failed
  */
-I_NODE* get_inode()
+I_NODE* get_inode(int nr_inode)
 {
-	for (int i = 0; i < NR_INODES; i++)
+	I_NODE* pin = NULL;
+	int i;
+	
+	/* find a free slot */
+	for (i = 0; i < NR_INODES; i++)
 	{
 		if (inode_table[i].i_mode == 0)
-			return &inode_table[i];
+		{
+			pin = &inode_table[i];
+			break;
+		}
+	}
+	if (i >= NR_INODES)
+	{
+		_printf("\n#ERROR#-get_inode: inode_table[] is full\n");
+		return NULL;
+	}
+	
+	if (nr_inode == 0)
+	{
+		/**
+		 * inode does not exist(caller is creating a new file),
+		 * return ptr to the free slot.
+		 */
+		return pin;
+	}
+	else
+	{
+		/**
+		 * read inode_array from hard disk, find the inode with the index
+		 * of (nr_inode - 1), copy it to the free slot in inode_table[].
+		 */
+		 
+		read_hd(INODE_ARRAY_SEC, inode_buf, NR_INODE_SECTORS * SECTOR_SIZE);
+		I_NODE* pin2 = (I_NODE*) inode_buf;
+		if (nr_inode >= 0 && nr_inode < NR_INODES)
+		{
+			assert(pin);
+			_memcpy(pin, &pin2[nr_inode - 1], sizeof(I_NODE));
+			_memset(inode_buf, 0, sizeof(inode_buf));
+			
+			return pin;
+		}
 	}
 	return NULL;
 }
