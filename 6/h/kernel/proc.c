@@ -272,7 +272,7 @@ void enqueue_send(PROCESS* p, PROCESS* p_proc)
 		*p->send_queue.p_tail++ = p_proc;
 		p->send_queue.count++;
 		
-		assert(p->send_queue.count > (NR_PROCS + NR_TASKS));
+		assert(p->send_queue.count <= (NR_PROCS + NR_TASKS));
 		
 		if (p->send_queue.p_tail > &p->send_queue.proc_queue[NR_PROCS + NR_TASKS - 1])
 		{
