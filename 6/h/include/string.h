@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-u32	_strlen(const char* s);
+size_t	_strlen(const char* s);
 void	_strcpy(char* dst, const char* src);
 
 #endif /* STRING_H */
