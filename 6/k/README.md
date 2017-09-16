@@ -41,7 +41,7 @@
 
 显然，`/bar`文件删除后各部分出现了空洞.
 
-### Test-1
+### Test-3
 - 删除测试完成后，新建一个文件
 
 ![taskb3](screenshot/taskb3.png)
@@ -50,7 +50,7 @@
 
 ![fs_ds3](screenshot/fs_ds3.png)
 
-`/foobar`被填进了空洞.
+`/foobar3`被填进了空洞.
 
 ## 总结
 至此，`open()`,`read()`,`write()`和`unlink()`基本实现，文件系统的基本操作业已完成. 这些函数的实现框架一致，为便于今后扩展，现予以概括:
