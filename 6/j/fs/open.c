@@ -83,13 +83,10 @@ int do_open()
 	for (int j = 0; j < NR_FILES; j++) {
 		pin = pcaller->filp[j]->fd_inode;
 		if (pin) {
-			for (int k = 0; k < NR_INODES; k++) {
-				if (pin->i_nr_inode == nr_inode) {
-					_printf("\n#ERROR#-do_open: the file has already been opened {PID:0x%.8x, filename:%s}",
-							pcaller->pid, filename);
-					return -1;
-				}
-				pin++;
+			if (pin->i_nr_inode == nr_inode) {
+				_printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:0x%.8x}",
+						fs_msg.PATHNAME, pcaller->pid);
+				return -1;
 			}
 		}
 	}
