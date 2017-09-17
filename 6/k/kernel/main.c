@@ -127,8 +127,6 @@ void TaskB()
 		
 		int fd;
 		
-		I_NODE* pin;
-		
 		fd = open("/foo", O_CREAT | O_RDWR);
 		//close(fd);
 		fd = open("/bar", O_CREAT | O_RDWR);
@@ -136,23 +134,12 @@ void TaskB()
 		fd = open("/foobar", O_CREAT | O_RDWR);
 		close(fd);
 		
-		for(pin=inode_table;pin<inode_table + NR_INODES && pin->i_nr_inode != 0;pin++)
-			_printf("{%.2x} ", pin->i_nr_inode);
-		
 		unlink("/foo");
 		unlink("/bar");
 		unlink("/dev_tty3");
 		
-		_printf("\n\n");
-		for(pin=inode_table;pin<inode_table + NR_INODES && pin->i_nr_inode != 0;pin++)
-			_printf("{%.2x} ", pin->i_nr_inode);
-		
 		fd = open("/foobar3", O_CREAT | O_RDWR);
 		close(fd);
-		
-		_printf("\n\n");
-		for(pin=inode_table;pin<inode_table + NR_INODES && pin->i_nr_inode != 0;pin++)
-			_printf("{%.2x} ", pin->i_nr_inode);
 		
 		halt("TaskB DONE");
 	}
