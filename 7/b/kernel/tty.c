@@ -56,7 +56,7 @@ void init_console(TTY* p_tty)
 {
 	int nr_tty = p_tty - tty_table;
 	
-	int con_v_mem_size						= V_MEM_SCREEN;
+	int con_v_mem_size						= V_MEM_SCREEN; /* V_MEM_SIZE = 2 * SCREEN_SIZE, 一个 console 有两个屏幕的显示空间 */
 	p_tty->p_console->orig_addr				= nr_tty * con_v_mem_size;	
 	p_tty->p_console->v_mem_limit			= con_v_mem_size;
 	p_tty->p_console->current_start_addr	= p_tty->p_console->orig_addr;

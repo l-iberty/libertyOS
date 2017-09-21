@@ -111,7 +111,7 @@ void delay(int x)
 void TaskA()
 {
 	for (;;) {
-
+            
 	}
 }
 

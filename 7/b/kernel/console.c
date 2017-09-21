@@ -17,11 +17,14 @@ void select_console(int nr_console)
 	set_cursor_pos(console_table[nr_console].cursor_pos);
 }
 
+/**
+ * 滚动屏幕, 滚动范围在 p_con 占据的两个屏幕范围内
+ */
 void scroll_screen(CONSOLE* p_con, int direction)
 {
 	if (direction == SCROLL_UP) {
-		if (p_con->current_start_addr + SCREEN_WIDTH <
-				p_con->current_start_addr + p_con->v_mem_limit)
+		if (p_con->current_start_addr + SCREEN_SIZE <
+				p_con->orig_addr + p_con->v_mem_limit)
 			p_con->current_start_addr += SCREEN_WIDTH;
 	}
 	else if (direction == SCROLL_DOWN) {

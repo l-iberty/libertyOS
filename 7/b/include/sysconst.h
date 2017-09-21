@@ -114,7 +114,8 @@
 #define V_MEM_BASE		0xB8000
 #define SCREEN_WIDTH		80
 #define SCREEN_HIGH		25
-#define V_MEM_SCREEN		4000	/* 一个屏幕映射到显存空间的大小 = 80*25*2 = 4000 字节 */
+#define SCREEN_SIZE		(SCREEN_HIGH * SCREEN_WIDTH)
+#define V_MEM_SCREEN		(SCREEN_SIZE * 2) /* 一个屏幕映射到显存空间的大小 = 80*25*2 = 4000 字节 */
 
 #define NR_CONSOLES		4	/* 控制台个数 (也是终端个数) */
 #define NR_FILES		32	/* 根目录最大文件数 = SECTOR_SIZE / sizeof(DIR_ENTRY) */
