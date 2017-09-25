@@ -2,7 +2,7 @@
 
 ASMBFLAGS=	-I boot/include/
 ASMKFLAGS=	-f elf
-LDKFLAGS=	-s -melf_i386 -Ttext 0x1b200
+LDKFLAGS=	-s -melf_i386 -Ttext 0x1b400
 CFLAGS=		-I include/ -c -m32 -fno-stack-protector
 
 KOBJS=		kernel.o klib.o start.o 8259A.o main.o protect.o clock.o \
