@@ -3,9 +3,9 @@
 ; 定义 MBR 加载 Loader 以及 Loader 加载 Kernel 用到的常量信息
 ;================================================================
 
-BaseOfKernel		equ	00b50h		; Kernel 被加载到的地址(段地址)
+BaseOfKernel		equ	0b40h		; Kernel 被加载到的地址(段地址)
 OffsetOfKernel		equ	0		; Kernel 被加载到的地址(偏移地址)
-BaseOfKernelPAddr	equ	0b500h		; BaseOfKernel << 4
+BaseOfKernelPAddr	equ	0b400h		; BaseOfKernel << 4
 
 KernelEntryPointPAddr	equ	1b400h		; Kernel 的入口物理地址
 KernelBaseAddr		equ	1b000h		; Kernel 的加载基地址
