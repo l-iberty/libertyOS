@@ -177,7 +177,7 @@ LOAD fork.o
  *(.text.startup .text.startup.*)
  *(.text.hot .text.hot.*)
  *(.text .stub .text.* .gnu.linkonce.t.*)
- .text          0x000000000001b400      0x248 kernel.o
+ .text          0x000000000001b400      0x24e kernel.o
                 0x000000000001b400                _start
                 0x000000000001b475                divide_error
                 0x000000000001b47b                reserved
@@ -215,8 +215,8 @@ LOAD fork.o
                 0x000000000001b59f                irq13_handler
                 0x000000000001b5a3                irq14_handler
                 0x000000000001b5e5                sys_call
-                0x000000000001b622                proc_begin
- *fill*         0x000000000001b648        0x8 
+                0x000000000001b62c                proc_begin
+ *fill*         0x000000000001b64e        0x2 
  .text          0x000000000001b650      0x1fa klib.o
                 0x000000000001b650                memcpy
                 0x000000000001b673                memset

@@ -468,11 +468,15 @@ sys_call:
 	cli
 	mov	esp, BottomOfStack	; 内核栈
 	
+	push	dword [p_current_proc]
 	push	edx
 	push	ecx
 	push	ebx
 	call	[syscall_table + eax * 4]
 	add	esp, 12
+	
+	pop	esi			; esi <- [p_current_proc]
+	mov	[esi + EAX_OFFSET], eax	; return value
 	
 	jmp	proc_begin
 .reenter:
@@ -482,10 +486,6 @@ sys_call:
 
 proc_begin:
 	mov	esp, [p_current_proc]
-	mov	[esp + EAX_OFFSET], eax ; sys_call 调用 syscall_table[] 中的函数,
-					; 返回值在 eax 中, 需将其放入进程表的相应
-					; 位置, 使得 popad 后 eax 为正确的值. 其他
-					; 中断的 handler 的返回值为 void, 不受影响.
 	lldt	[esp + LDT_SEL_OFFSET]
 	lea	eax, [esp + STACK_BUTTOM_OFFSET]
 	mov	dword [TSS_ESP0], eax
