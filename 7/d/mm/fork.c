@@ -17,7 +17,7 @@ u32 fork()
 	//assert(msg.RETVAL == 0);
 	if (msg.RETVAL != 0) {
 		dump_msg(&msg);
-		halt("%.8x, pid:%.4x, src:%.4x, dst:%.4x", msg.RETVAL, getpid(), msg.src_pid, msg.dst_pid);
+		halt("%.8x, pid:%.4x, src:%.4x, dst:%.4x", msg.RETVAL, getpid(), msg.source, msg.dest);
 	}
 
 	return msg.FORK_PID;
@@ -41,7 +41,7 @@ u32 do_fork()
 	}
 
 	/* Duplicate the process table */
-	u32 pid = mm_msg.src_pid;
+	u32 pid = mm_msg.source;
 	u16 child_ldt_sel = p_proc->ldt_selector;
 	memcpy(p_proc, &proc_table[pid], sizeof(PROCESS));
 	proc_table[child_pid].pid = child_pid;

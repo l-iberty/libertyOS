@@ -37,7 +37,7 @@ size_t read(int fd, void* buf, size_t len)
 
 size_t do_rdwt()
 {
-	PROCESS* pcaller = proc_table + fs_msg.src_pid;
+	PROCESS* pcaller = proc_table + fs_msg.source;
 	
 	size_t nr_bytes = 0; /* num of bytes RD/WR */
 	

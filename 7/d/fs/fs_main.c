@@ -44,7 +44,7 @@ void Task_fs()
 				dump_msg(&fs_msg);
 			}
 		}
-		sendrecv(SEND, fs_msg.src_pid, &fs_msg);
+		sendrecv(SEND, fs_msg.source, &fs_msg);
 	}
 }
 

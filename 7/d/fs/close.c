@@ -31,7 +31,7 @@ int do_close()
 {
 	
 	int fd = fs_msg.FD;
-	PROCESS* pcaller = proc_table + fs_msg.src_pid;
+	PROCESS* pcaller = proc_table + fs_msg.source;
 	
 	if (fd < 0 || fd >= NR_FILES)
 		return -1;

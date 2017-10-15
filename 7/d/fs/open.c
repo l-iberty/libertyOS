@@ -35,7 +35,7 @@ int open(const char* pathname, int flags)
 int do_open()
 {
 	int fd = -1;
-	PROCESS* pcaller = proc_table + fs_msg.src_pid;
+	PROCESS* pcaller = proc_table + fs_msg.source;
 	
 	/* dump parameters */
 	int flags = fs_msg.FLAGS;

@@ -102,8 +102,8 @@ int msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 		halt("\n>>DEADLOCK<< {pid: 0x%.4x->0x%.4x}\n", pid_sender, pid_receiver);
 	}
 	
-	p_msg->src_pid = pid_sender;
-	p_msg->dst_pid = pid_receiver;
+	p_msg->source = pid_sender;
+	p_msg->dest = pid_receiver;
 	
 	if (receiver->flag & RECEIVING) {
 		/* 将消息复制给 receiver 并将其取消阻塞 */
@@ -138,8 +138,8 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 	if (receiver->has_int_msg && (pid_sender == INTERRUPT)) {
 		MESSAGE msg;
 		reset_msg(&msg);
-		msg.src_pid = INTERRUPT;
-		msg.dst_pid = pid_receiver;
+		msg.source = INTERRUPT;
+		msg.dest = pid_receiver;
 		msg.value = HARD_INT;
 		
 		memcpy(va2la(receiver, p_msg), &msg, sizeof(MESSAGE));
@@ -244,8 +244,8 @@ void inform_int(int pid)
 	PROCESS* p_proc = proc_table + pid;
 	
 	if ((p_proc->flag & RECEIVING) && (p_proc->pid_recvfrom == INTERRUPT)) {
-		p_proc->p_msg->src_pid = INTERRUPT;
-		p_proc->p_msg->dst_pid = pid;
+		p_proc->p_msg->source = INTERRUPT;
+		p_proc->p_msg->dest = pid;
 		p_proc->p_msg->value = HARD_INT;
 		p_proc->p_msg = NULL;
 		p_proc->has_int_msg = 0;
@@ -334,7 +334,7 @@ void dump_proc(PROCESS* p_proc)
 void dump_msg(MESSAGE* p_msg)
 {
 	printf("\n{msg>> src=%.2x, dst=%.2x, value=%.8x}\n",
-		p_msg->src_pid, p_msg->dst_pid, p_msg->value);
+		p_msg->source, p_msg->dest, p_msg->value);
 }
 
 void failure(char* exp, char* file, char* base_file, int line)

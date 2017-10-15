@@ -28,7 +28,7 @@ void Task_mm()
 			}
 		}
 		
-		sendrecv(SEND, mm_msg.src_pid, &mm_msg);
+		sendrecv(SEND, mm_msg.source, &mm_msg);
 	}
 }
 

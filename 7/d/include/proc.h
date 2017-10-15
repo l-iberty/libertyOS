@@ -64,8 +64,8 @@ struct mess2 {
 };
 
 typedef struct {
-	int	src_pid;
-	int	dst_pid;
+	int	source;
+	int	dest;
 	int	value;
 	union {
 		struct mess1 m1;

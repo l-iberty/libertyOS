@@ -48,7 +48,7 @@ void Task_hd()
 				dump_msg(&hd_msg);
 			}
 		}
-		sendrecv(SEND, hd_msg.src_pid, &hd_msg);
+		sendrecv(SEND, hd_msg.source, &hd_msg);
 	}
 }
 

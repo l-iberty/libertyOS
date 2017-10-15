@@ -30,7 +30,7 @@ int unlink(const char* pathname)
 int do_unlink()
 {
 	int i;
-	PROCESS* pcaller = proc_table + fs_msg.src_pid;
+	PROCESS* pcaller = proc_table + fs_msg.source;
 	
 	/* dump parameters */
 	int namelen = fs_msg.NAMELEN;
