@@ -202,5 +202,8 @@ MESSAGE hd_msg;
 MESSAGE fs_msg;
 MESSAGE mm_msg;
 
+TASK	task_table[NR_PROCS];
+SYSCALL syscall_table[NR_SYSCALL];
+
 
 #endif /* PROC_H */

@@ -8,8 +8,8 @@
 
 ; 常量------------------------------------------------------
 ButtomOfStack	equ	7C00h		; 栈底地址
-PageDirBase	equ	100000h		; 页目录起始物理地址 2M
-PageTblBase	equ	101000h		; 页表起始物理地址 2M + 4K
+PageDirBase	equ	100000h		; 页目录起始物理地址 1M
+PageTblBase	equ	101000h		; 页表起始物理地址 1M + 4K
 %include	"load.inc"
 %include	"pm.inc"
 ;-----------------------------------------------------------
@@ -32,7 +32,7 @@ LABEL_DESC_FLAT_RW:	Descriptor	0,		0FFFFFh,	DA_D32|DA_G_4K	; 0 ~ 4G 数据段
 
 GdtLen	equ	$ - LABEL_GDT
 GdtPtr:	dw	GdtLen - 1			; GDT　界限
-	dd	BaseOfLoaderPAddr + LABEL_GDT	; GDT线性基地址
+	dd	LoaderBasePhyAddr + LABEL_GDT	; GDT线性基地址
 
 ; GDT　选择子, 16 bits
 Selector_Video		equ	LABEL_DESC_VIDEO	- LABEL_GDT
@@ -75,7 +75,7 @@ LABEL_START:
 	int	13h
 
 	; 读 A 盘的根目录区(共14个扇区)至缓冲区
-	mov	ax, BaseOfKernel
+	mov	ax, KernelSeg
 	mov	es, ax
 	
 	push	BaseOfRootBuf
@@ -162,7 +162,7 @@ ReadSector:
 ; LoadKernel 加载 KERNEL.BIN
 ;-----------------------------------------------------------
 LoadKernel:
-	mov	word [_ppDst], OffsetOfKernel
+	mov	word [_ppDst], KernelOff
 
 	; 加载 KERNEL.BIN 的第 1 个簇
 	push	word [_ppDst]		; pDst
@@ -328,7 +328,7 @@ LABEL_READY_FOR_PM: ; 准备进入保护模式
 	mov	cr0, eax
 
 	; 进入保护模式
-	jmp	dword Selector_FlatC:(BaseOfLoaderPAddr + LABEL_SEG_CODE32)
+	jmp	dword Selector_FlatC:(LoaderBasePhyAddr + LABEL_SEG_CODE32)
 
 ; /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -458,16 +458,16 @@ InitKernel:
 	mov	ax, Selector_FlatRW
 	mov	es, ax
 
-	mov	cx, [BaseOfKernelPAddr + 2Ch]	; cx <- ELF32_Ehdr.e_phnum
+	mov	cx, [KernelBasePhyAddr + 2Ch]	; cx <- ELF32_Ehdr.e_phnum
 	movzx	ecx, cx
-	mov	esi, [BaseOfKernelPAddr + 1Ch]	; esi <- ELF32_Ehdr.e_phoff
-	add	esi, BaseOfKernelPAddr		; esi 指向第一个 Program Header
+	mov	esi, [KernelBasePhyAddr + 1Ch]	; esi <- ELF32_Ehdr.e_phoff
+	add	esi, KernelBasePhyAddr		; esi 指向第一个 Program Header
 .copy_seg:
 	cmp	dword [esi], 1
 	jnz	.end
 	push	dword [esi + 10h]		; len (ELF_Phdr.p_filesz)
 	mov	eax, [esi + 4]			; eax <- ELF_Phdr.p_offset
-	add	eax, BaseOfKernelPAddr
+	add	eax, KernelBasePhyAddr
 	push	eax				; pSrc
 	push	dword [esi + 8]			; pDst (ELF_Phdr.p_vaddr)
 	call	CopyMemory
@@ -513,13 +513,13 @@ _Msg1:			db	'Kernel loaded'
 ; 保护模式下使用这些符号
 ; ds 指向的 GDT 描述符对应的内存区段的段基址为 0, "_szPMMessage" 等符号的数值是其
 ; 相对 LOADER 加载基地址的偏移.
-szPMMessage		equ	BaseOfLoaderPAddr + _szPMMessage
-MemChkBuf		equ	BaseOfLoaderPAddr + _MemChkBuf
-dwNumOfARDS		equ	BaseOfLoaderPAddr + _dwNumOfARDS
-szMemChkTitle		equ	BaseOfLoaderPAddr + _szMemChkTitle
-szMemSize		equ	BaseOfLoaderPAddr + _szMemSize
-dwMemSize		equ	BaseOfLoaderPAddr + _dwMemSize
-dwMemDispPos		equ	BaseOfLoaderPAddr + _dwMemDispPos
+szPMMessage		equ	LoaderBasePhyAddr + _szPMMessage
+MemChkBuf		equ	LoaderBasePhyAddr + _MemChkBuf
+dwNumOfARDS		equ	LoaderBasePhyAddr + _dwNumOfARDS
+szMemChkTitle		equ	LoaderBasePhyAddr + _szMemChkTitle
+szMemSize		equ	LoaderBasePhyAddr + _szMemSize
+dwMemSize		equ	LoaderBasePhyAddr + _dwMemSize
+dwMemDispPos		equ	LoaderBasePhyAddr + _dwMemDispPos
 
 
 ; ARDS　各成员相对结构体开头的偏移

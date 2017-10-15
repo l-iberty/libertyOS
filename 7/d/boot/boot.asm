@@ -21,7 +21,7 @@ LABEL_START:
 	mov	ss, ax
 	mov	sp, ButtomOfStack
 
-	mov	ax, BaseOfLoader
+	mov	ax, LoaderSeg
 	mov	es, ax
 
 	; 清屏
@@ -72,7 +72,7 @@ LABEL_START:
 	mov	al, 0			; 'Ready    '
 	mov	dh, 1			; 行号 1
 	call	DispMsg
-	jmp	BaseOfLoader:OffsetOfLoader	; 转交控制权, MBR 的使命结束
+	jmp	LoaderSeg:LoaderOff	; 转交控制权, MBR 的使命结束
 .next:
 	dec	byte [LoopCnt]
 	cmp	byte [LoopCnt], 0
@@ -124,7 +124,7 @@ ReadSector:
 ; LoadLoader 加载 LOADER.BIN
 ;-----------------------------------------------------------
 LoadLoader:
-	mov	word [ppDst], OffsetOfLoader
+	mov	word [ppDst], LoaderOff
 
 	; 加载 LOADER.BIN 的第 1 个簇
 	push	word [ppDst]		; pDst

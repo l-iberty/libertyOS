@@ -526,7 +526,7 @@ LOAD fork.o
  *(.igot.plt)
  .igot.plt      0x0000000000021d54        0x0 kernel.o
 
-.data           0x0000000000021d60     0x1245
+.data           0x0000000000021d60     0x1254
  *(.data .data.* .gnu.linkonce.d.*)
  .data          0x0000000000021d60     0x1074 kernel.o
                 0x0000000000021d60                GDT
@@ -538,37 +538,37 @@ LOAD fork.o
  *fill*         0x0000000000022ddc        0x4 
  .data          0x0000000000022de0       0x50 start.o
                 0x0000000000022de0                err_msg_list
+ .data          0x0000000000022e30        0x0 main.o
+ .data          0x0000000000022e30        0x0 protect.o
+ .data          0x0000000000022e30        0x0 clock.o
  *fill*         0x0000000000022e30       0x10 
- .data          0x0000000000022e40      0x114 main.o
-                0x0000000000022e40                task_table
-                0x0000000000022f40                syscall_table
- .data          0x0000000000022f54        0x0 protect.o
- .data          0x0000000000022f54        0x0 clock.o
- *fill*         0x0000000000022f54        0xc 
- .data          0x0000000000022f60       0x45 keyboard.o
-                0x0000000000022f60                keymap
- .data          0x0000000000022fa5        0x0 tty.o
- .data          0x0000000000022fa5        0x0 printf.o
- .data          0x0000000000022fa5        0x0 vsprintf.o
- .data          0x0000000000022fa5        0x0 hd.o
- .data          0x0000000000022fa5        0x0 fs_main.o
- .data          0x0000000000022fa5        0x0 io.o
- .data          0x0000000000022fa5        0x0 console.o
- .data          0x0000000000022fa5        0x0 proc.o
- .data          0x0000000000022fa5        0x0 open.o
- .data          0x0000000000022fa5        0x0 misc.o
- .data          0x0000000000022fa5        0x0 close.o
- .data          0x0000000000022fa5        0x0 rdwt.o
- .data          0x0000000000022fa5        0x0 unlink.o
- .data          0x0000000000022fa5        0x0 mm_main.o
- .data          0x0000000000022fa5        0x0 fork.o
+ .data          0x0000000000022e40       0x45 keyboard.o
+                0x0000000000022e40                keymap
+ .data          0x0000000000022e85        0x0 tty.o
+ .data          0x0000000000022e85        0x0 printf.o
+ .data          0x0000000000022e85        0x0 vsprintf.o
+ .data          0x0000000000022e85        0x0 hd.o
+ .data          0x0000000000022e85        0x0 fs_main.o
+ .data          0x0000000000022e85        0x0 io.o
+ .data          0x0000000000022e85        0x0 console.o
+ *fill*         0x0000000000022e85       0x1b 
+ .data          0x0000000000022ea0      0x114 proc.o
+                0x0000000000022ea0                task_table
+                0x0000000000022fa0                syscall_table
+ .data          0x0000000000022fb4        0x0 open.o
+ .data          0x0000000000022fb4        0x0 misc.o
+ .data          0x0000000000022fb4        0x0 close.o
+ .data          0x0000000000022fb4        0x0 rdwt.o
+ .data          0x0000000000022fb4        0x0 unlink.o
+ .data          0x0000000000022fb4        0x0 mm_main.o
+ .data          0x0000000000022fb4        0x0 fork.o
 
 .data1
  *(.data1)
-                0x0000000000022fa5                _edata = .
+                0x0000000000022fb4                _edata = .
                 [!provide]                        PROVIDE (edata, .)
-                0x0000000000022fa5                . = .
-                0x0000000000022fa5                __bss_start = .
+                0x0000000000022fb4                . = .
+                0x0000000000022fb4                __bss_start = .
 
 .bss            0x0000000000022fc0    0x51e40
  *(.dynbss)

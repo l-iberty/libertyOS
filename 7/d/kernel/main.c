@@ -18,20 +18,6 @@ int f_reenter;
 
 void proc_begin(); /* lib/klib.asm */
 
-TASK task_table[NR_PROCS] = {{ Init, task_stack_init },
-                             { TaskA, task_stack_a },
-                             { TaskB, task_stack_b },
-                             { TaskC, task_stack_c },
-                             { Task_tty, task_stack_tty },
-                             { Task_hd, task_stack_hd },
-                             { Task_fs, task_stack_fs },
-                             { Task_mm, task_stack_mm } };
-		   	          
-SYSCALL syscall_table[NR_SYSCALL] = { sys_get_ticks,
-                                      sys_sendrecv,
-                                      sys_disp_ldt,
-                                      sys_getpid,
-                                      sys_getppid };
 
 void kernel_main()
 {
@@ -72,10 +58,12 @@ void kernel_main()
 		
 		/* 初始化进程/任务的 LDT 描述符 */
 		if (i == PID_INIT) {
+			/* 0~1M */
 			init_desc(&p_proc->LDT[INDEX_LDT_C * DESC_SIZE], 0, 0xFF, DA_C32 | DA_G_4K | _DPL);
 			init_desc(&p_proc->LDT[INDEX_LDT_RW * DESC_SIZE], 0, 0xFF, DA_D32 | DA_G_4K | _DPL);
 		}
 		else {
+			/* 0~4G */
 			init_desc(&p_proc->LDT[INDEX_LDT_C * DESC_SIZE], 0, 0xFFFFF, DA_C32 | DA_G_4K | _DPL);
 			init_desc(&p_proc->LDT[INDEX_LDT_RW * DESC_SIZE], 0, 0xFFFFF, DA_D32 | DA_G_4K | _DPL);
 		}
