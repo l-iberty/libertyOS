@@ -282,11 +282,9 @@ Call_excep_handler:
 	mov	ds, ax
 	mov	es, ax
 	mov	fs, ax
-	
-	call	excep_handler
-	add	esp, 8
-	hlt
 
+	call	excep_handler
+	hlt
 
 ; 8259A 中断异常处理例程 ----------------------------------------------------
 
@@ -305,16 +303,15 @@ irq00_handler:				; 时钟
 	mov	al, 20h ; `.
 	out	20h, al	; / 向主8259A发送 EOI
 	
-	sti
 	inc	dword [f_reenter]
 	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
 	je	.no_reenter
 	jmp	.reenter	
 .no_reenter:
-	cli
 	mov	esp, BottomOfStack	; 内核栈
+	sti
 	call	clock_handler
-	
+	cli
 	jmp	proc_begin
 .reenter:
 	jmp	proc_begin_reenter
@@ -336,16 +333,15 @@ irq01_handler:				; 键盘
 	mov	al, 20h ; `.
 	out	20h, al	; / 向主8259A发送 EOI
 	
-	sti
 	inc	dword [f_reenter]
 	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
 	je	.no_reenter
 	jmp	.reenter	
 .no_reenter:
-	cli
 	mov	esp, BottomOfStack	; 内核栈
+	sti
 	call	keyboard_handler
-	
+	cli
 	jmp	proc_begin
 .reenter:
 	jmp	proc_begin_reenter
@@ -419,17 +415,15 @@ irq14_handler:				; AT 温盘
 	
 	mov	al, 20h ; `.
 	out	0A0h, al; / 向从8259A发送 EOI
-	
-	sti
 	inc	dword [f_reenter]
 	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
 	je	.no_reenter
 	jmp	.reenter	
 .no_reenter:
-	cli
+	sti
 	mov	esp, BottomOfStack	; 内核栈
 	call	hd_handler
-	
+	cli
 	jmp	proc_begin
 .reenter:
 	jmp	proc_begin_reenter
@@ -457,23 +451,20 @@ sys_call:
 	mov	fs, ax
 	
 	mov	eax, esi	; resume eax
-	
-	sti
-	
 	inc	dword [f_reenter]
 	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
 	je	.no_reenter
 	jmp	.reenter	
 .no_reenter:
-	cli
 	mov	esp, BottomOfStack	; 内核栈
-	
 	push	dword [p_current_proc]
+	sti
 	push	edx
 	push	ecx
 	push	ebx
 	call	[syscall_table + eax * 4]
 	add	esp, 12
+	cli
 	
 	pop	esi			; esi <- [p_current_proc]
 	mov	[esi + EAX_OFFSET], eax	; return value

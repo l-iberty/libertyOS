@@ -66,17 +66,15 @@ u32 do_fork()
 	/* Allocate memory for child process */
 	assert(caller_T_size > 0);
 	u32 child_base = alloc_mem(child_pid, caller_T_size);
-/*	printf("\nchild of 0x%.4x: [proc_base: 0x%.8x, t_base: 0x%.8x, t_size: 0x%.8x]",*/
-/*		pid, child_base, caller_T_base, caller_T_size);*/
 
 	/*assert((caller_T_base == caller_D_base) &&
 		(caller_T_limit == caller_D_limit) &&
 		(caller_T_size == caller_D_size));*/
 		
 	p_current_proc = proc_table + child_pid;
-
-	memcpy((void*) child_base, (void*) caller_T_base, caller_T_size);
 	
+	memcpy((void*) child_base, (void*) caller_T_base, caller_T_size);
+
 	/* child's LDT */
 	init_desc(&p_proc->LDT[INDEX_LDT_C * DESC_SIZE],
 			child_base,

@@ -77,13 +77,11 @@ void excep_handler(int vecno, u32 err_code, u32 eip, u16 cs, u32 eflags)
 {
 	char* err = err_msg_list[vecno];
 	char msg[160];
-	u32 pid = getpid();
-	sprintf(msg, "%s PID:%.4x Text-Base:%.8x LDT-Selector:%.4x\n{CS:%.4x EIP:%.8x EFLAGS:%.8x ERROR-CODE:%.8x}",
-		err, pid, get_base(&proc_table[pid].LDT[INDEX_LDT_C * DESC_SIZE]), proc_table[pid].ldt_selector,
-		cs, eip, eflags, err_code);
+	sprintf(msg, "%s {CS:%.4x EIP:%.8x EFLAGS:%.8x ERROR-CODE:%.8x}",
+		err, cs, eip, eflags, err_code);
 	
 	/* 0x74 => 0111 灰底, 0100 暗红 */
-	printmsg(msg, 0x74, (80 * 23 + 0) * 2);
+	printmsg(msg, 0x74, (80 * 24 + 0) * 2);
 }
 
 void irq_handler(int irqno)

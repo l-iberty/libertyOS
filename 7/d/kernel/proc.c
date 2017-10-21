@@ -16,9 +16,9 @@ TASK task_table[NR_PROCS] = {{ Init, task_stack_init },
 		   	          
 SYSCALL syscall_table[NR_SYSCALL] = { sys_get_ticks,
                                       sys_sendrecv,
-                                      sys_disp_ldt,
                                       sys_getpid,
-                                      sys_getppid };
+                                      sys_getppid,
+                                      sys_printk };
 
 
 /***************************************************************
@@ -59,13 +59,6 @@ int sys_sendrecv(int func_type, int pid, MESSAGE* p_msg)
 	return ret;
 }
 
-void sys_disp_ldt()
-{
-	u16 ldt_sel;
-	c_sldt(&ldt_sel);
-	printf("\n[pid:%.4x]:disp_ldt(): ldt_sel: %.4x", getpid(), ldt_sel);
-}
-
 u32 sys_getpid()
 {
 	//return p_current_proc - &FIRST_PROC;
@@ -75,6 +68,12 @@ u32 sys_getpid()
 u32 sys_getppid()
 {
 	return p_current_proc->pid_parent;
+}
+
+void sys_printk(const char* sz)
+{
+	print((char*) va2la(p_current_proc, (void*) sz));
+	set_cursor_pos(MainPrintPos >> 1);
 }
 
 
@@ -344,7 +343,7 @@ void failure(char* exp, char* file, char* base_file, int line)
 		exp, file, base_file, line);
 	/* 蓝底黄字, 1 行 0 列 */
 	printmsg(buf, 0x1E, (80*1+0)*2);
-	disable_int();
+	//disable_int(); // 若禁止用户进程(ring3)的IO权限，该调用会失败
 	for (;;);
 }
 
@@ -356,7 +355,7 @@ void halt(const char* fmt, ...)
 	vsprintf(buf, fmt, arg);
 	/* 蓝底黄字, 0 行 0 列 */
 	printmsg(buf, 0x1E, (80*0+0)*2);
-	disable_int();
+	//disable_int(); // 若禁止用户进程(ring3)的IO权限，该调用会失败
 	for (;;);
 }
 

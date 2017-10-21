@@ -21,7 +21,7 @@ void proc_begin(); /* lib/klib.asm */
 
 void kernel_main()
 {
-	printf("\n------------kernel_main------------\n");
+	print("\n------------kernel_main------------\n");
 	
 	f_reenter = 0;
 	
@@ -47,7 +47,7 @@ void kernel_main()
 		if (i < NR_NATIVE_PROCS) {	/* 用户进程 ring3 */
 			_DPL = DPL_3;
 			_RPL_MASK = 0xFFFF;
-			_eflags = 0x3202; /* IOPL = 3 (允许用户进程的 I/O 操作), IF = 1, bit 2 is always 1 */
+			_eflags = 0x202; /* IOPL = 0 (禁止用户进程的 I/O 操作), IF = 1, bit 2 is always 1 */
 			p_proc->ticks = p_proc->priority = USER_PROC_PRIORITY;
 		} else {		/* 任务 ring1 */
 			_DPL = DPL_1;
@@ -119,7 +119,7 @@ void Init()
 			printf("\nparent 0x%.8x is running, child pid: 0x%.8x", getpid(), pid);
 			while(1) {}
 		} else {
-			printf("\n\nchild 0x%.8x is running, parent pid: 0x%.8x", getpid(), getppid());
+			printf("\nchild 0x%.8x is running, parent pid: 0x%.8x", getpid(), getppid());
 			while(1) {}
 		}
 	}
@@ -127,22 +127,16 @@ void Init()
 
 void TaskA()
 {
-	for (;;) {
-	
-	}
+	for (;;) {}
 }
 
 void TaskB()
 {
-	for (;;) {
-	
-	}
+	for (;;) {}
 }
 
 void TaskC()
 {
-	for (;;) {
-	
-	}
+	for (;;) {}
 }
 

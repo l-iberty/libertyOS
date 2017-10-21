@@ -171,9 +171,9 @@ void Task_mm();
 
 int	sys_get_ticks();
 int	sys_sendrecv(int func_type, int pid, MESSAGE* p_msg);
-void	sys_disp_ldt();
 u32	sys_getpid();
 u32	sys_getppid();
+void	sys_printk(const char* sz);
 
 void*	va2la(PROCESS* proc, void* va);
 int	msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg);

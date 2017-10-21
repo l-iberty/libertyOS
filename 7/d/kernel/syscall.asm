@@ -4,16 +4,16 @@
 
 _NR_get_ticks		equ	0
 _NR_sendrecv		equ	1
-_NR_disp_ldt		equ	2
-_NR_getpid		equ	3
-_NR_getppid		equ	4
+_NR_getpid		equ	2
+_NR_getppid		equ	3
+_NR_printk		equ	4
 INT_VECTOR_SYSCALL	equ	0x80
 
 global	get_ticks	; int get_ticks();
 global	sendrecv	; void sendrecv(int func_type, int pid, MESSAGE* p_msg);
-global	disp_ldt	; void disp_ldt();
 global	getpid		; u32 getpid();
 global	getppid		; u32 getppid();
+global	printk		; void printk(const char* sz);
 
 [SECTION .text]
 [BITS 32]
@@ -31,11 +31,6 @@ sendrecv:
 	int	INT_VECTOR_SYSCALL
 	ret
 
-disp_ldt:
-	mov	eax, _NR_disp_ldt
-	int	INT_VECTOR_SYSCALL
-	ret
-
 getpid:
 	mov	eax, _NR_getpid
 	int	INT_VECTOR_SYSCALL
@@ -46,3 +41,9 @@ getppid:
 	int	INT_VECTOR_SYSCALL
 	ret
 
+printk:
+	mov	ebx, [esp + 4]		; char* sz
+	mov	eax, _NR_printk
+	int	INT_VECTOR_SYSCALL
+	ret
+	

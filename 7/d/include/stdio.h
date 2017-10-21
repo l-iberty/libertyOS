@@ -5,11 +5,13 @@
 
 #define NULL 0
 
+extern u32 MainPrintPos;
+
 void	printf(const char* fmt, ...);
 void	sprintf(char* buf, const char* fmt, ...);
-void	println(char* sz);
-void	print(char* sz);
-void	printmsg(char* sz, u8 color, u32 pos);
+void	println(const char* sz);
+void	print(const char* sz);
+void	printmsg(const char* sz, u8 color, u32 pos);
 void	printchar(char ch);
 void	backspace();
 void	set_cursor_pos(u32 pos);

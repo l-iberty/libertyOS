@@ -21,9 +21,8 @@ extern u8	TSS[TSS_SIZE];			/* kernel/kernel.asm */
 /* prototypes */
 int	get_ticks();
 int	sendrecv(int func_type, int pid, MESSAGE* p_msg);
-void	disp_ldt(); /* 打印当前进程对应的 LDT 信息 */
 u32	getpid();
 u32	getppid();
-
+void	printk(const char* sz);
 
 #endif /* GLOBAL_H */
