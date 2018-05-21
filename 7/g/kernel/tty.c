@@ -56,9 +56,9 @@ void init_console(TTY* p_tty)
 {
 	int nr_tty = p_tty - tty_table;
 	
-	int con_v_mem_size						= V_MEM_SCREEN; /* V_MEM_SIZE = 2 * SCREEN_SIZE, 一个 console 有两个屏幕的显示空间 */
-	p_tty->p_console->orig_addr				= nr_tty * con_v_mem_size;	
-	p_tty->p_console->v_mem_limit			= con_v_mem_size;
+	int con_v_mem_size			= V_MEM_SCREEN; /* V_MEM_SIZE = 2 * SCREEN_SIZE, 一个 console 有两个屏幕的显示空间 */
+	p_tty->p_console->orig_addr		= nr_tty * con_v_mem_size;	
+	p_tty->p_console->v_mem_limit		= con_v_mem_size;
 	p_tty->p_console->current_start_addr	= p_tty->p_console->orig_addr;
 	
 	if (nr_tty == 0) { /* 0 号控制台沿用原来的光标位置 */
@@ -108,8 +108,9 @@ void tty_printstr(TTY* p_tty, char* str)
 void tty_backspace(TTY* p_tty)
 {
 	u32 next_cursor = p_tty->p_console->cursor_pos - 1; /* 退格后的光标位置, 不一定采用 */
-	u32 min_cursor = p_tty->p_console->current_start_addr + 2; /* 终端提示符有 2 个字符 */
-	if (next_cursor > min_cursor) {
+	u32 min_cursor =
+	        (p_tty->p_console->current_start_addr % SCREEN_WIDTH ) + 2; /* 终端提示符有 2 个字符 */
+	if ((next_cursor % SCREEN_WIDTH) > min_cursor) {
 		backspace();
 		p_tty->p_console->cursor_pos--;
 		set_cursor_pos(PrintPos >> 1);
@@ -151,18 +152,22 @@ void parse_input(TTY* p_tty)
 		char _ch = keymap[scan_code & MAKE_MASK];
 		if (_ch & TEXT_MASK) {
 			char ch = _ch & ~TEXT_MASK;
-			if (ch == '\n') /* end */
+			if (ch == '\n') {/* end */
 				input[i] = 0;
-			else
+			}
+			else {
 				input[i] = ch;
+			}
 		}
 	}
 	
 	char s[] = "hello";
-	if (!strncmp(s, input, max(strlen(s), strlen(input))))
+	if (!strncmp(s, input, max(strlen(s), strlen(input)))) {
 		tty_printstr(p_tty, "hello,world!");
-	else
+	}
+	else {
 		tty_printstr(p_tty, input);
+	}
 }
 
 

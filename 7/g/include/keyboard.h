@@ -7,7 +7,7 @@
 
 #include "type.h"
 
-#define KB_BUFSIZE	16
+#define KB_BUFSIZE	64
 #define BREAK_MASK	0x80	/* Break Code 的最高位为 1 */
 #define MAKE_MASK	0x7F	/* Make Code 最高位为 0 */
 
