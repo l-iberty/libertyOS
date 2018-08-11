@@ -36,7 +36,8 @@ int do_unlink()
 	int namelen = fs_msg.NAMELEN;
 	char filename[MAX_FILENAME_LEN];
 	
-	if (*(char*) fs_msg.PATHNAME != '/') {
+	if (*(char*) fs_msg.PATHNAME != '/') 
+	{
 		printf("\n#ERROR#-do_unlink: invalid pathname: %s (pathname should start with root dir \'/\')",
 			fs_msg.PATHNAME);
 		return -1;
@@ -55,11 +56,13 @@ int do_unlink()
 	}
 	
 	I_NODE* pin;
-	for (pin = inode_table; pin < inode_table + NR_INODES; pin++) {
+	for (pin = inode_table; pin < inode_table + NR_INODES; pin++) 
+	{
 		if (pin->i_nr_inode == nr_inode)
 			break;
 	}
-	if (pin >= inode_table + NR_INODES) {
+	if (pin >= inode_table + NR_INODES) 
+	{
 		printf("\n#ERROR#-do_unlink: invalid i-node {PID:0x%.8x}",
 				pcaller->pid);
 		return -1;
@@ -71,14 +74,17 @@ int do_unlink()
 		return -1;
 	}
 	
-	if (pin->i_mode & I_MODE_CHARDEV) {
+	if (pin->i_mode & I_MODE_CHARDEV) 
+	{
 		printf("\n#ERROR#-do_unlink: cannot remove a char-device {PID:0x%.8x}",
 				pcaller->pid);
 		return -1;
 	}
 	
-	if (pin->i_mode & I_MODE_NORMAL) {
-		if (pin->i_cnt > 0) {
+	if (pin->i_mode & I_MODE_NORMAL) 
+	{
+		if (pin->i_cnt > 0) 
+		{
 			printf("\n#ERROR#-do_unlink: file \"%s\" is being used by some procs {PID:0x%.8x}",
 				fs_msg.PATHNAME, pcaller->pid);
 			return -1;
@@ -126,8 +132,10 @@ int do_unlink()
 		/****************************/
 		read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 		u8* pch = inode_buf;
-		for (i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) {
-			if (!memcmp(pch, pin, INODE_DISK_SIZE)) { /* i-node found! */
+		for (i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) 
+		{
+			if (!memcmp(pch, pin, INODE_DISK_SIZE)) /* i-node found! */
+			{ 
 				memset(pch, 0, INODE_DISK_SIZE);
 				write_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 				break;
@@ -140,8 +148,10 @@ int do_unlink()
 		/****************************/
 		read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 		DIR_ENTRY* pde = (DIR_ENTRY*) dirent_buf;
-		for (i = 0; i < NR_FILES; i++, pde++) {
-			if (pde->nr_inode == nr_inode) { /* dir entry found! */
+		for (i = 0; i < NR_FILES; i++, pde++) 
+		{
+			if (pde->nr_inode == nr_inode) /* dir entry found! */
+			{ 
 				memset(pde, 0, sizeof(DIR_ENTRY));
 				write_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 				break;

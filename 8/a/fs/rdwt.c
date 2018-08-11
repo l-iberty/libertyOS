@@ -75,11 +75,16 @@ size_t do_rdwt()
 	 *		case 2.2: len >= i_size, then len = 0.
 	 * case 3: 文件有数据, 且 len > i_size, 则最多只能读 (i_size - fd_pos) 字节
 	 */
-	if (type == FILE_READ) {
+	if (type == FILE_READ) 
+	{
 		if (pfd->fd_pos == pin->i_size)
+		{
 			len = max(0, min(0, len - pin->i_size));
+		}
 		else
+		{
 			len = min(len, pin->i_size - pfd->fd_pos);
+		}
 		
 		/* make sure "len <= i_size" */
 		len = min(len, pin->i_size);
@@ -91,25 +96,33 @@ size_t do_rdwt()
 	int start_sector = pin->i_start_sector +
 				(pfd->fd_pos >> SECTOR_SIZE_SHIFT);
 
-	for (int i = 0; i < nr_sectors && nr_bytes < len; i++) {
+	for (int i = 0; i < nr_sectors && nr_bytes < len; i++) 
+	{
 		/* read file data from disk */
 		read_hd(start_sector + i, fsbuf, SECTOR_SIZE);
 		
 		int offset = pfd->fd_pos % SECTOR_SIZE;
 		
 		if (i == nr_sectors - 1) /* the last sector */
+		{
 			chunk = len - nr_bytes;
-		else	/* not the last sector */
-			chunk = SECTOR_SIZE - offset;
-		
-		if (type == FILE_WRITE) {
-			/* write file data */
-            memcpy(fsbuf + offset, buf, chunk);
-            write_hd(start_sector + i, fsbuf, SECTOR_SIZE);
 		}
-		else if (type == FILE_READ) {
+		else	/* not the last sector */
+		{
+			chunk = SECTOR_SIZE - offset;
+		}
+			
+		
+		if (type == FILE_WRITE) 
+		{
+			/* write file data */
+            		memcpy(fsbuf + offset, buf, chunk);
+            		write_hd(start_sector + i, fsbuf, SECTOR_SIZE);
+		}
+		else if (type == FILE_READ) 
+		{
 			/* dump file data, so thar `pcaller` can get it */
-            memcpy(buf, fsbuf + offset, chunk);
+            		memcpy(buf, fsbuf + offset, chunk);
 		}
 		/* clear fsbuf */
 		memset(fsbuf, 0, SECTOR_SIZE);
@@ -119,23 +132,24 @@ size_t do_rdwt()
 		buf += chunk;
 	}
 	
-    if (pfd->fd_pos > pin->i_size) {
-    	/**
-    	 * update file size (INODE::i_size), which is
-    	 * needed when calling `write` routine.
-    	 */
-    	pin->i_size = pfd->fd_pos;
-    	
-    	/* write inode_array back to the disk */
-	    read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
-	    assert(nr_inode > 0);
-	    memcpy(inode_buf + INODE_DISK_SIZE * (nr_inode - 1),
-	            va2la(pcaller, pcaller->filp[fd]->fd_inode),
-	            INODE_DISK_SIZE);
+	if (pfd->fd_pos > pin->i_size) 
+	{
+		/**
+		 * update file size (INODE::i_size), which is
+		 * needed when calling `write` routine.
+		 */
+		pin->i_size = pfd->fd_pos;
 
-	    write_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
-	    memset(inode_buf, 0, sizeof(inode_buf));
-    }
+		/* write inode_array back to the disk */
+		read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+		assert(nr_inode > 0);
+		memcpy(inode_buf + INODE_DISK_SIZE * (nr_inode - 1),
+		    va2la(pcaller, pcaller->filp[fd]->fd_inode),
+		    INODE_DISK_SIZE);
+
+		write_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+		memset(inode_buf, 0, sizeof(inode_buf));
+	}
 	
 	return nr_bytes;
 }

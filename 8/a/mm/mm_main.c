@@ -11,7 +11,8 @@ void Task_mm()
 {
 	printf("\n-----Task_mm-----");
 	
-	for (;;) {
+	for (;;) 
+	{
 		sendrecv(RECEIVE, ANY, &mm_msg);
 		
 		switch (mm_msg.value)

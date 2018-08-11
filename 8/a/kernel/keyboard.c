@@ -96,11 +96,14 @@ void keyboard_handler(int irq)
 	
 	p_current_tty = tty_table + nr_current_console;
 	
-	if (scan_code & BREAK_MASK) { /* 仅接收 Break Code */
-		if (p_current_tty->kb_in.count < KB_BUFSIZE) {
+	if (scan_code & BREAK_MASK) /* 仅接收 Break Code */
+	{ 
+		if (p_current_tty->kb_in.count < KB_BUFSIZE) 
+		{
 			*p_current_tty->kb_in.p_tail++ = scan_code;
 			p_current_tty->kb_in.count++;
-			if (p_current_tty->kb_in.p_tail >= p_current_tty->kb_in.buf_queue + KB_BUFSIZE) {
+			if (p_current_tty->kb_in.p_tail >= p_current_tty->kb_in.buf_queue + KB_BUFSIZE) 
+			{
 				/* 队列已满, 回绕 */
 				p_current_tty->kb_in.p_tail = p_current_tty->kb_in.buf_queue;
 			}
@@ -114,17 +117,21 @@ void keyboard_read()
 	
 	int nr_console = p_current_tty - tty_table;
 	
-	if (p_current_tty->kb_in.count > 0) {
+	if (p_current_tty->kb_in.count > 0) 
+	{
 		scan_code = *p_current_tty->kb_in.p_head++;
 		p_current_tty->kb_in.count--;
-		if (p_current_tty->kb_in.p_head == p_current_tty->kb_in.buf_queue + KB_BUFSIZE) {
+		if (p_current_tty->kb_in.p_head == p_current_tty->kb_in.buf_queue + KB_BUFSIZE) 
+		{
 			p_current_tty->kb_in.p_head = p_current_tty->kb_in.buf_queue;
 		}
 		
-		switch (scan_code & MAKE_MASK) {
+		switch (scan_code & MAKE_MASK) 
+		{
 			case MC_BACKSPACE:
 			{
-				if (nr_console > 0) { /* 0 号控制台不响应 Backspace */
+				if (nr_console > 0) /* 0 号控制台不响应 Backspace */
+				{ 
 					tty_backspace(p_current_tty);
 				}
 				break;
@@ -159,19 +166,23 @@ void keyboard_read()
 			{
 				init_video();
 				/* 初始化所有 TTY */
-				for (TTY* p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) {
+				for (TTY* p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) 
+				{
 					init_tty(p_tty);
 				}
 			}
 			default:
 			{
-				if (nr_console > 0) {
+				if (nr_console > 0) 
+				{
 					char _ch = keymap[scan_code & MAKE_MASK];
-					if (_ch & TEXT_MASK) { /* 判断是否是可打印字符 */
+					if (_ch & TEXT_MASK) /* 判断是否是可打印字符 */
+					{ 
 						char ch = _ch & ~TEXT_MASK;
 						/* (_ch & ~TEXT_MASK) 得到的是去除 TEXT_MASK 掩码的 ASCII 字符 */
 						tty_printchar(p_current_tty, ch);
-						if (ch == '\n') {
+						if (ch == '\n') 
+						{
 							parse_input(p_current_tty);
 							reset_kb_buf(p_current_tty);
 							

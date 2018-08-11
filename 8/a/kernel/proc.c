@@ -111,7 +111,8 @@ int sys_sem_post(SEMAPHORE* p_sem)
 	
 	p_sem->value++;
 	
-	if (p_sem->value <= 0) {
+	if (p_sem->value <= 0) 
+	{
 		p_proc = dequeue(p_sem);
 		p_proc->flag &= (~WAITING);
 		unblock(p_proc);
@@ -139,7 +140,8 @@ int sys_sem_wait(SEMAPHORE* p_sem)
 
 	p_sem->value--;
 	
-	if (p_sem->value < 0) {
+	if (p_sem->value < 0) 
+	{
 		p_current_proc->flag |= WAITING;
 		enqueue(p_sem, p_current_proc);
 		block(p_current_proc);
@@ -152,13 +154,15 @@ int sys_sem_wait(SEMAPHORE* p_sem)
 
 void enqueue(SEMAPHORE* p_sem, PROCESS* proc)
 {
-	if (p_sem->wait_queue.count < NR_PROCS) {
+	if (p_sem->wait_queue.count < NR_PROCS) 
+	{
 		*p_sem->wait_queue.p_tail++ = proc;
 		p_sem->wait_queue.count++;
 		
 		assert(p_sem->wait_queue.count <= (NR_PROCS));
 		
-		if (p_sem->wait_queue.p_tail > &p_sem->wait_queue.proc_queue[NR_PROCS - 1]) {
+		if (p_sem->wait_queue.p_tail > &p_sem->wait_queue.proc_queue[NR_PROCS - 1]) 
+		{
 			p_sem->wait_queue.p_tail = p_sem->wait_queue.proc_queue;
 		}
 	}
@@ -168,13 +172,15 @@ PROCESS* dequeue(SEMAPHORE* p_sem)
 {
 	PROCESS* proc = NULL;
 	
-	if (p_sem->wait_queue.count > 0) {
+	if (p_sem->wait_queue.count > 0) 
+	{
 		proc = *p_sem->wait_queue.p_head++;
 		p_sem->wait_queue.count--;
 		
 		assert(p_sem->wait_queue.count >= 0);
 		
-		if (p_sem->wait_queue.p_head > &p_sem->wait_queue.proc_queue[NR_PROCS - 1]) {
+		if (p_sem->wait_queue.p_head > &p_sem->wait_queue.proc_queue[NR_PROCS - 1]) 
+		{
 			p_sem->wait_queue.p_head = p_sem->wait_queue.proc_queue;
 		}
 	}
@@ -201,14 +207,16 @@ int msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 	PROCESS* sender = proc_table + pid_sender;
 	PROCESS* receiver = proc_table + pid_receiver;
 	
-	if (deadlock(pid_sender, pid_receiver)) {
+	if (deadlock(pid_sender, pid_receiver)) 
+	{
 		halt("\n>>DEADLOCK<< {pid: 0x%.4x->0x%.4x}\n", pid_sender, pid_receiver);
 	}
 	
 	p_msg->source = pid_sender;
 	p_msg->dest = pid_receiver;
 	
-	if (receiver->flag & RECEIVING) {
+	if (receiver->flag & RECEIVING) 
+	{
 		/* 将消息复制给 receiver 并将其取消阻塞 */
 		assert(receiver->p_msg);
 		memcpy(va2la(receiver, receiver->p_msg),
@@ -216,7 +224,9 @@ int msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 				sizeof(MESSAGE));
 		receiver->flag &= (~RECEIVING);
 		unblock(receiver);
-	} else {
+	} 
+	else 
+	{
 		/* receiver 未准备接收消息, 将 sender 加入 receiver 的发送队列并阻塞之 */
 		sender->flag |= SENDING;
 		sender->p_msg = p_msg;
@@ -238,7 +248,8 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 	receiver->pid_sendto = NONE;
 	receiver->pid_recvfrom = NONE;
 	
-	if (receiver->has_int_msg && (pid_sender == INTERRUPT)) {
+	if (receiver->has_int_msg && (pid_sender == INTERRUPT)) 
+	{
 		MESSAGE msg;
 		reset_msg(&msg);
 		msg.source = INTERRUPT;
@@ -251,24 +262,31 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 		return 0;
 	}
 	
-	if (pid_sender == ANY) {
-		if (!isEmpty(&receiver->send_queue)) {
+	if (pid_sender == ANY) 
+	{
+		if (!isEmpty(&receiver->send_queue)) 
+		{
 			/* 从 receiver 的发送队列里取第一个 */
 			sender = dequeue_send(receiver);
-			if ((sender >= &FIRST_PROC) && (sender <= &LAST_PROC)) {
+			if ((sender >= &FIRST_PROC) && (sender <= &LAST_PROC)) 
+			{
 				bOk = 1;
 			}
 		}
-	} else if ((pid_sender >= 0) && (pid_sender < NR_PROCS)) {
+	} 
+	else if ((pid_sender >= 0) && (pid_sender < NR_PROCS)) 
+	{
 		sender = proc_table + pid_sender;
 		/* 判断 sender 是否在向 receiver 发消息 */
 		if ((sender->flag & SENDING) &&
-		    (sender->pid_sendto == pid_receiver)) {
+		    (sender->pid_sendto == pid_receiver)) 
+		{
 		    	bOk = 1;
 		}
 	}
 	
-	if (bOk) {
+	if (bOk) 
+	{
 		/* 接收 sender 的消息, 并将 sender 取消阻塞 */
 		assert(p_msg);
 		assert(sender->p_msg);
@@ -278,7 +296,9 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 				sizeof(MESSAGE));
 		sender->flag &= (~SENDING);
 		unblock(sender);
-	} else {
+	} 
+	else 
+	{
 		/* 没有进程向 receiver 发消息, 将 receiver 阻塞 */
 		receiver->flag |= RECEIVING;
 		receiver->pid_recvfrom = pid_sender;
@@ -318,21 +338,29 @@ int deadlock(int src, int dst)
 	PROCESS* p_proc = proc_table + dst;
 	int isDeadLock = 1;
 	
-	for (;;) {
-		if (p_proc->flag & SENDING) {
-			if (p_proc->pid_sendto == src) {
+	for (;;) 
+	{
+		if (p_proc->flag & SENDING) 
+		{
+			if (p_proc->pid_sendto == src) 
+			{
 				isDeadLock = 1;
 				break;
 			}
-		} else {
+		} 
+		else 
+		{
 			isDeadLock = 0;
 			break;
 		}
 		
-		if (p_proc->pid_sendto < 0 || p_proc->pid_sendto >= (NR_PROCS)) {
+		if (p_proc->pid_sendto < 0 || p_proc->pid_sendto >= (NR_PROCS)) 
+		{
 			isDeadLock = 0;
 			break;
-		} else {
+		} 
+		else 
+		{
 			p_proc = proc_table + p_proc->pid_sendto;
 		}
 	}
@@ -346,7 +374,8 @@ void inform_int(int pid)
 {
 	PROCESS* p_proc = proc_table + pid;
 	
-	if ((p_proc->flag & RECEIVING) && (p_proc->pid_recvfrom == INTERRUPT)) {
+	if ((p_proc->flag & RECEIVING) && (p_proc->pid_recvfrom == INTERRUPT)) 
+	{
 		p_proc->p_msg->source = INTERRUPT;
 		p_proc->p_msg->dest = pid;
 		p_proc->p_msg->value = HARD_INT;
@@ -355,7 +384,9 @@ void inform_int(int pid)
 		p_proc->pid_recvfrom = NONE;
 		p_proc->flag &= (~RECEIVING);
 		unblock(p_proc);
-	} else {
+	} 
+	else 
+	{
 		p_proc->has_int_msg = 1;
 	}
 }
@@ -387,13 +418,15 @@ void init_send_queue(PROCESS* p_proc)
  */
 void enqueue_send(PROCESS* p, PROCESS* p_proc)
 {
-	if (p->send_queue.count < NR_PROCS) {
+	if (p->send_queue.count < NR_PROCS) 
+	{
 		*p->send_queue.p_tail++ = p_proc;
 		p->send_queue.count++;
 		
 		assert(p->send_queue.count <= (NR_PROCS));
 		
-		if (p->send_queue.p_tail > &p->send_queue.proc_queue[NR_PROCS - 1]) {
+		if (p->send_queue.p_tail > &p->send_queue.proc_queue[NR_PROCS - 1]) 
+		{
 			p->send_queue.p_tail = p->send_queue.proc_queue;
 		}
 	}
@@ -406,13 +439,15 @@ PROCESS* dequeue_send(PROCESS* p)
 {
 	PROCESS* p_proc = NULL;
 	
-	if (p->send_queue.count > 0) {
+	if (p->send_queue.count > 0) 
+	{
 		p_proc = *p->send_queue.p_head++;
 		p->send_queue.count--;
 		
 		assert(p->send_queue.count >= 0);
 		
-		if (p->send_queue.p_head > &p->send_queue.proc_queue[NR_PROCS - 1]) {
+		if (p->send_queue.p_head > &p->send_queue.proc_queue[NR_PROCS - 1]) 
+		{
 			p->send_queue.p_head = p->send_queue.proc_queue;
 		}
 	}
@@ -428,7 +463,8 @@ int isEmpty(SEND_QUEUE* queue)
 void dump_proc(PROCESS* p_proc)
 {
 	PROCESS* p;
-	for (p = &FIRST_PROC; p <= &LAST_PROC; p++) {
+	for (p = &FIRST_PROC; p <= &LAST_PROC; p++) 
+	{
 		printf("\n[pid:%.2x,ticks:%.2x,flag:%.8x,pid_sendto:%.8x,pid_recvfrom:%.8x]",
 			p->pid, p->ticks, p->flag, p->pid_sendto, p->pid_recvfrom);
 	}

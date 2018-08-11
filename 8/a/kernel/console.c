@@ -22,12 +22,14 @@ void select_console(int nr_console)
  */
 void scroll_screen(CONSOLE* p_con, int direction)
 {
-	if (direction == SCROLL_UP) {
+	if (direction == SCROLL_UP) 
+	{
 		if (p_con->current_start_addr + SCREEN_SIZE <
 				p_con->orig_addr + p_con->v_mem_limit)
 			p_con->current_start_addr += SCREEN_WIDTH;
 	}
-	else if (direction == SCROLL_DOWN) {
+	else if (direction == SCROLL_DOWN) 
+	{
 		if (p_con->current_start_addr > p_con->orig_addr)
 			p_con->current_start_addr -= SCREEN_WIDTH;
 	}

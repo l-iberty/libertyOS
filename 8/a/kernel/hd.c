@@ -100,7 +100,8 @@ void disp_hd_info()
 {
 	int i, j;
 	char sz[64];
-	struct hd_info {
+	struct hd_info 
+	{
 		int offset;
 		int len;
 		char *desc;
@@ -108,11 +109,13 @@ void disp_hd_info()
 	
 	struct hd_info info[] = {{10, 20, "Serial Number"}, {27, 40, "Model Number"}};
 	
-	for (i = 0; i < sizeof(info) / sizeof(info[0]); i++) {
+	for (i = 0; i < sizeof(info) / sizeof(info[0]); i++) 
+	{
 		char *p;
 		p = (char*) (hd_buf + info[i].offset);
 		/* 重组字符串 */
-		for (j = 0; j < info[i].len / 2; j++) {
+		for (j = 0; j < info[i].len / 2; j++) 
+		{
 			sz[j*2+1] = *p++;
 			sz[j*2] = *p++;
 		}

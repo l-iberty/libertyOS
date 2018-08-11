@@ -13,7 +13,8 @@ void Task_fs()
 
 	init_fs();
 	
-	for (;;) {
+	for (;;) 
+	{
 		sendrecv(RECEIVE, ANY, &fs_msg);
 		switch (fs_msg.value)
 		{

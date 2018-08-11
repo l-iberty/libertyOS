@@ -19,7 +19,8 @@ void Task_tty()
 	TTY* p_tty;
 	
 	/* 初始化所有 TTY */
-	for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) {
+	for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) 
+	{
 		init_tty(p_tty);
 	}
 	
@@ -30,9 +31,12 @@ void Task_tty()
 	 * 则读取对应的键盘输入缓冲并显示. 注意: 键盘是所有 TTY 共享的, 但每个
 	 * TTY 拥有独立的键盘输入缓冲.
 	 */
-	while (1) {
-		for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) {
-			if (is_current_console(p_tty)) {
+	while (1) 
+	{
+		for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) 
+		{
+			if (is_current_console(p_tty)) 
+			{
 				keyboard_read();
 			}
 		}
@@ -61,9 +65,12 @@ void init_console(TTY* p_tty)
 	p_tty->p_console->v_mem_limit		= con_v_mem_size;
 	p_tty->p_console->current_start_addr	= p_tty->p_console->orig_addr;
 	
-	if (nr_tty == 0) { /* 0 号控制台沿用原来的光标位置 */
+	if (nr_tty == 0) /* 0 号控制台沿用原来的光标位置 */
+	{ 
 		p_tty->p_console->cursor_pos = MainPrintPos >> 1;
-	} else {
+	} 
+	else 
+	{
 		p_tty->p_console->cursor_pos = p_tty->p_console->orig_addr;
 		disp_tips(p_tty);
 	}
@@ -99,7 +106,9 @@ void tty_printstr(TTY* p_tty, char* str)
 {
 	int len = strlen(str);
 	for (int i = 0; i < len; i++)
+	{
 		tty_printchar(p_tty, str[i]);
+	}
 }
 
 /**
@@ -110,7 +119,8 @@ void tty_backspace(TTY* p_tty)
 	u32 next_cursor = p_tty->p_console->cursor_pos - 1; /* 退格后的光标位置, 不一定采用 */
 	u32 min_cursor =
 	        (p_tty->p_console->current_start_addr % SCREEN_WIDTH ) + 2; /* 终端提示符有 2 个字符 */
-	if ((next_cursor % SCREEN_WIDTH) > min_cursor) {
+	if ((next_cursor % SCREEN_WIDTH) > min_cursor) 
+	{
 		backspace();
 		p_tty->p_console->cursor_pos--;
 		set_cursor_pos(PrintPos >> 1);
@@ -147,25 +157,31 @@ void parse_input(TTY* p_tty)
 	char input[KB_BUFSIZE];
 	
 	/* 将缓冲区字符逐个拷贝到 `input`, 组装为字符串 */
-	for (int i = 0; i < KB_BUFSIZE; i++) {
+	for (int i = 0; i < KB_BUFSIZE; i++) 
+	{
 		char scan_code = p_tty->kb_in.buf_queue[i];
 		char _ch = keymap[scan_code & MAKE_MASK];
-		if (_ch & TEXT_MASK) {
+		if (_ch & TEXT_MASK) 
+		{
 			char ch = _ch & ~TEXT_MASK;
-			if (ch == '\n') {/* end */
+			if (ch == '\n') /* end */
+			{
 				input[i] = 0;
 			}
-			else {
+			else 
+			{
 				input[i] = ch;
 			}
 		}
 	}
 	
 	char s[] = "hello";
-	if (!strncmp(s, input, max(strlen(s), strlen(input)))) {
+	if (!strncmp(s, input, max(strlen(s), strlen(input)))) 
+	{
 		tty_printstr(p_tty, "hello,world!");
 	}
-	else {
+	else 
+	{
 		tty_printstr(p_tty, input);
 	}
 }

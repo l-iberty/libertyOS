@@ -43,7 +43,8 @@ void init_prot()
 {
 	/* 初始化进程的 LDT 选择子, 及该选择子指向的 GDT 描述符 */
 	PROCESS* p_proc = &FIRST_PROC;
-	for (int i = 0; i < NR_PROCS; i++, p_proc++) {
+	for (int i = 0; i < NR_PROCS; i++, p_proc++)
+	{
 		memset(p_proc, 0, sizeof(PROCESS));
 		p_proc->ldt_selector = SELECTOR_LDT_FIRST + (i << 3);
 		init_desc(&GDT[(INDEX_LDT_DESC_FIRST + i) * DESC_SIZE], (u32) p_proc->LDT,

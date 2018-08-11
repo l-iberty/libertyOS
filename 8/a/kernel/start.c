@@ -97,7 +97,8 @@ void cstart()
 	
 	init_8259A();
 	
-	for (int i = 0; i < NR_IRQ; i++) {
+	for (int i = 0; i < NR_IRQ; i++)
+	{
 		irq_table[i] = default_irq_handler;
 	}
 

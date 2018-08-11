@@ -21,16 +21,20 @@ void schedule()
 	PROCESS* p_proc;
 	int max_ticks = 0;
 	
-	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) {
-		if (p_proc->flag == 0) {
-			if (p_proc->ticks > max_ticks) {
+	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) 
+	{
+		if (p_proc->flag == 0) 
+		{
+			if (p_proc->ticks > max_ticks) 
+			{
 				max_ticks = p_proc->ticks;
 				p_current_proc = p_proc;
 			}
 		}
 	}
 	
-	if (max_ticks == 0) {
+	if (max_ticks == 0) 
+	{
 		for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++)
 			p_proc->ticks = p_proc->priority;
 	}

@@ -42,7 +42,8 @@ int do_open()
 	int namelen = fs_msg.NAMELEN;
 	char filename[MAX_FILENAME_LEN];
 	
-	if (*(char*) fs_msg.PATHNAME != '/') {
+	if (*(char*) fs_msg.PATHNAME != '/') 
+	{
 		printf("\n#ERROR#-do_open: invalid pathname: %s (pathname should start with root dir \'/\')",
 			fs_msg.PATHNAME);
 		return -1;
@@ -56,8 +57,10 @@ int do_open()
 	
 	/* find a free slot in PROCESS::filp[] */
 	int i;
-	for (i = 0; i < NR_FILES; i++) {
-		if (pcaller->filp[i] == NULL) {
+	for (i = 0; i < NR_FILES; i++) 
+	{
+		if (pcaller->filp[i] == NULL) 
+		{
 			fd = i;
 			break;
 		}
@@ -66,7 +69,8 @@ int do_open()
 		halt("\n#ERROR#-do_open: No available slot in PROCESS::filp[] {PID:0x%.8x}", pcaller->pid);
 	
 	/* find a free slot in f_desc_table[] */
-	for (i = 0; i < NR_FILES; i++) {
+	for (i = 0; i < NR_FILES; i++) 
+	{
 		if (f_desc_table[i].fd_inode == NULL)
 			break;
 	}
@@ -80,10 +84,13 @@ int do_open()
 	I_NODE* pin; /* `pin` is ptr to the slot in inode_table[] */
 	
 	/* check whether `pcaller` tries to open a file which has already been opened */
-	for (int j = 0; j < NR_FILES; j++) {
+	for (int j = 0; j < NR_FILES; j++) 
+	{
 		pin = pcaller->filp[j]->fd_inode;
-		if (pin) {
-			if (pin->i_nr_inode == nr_inode) {
+		if (pin) 
+		{
+			if (pin->i_nr_inode == nr_inode) 
+			{
 				printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:0x%.8x}",
 						fs_msg.PATHNAME, pcaller->pid);
 				return -1;
@@ -92,15 +99,20 @@ int do_open()
 	}
 	
 	pin = NULL;
-	if (flags & O_CREAT) {
-		if (nr_inode != 0) {
+	if (flags & O_CREAT) 
+	{
+		if (nr_inode != 0) 
+		{
 			printf("\n#ERROR#-do_open: File exists");
 			return -1;
-		} else {
+		} 
+		else 
+		{
 			pin = create_file(filename, flags);
 		}
 	}
-	if (flags & O_RDWR) {
+	if (flags & O_RDWR) 
+	{
 		/* 读写文件时文件必须已存在 */
 		if (pin == NULL && nr_inode == 0)
 			return -1;
@@ -110,7 +122,8 @@ int do_open()
 			pin = get_inode(nr_inode);
 	}
 	
-	if (pin) {
+	if (pin) 
+	{
 		/* connect PROCESS::filp[] with f_desc_table[] */
 		pcaller->filp[fd] = &f_desc_table[i];
 		
@@ -165,10 +178,12 @@ int alloc_imap_bit()
 	int j; /* byte index */
 	int k; /* bit index */
 
-	for (i = 0; i < NR_IMAP_SECTORS; i++) {
+	for (i = 0; i < NR_IMAP_SECTORS; i++) 
+	{
 		read_hd(INODE_MAP_SEC + i, imap_buf, SECTOR_SIZE);
 		
-		for (j = 0; j < SECTOR_SIZE; j++) {
+		for (j = 0; j < SECTOR_SIZE; j++) 
+		{
 			if (imap_buf[j] == 0xFF)
 				continue; /* skip "1111_1111" */
 			
@@ -203,23 +218,27 @@ int alloc_smap_bits(int nr_sectors)
     int j; /* byte index */
     int k; /* bit index */
 
-    for (i = 0; i < NR_SMAP_SECTORS && nr_sectors > 0; i++) {
+    for (i = 0; i < NR_SMAP_SECTORS && nr_sectors > 0; i++) 
+    {
         read_hd(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
         
-        for (j = 0; j < SECTOR_SIZE && nr_sectors > 0; j++) {
+        for (j = 0; j < SECTOR_SIZE && nr_sectors > 0; j++) 
+        {
         	if (smap_buf[j] == 0xFF)
 				continue; /* skip "1111_1111" */
 		
 			/* skip "1" bit */
 			for (k = 0; (smap_buf[j] >> k) & 0x1; k++) {}
 			
-			if (idx == -1) {
+			if (idx == -1) 
+			{
 				/* set `idx`, and lock it */
 				idx = (i * SECTOR_SIZE + j) * 8 + k; /* 1 Byte = 8 bit */
 			}
 			
 			/* fill each byte bit by bit */
-			for (; k < 8; k++) {
+			for (; k < 8; k++) 
+			{
 				smap_buf[j] |= (1 << k);
 				if (--nr_sectors == 0)
 					break;
@@ -247,12 +266,14 @@ I_NODE* alloc_inode(int nr_inode, u32 mode, u32 size, u32 start_sector, u32 nr_s
 	
 	/* find a free slot in inode_array */
 	u8* pch = inode_buf;
-	for (int i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) {
+	for (int i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) 
+	{
         pin = (I_NODE*) pch;
 		/* if I_NODE::i_mode == 0, it's a free slot in inode_array */
-		if (pin->i_mode == 0) {
-			pin->i_mode			= mode;
-			pin->i_size			= size;
+		if (pin->i_mode == 0) 
+		{
+			pin->i_mode		= mode;
+			pin->i_size		= size;
 			pin->i_start_sector	= start_sector;
 			pin->i_nr_sectors	= nr_sectors;
 			
@@ -286,9 +307,11 @@ void alloc_dir_entry(int nr_inode, char* filename)
 	
 	/* find a free slot in root dir */
 	pde = (DIR_ENTRY*) dirent_buf;
-	for (int i = 0; i < NR_FILES; i++, pde++) {
+	for (int i = 0; i < NR_FILES; i++, pde++) 
+	{
 		/* if DIR_ENTRY::nr_inode == 0, it's a free slot in root dir */
-		if (pde->nr_inode == 0) {
+		if (pde->nr_inode == 0) 
+		{
 			pde->nr_inode = nr_inode;
 			assert(strlen(filename) < MAX_FILENAME_LEN);
 			strcpy(pde->name, filename);
@@ -309,24 +332,32 @@ I_NODE* get_inode(int nr_inode)
 {
 	I_NODE* pin = NULL;
 	
-	for (int i = 0; i < NR_INODES; i++) {
-		if (nr_inode == 0) { /* A file is being created, a free slot is needed. */
-			if (inode_table[i].i_mode == 0) {
+	for (int i = 0; i < NR_INODES; i++) 
+	{
+		if (nr_inode == 0) /* A file is being created, a free slot is needed. */
+		{ 
+			if (inode_table[i].i_mode == 0) 
+			{
 				pin = &inode_table[i];
 				break;
 			}
-		} else { /* The file has already been created, find its i-node. */
-			if (inode_table[i].i_nr_inode == nr_inode) {
+		} 
+		else /* The file has already been created, find its i-node. */
+		{
+			if (inode_table[i].i_nr_inode == nr_inode) 
+			{
 				pin = &inode_table[i];
 				break;
 			}
 		}
 	}
 	
-	if (pin == NULL) {
+	if (pin == NULL) 
+	{
 		printf("\n#ERROR#-get_inode: inode_table[] is full");
 	}
-	else {
+	else 
+	{
 		pin->i_cnt++;
 	}
 	return pin;

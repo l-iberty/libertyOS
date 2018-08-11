@@ -12,8 +12,10 @@ void vsprintf(char* buf, const char* fmt, va_list arg)
 	char tmp[BUFSIZE];
 	va_list p_arg = arg;
 	
-	for (p = buf; *fmt; fmt++) {
-		if (*fmt == '%') {
+	for (p = buf; *fmt; fmt++) 
+	{
+		if (*fmt == '%') 
+		{
 			switch (*++fmt)
 			{
 				case '.':
@@ -39,7 +41,9 @@ void vsprintf(char* buf, const char* fmt, va_list arg)
 					break;				
 				}
 			}
-		} else {
+		} 
+		else 
+		{
 			*p++ = *fmt;
 		}
 	}

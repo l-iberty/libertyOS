@@ -15,7 +15,8 @@ u32 fork()
 
 	sendrecv(BOTH, PID_TASK_MM, &msg);
 	//assert(msg.RETVAL == 0);
-	if (msg.RETVAL != 0) {
+	if (msg.RETVAL != 0) 
+	{
 		dump_msg(&msg);
 		halt("%.8x, pid:%.4x, src:%.4x, dst:%.4x", msg.RETVAL, getpid(), msg.source, msg.dest);
 	}
@@ -28,14 +29,17 @@ u32 do_fork()
 	/* find a free slot in proc_table[] */
 	PROCESS* p_proc;
 	u32 child_pid = NONE;
-	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) {
-		if (p_proc->flag == FREE_SLOT) {
+	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) 
+	{
+		if (p_proc->flag == FREE_SLOT) 
+		{
 			child_pid = p_proc - &FIRST_PROC;
 			break;
 		}
 	}
 	/* 此时 p_proc 指向子进程 */
-	if (child_pid == NONE) {
+	if (child_pid == NONE) 
+	{
 		printf("\n#ERROR#-do_fork: no free slot in proc_table[]");
 		return -1;
 	}

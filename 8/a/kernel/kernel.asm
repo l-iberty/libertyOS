@@ -171,105 +171,105 @@ LABEL:
 divide_error:
 	push	0			; "err_code = 0" means that no error code actually.
 	push	0			; vecno = 0
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 reserved:
 	push	0			; no error code
 	push	1			; vecno = 1
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 nmi:
 	push	0			; no error code
 	push	2			; vecno = 2
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 breakpoint:
 	push	0			; no error code
 	push	3			; vecno = 3
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 overflow:
 	push	0			; no error code
 	push	4			; vecno = 4
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 out_of_bound:
 	push	0			; no error code
 	push	5			; vecno = 5
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 invalid_opcode:
 	push	0			; no error code
 	push	6			; vecno = 6
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 no_math_coprocessor:
 	push	0			; no error code
 	push	7			; vecno = 7
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 double_fault:
 	push	0			; no error code
 	push	8			; vecno = 8
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 
 coprocessor_error:
 	push	0			; no error code
 	push	9			; vecno = 9
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 invalid_tss:
 	push	0			; no error code
 	push	10			; vecno = 10
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 not_present:
 	push	0			; no error code
 	push	11			; vecno = 11
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 
 stack_error:
 	push	0			; no error code
 	push	12			; vecno = 12
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 general_protect:
 	push	13			; vecno = 13
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 page_fault:
 	push	0			; no error code
 	push	14			; vecno = 14
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 intel_reserved:
 	push	0			; no error code
 	push	15			; vecno = 15
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 mcu_fault:
 	push	0			; no error code
 	push	16			; vecno = 16
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 align_check:
 	push	0			; no error code
 	push	17			; vecno = 17
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 mechine:
 	push	0			; no error code
 	push	18			; vecno = 18
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
 simd_error:
 	push	0			; no error code
 	push	19			; vecno = 19
-	jmp	Call_excep_handler
+	jmp	call_excep_handler
 
-Call_excep_handler:
+call_excep_handler:
 	; 此时的栈:
 ;	|  vecno   |	
 ;	| err_code |

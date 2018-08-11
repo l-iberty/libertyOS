@@ -21,8 +21,10 @@ int find_file(char* filename)
 	read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 	
 	DIR_ENTRY* pde = (DIR_ENTRY*) dirent_buf;
-	for (int i = 0; i < NR_FILES; i++, pde++) {
-		if (!memcmp(filename, pde->name, strlen(filename) + 1)) {
+	for (int i = 0; i < NR_FILES; i++, pde++) 
+	{
+		if (!memcmp(filename, pde->name, strlen(filename) + 1)) 
+		{
 			nr_inode = pde->nr_inode;
 			break;
 		}
