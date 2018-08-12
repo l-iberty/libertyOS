@@ -24,4 +24,7 @@ mouse: enabled=0
 # enable key mapping, using US layout as default
 keyboard: keymap=$BXSHARE/keymaps/x11-pc-us.map
 
+# enable gdb debugging
+#gdbstub: enabled=1, port=9999
+
 ata0-master: type=disk, path="hd.img", mode=flat

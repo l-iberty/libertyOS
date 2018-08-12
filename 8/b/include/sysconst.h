@@ -12,9 +12,9 @@
 #define DA_S32_H	0x4092
 #define DA_C16		0x98
 #define DA_LDT		0x4082
-#define DA_CGATE	0x8C
-#define DA_IGATE	0x8E
-#define DA_TSS		0x89
+#define DA_386CGATE	0x8C
+#define DA_386IGATE	0x8E
+#define DA_386TSS	0x89
 #define DA_G_4K		0x8000
 #define DPL_0		0
 #define DPL_1		32

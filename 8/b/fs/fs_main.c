@@ -7,9 +7,9 @@
 #include "string.h"
 
 /* Ring1 */
-void Task_fs()
+void TaskFS()
 {
-	printf("\n-----Task_fs-----");
+	printf("\n-----TaskFS-----");
 
 	init_fs();
 	
@@ -51,22 +51,22 @@ void Task_fs()
 
 void init_fs()
 {
-	printf("\n{MM}    initializing file system...");
+	printf("\n{FS}    initializing file system...");
 
 	/* initialize f_desc_table & inode_table */
 	memset(f_desc_table, 0, sizeof(FILE_DESC) * NR_FILES);
 	memset(inode_table, 0, sizeof(I_NODE) * NR_FILES);
 
 	/* open hd driver */	
-	printf("\n{MM}    opening hard-disk driver...");
+	printf("\n{FS}    opening hard-disk driver...");
 	MESSAGE msg;
 	msg.value = DEV_OPEN;
 	sendrecv(BOTH, PID_TASK_HD, &msg);
 	
-	printf("\n{MM}    making file system...");
+	printf("\n{FS}    making file system...");
 	mkfs();
 	
-	printf("\n{MM}    file system initialization done");
+	printf("\n{FS}    file system initialization done");
 }
 
 void mkfs()

@@ -31,9 +31,9 @@ GdtPtr:	dw	GdtLen - 1			; GDT　界限
 	dd	LoaderBasePhyAddr + LABEL_GDT	; GDT线性基地址
 
 ; GDT　选择子, 16 bits
-Selector_Video		equ	LABEL_DESC_VIDEO	- LABEL_GDT
-Selector_FlatC		equ	LABEL_DESC_FLAT_C	- LABEL_GDT
-Selector_FlatRW		equ	LABEL_DESC_FLAT_RW	- LABEL_GDT
+SelectorVideo		equ	LABEL_DESC_VIDEO	- LABEL_GDT
+SelectorFlatC		equ	LABEL_DESC_FLAT_C	- LABEL_GDT
+SelectorFlatRW		equ	LABEL_DESC_FLAT_RW	- LABEL_GDT
 
 ; ///////////////////////////////// End of [SECTION .gdt] /////////////////////////////////
 
@@ -322,7 +322,7 @@ LABEL_READY_FOR_PM: ; 准备进入保护模式
 	mov	cr0, eax
 
 	; 进入保护模式
-	jmp	dword Selector_FlatC:(LoaderBasePhyAddr + LABEL_SEG_CODE32)
+	jmp	dword SelectorFlatC:(LoaderBasePhyAddr + LABEL_SEG_CODE32)
 
 ; /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -330,21 +330,24 @@ LABEL_READY_FOR_PM: ; 准备进入保护模式
 ALIGN 32
 [BITS 32]
 LABEL_SEG_CODE32:
-	mov	ax, Selector_FlatRW
+	mov	ax, SelectorFlatRW
 	mov	ds, ax
 	mov	es, ax
 	mov	ss, ax
 	mov	esp, ButtomOfStack
 
-	mov	ax, Selector_Video
+	mov	ax, SelectorVideo
 	mov	gs, ax
 
 	call	DispMemInfo
 
 	call	SetupPaging
+	
+	call	SaveMemInfo
 
 	call	InitKernel
-	jmp	Selector_FlatC:KernelEntryPointPAddr
+	
+	jmp	SelectorFlatC:KernelEntryPointPAddr
 
 ;--------------------------------------------------------------------------
 ; SetupPaging	启动二级页表分页机制
@@ -357,20 +360,19 @@ SetupPaging:
 	mov	[dwPageTblBase], eax
 	
 	; 初始化页目录
-	; 计算页目录项 PDE 的个数, 即计算大小为 dwMemSize 的物理内存需要使用
+	; 计算页目录项 PDE 的个数, 即计算大小为 dwAvailMemSize 的物理内存需要使用
 	; 多少个页表来映射.
 	; 一个页表有 1024 个页表项(PTE), 每个页表项映射一个大小为 4K 的物理页框,
 	; 则一个页表映射 4MB 物理内存.
-	; 所需页表数, 即 PDE 个数 = (dwMemSize + 4M - 1) / 4M -- 除以 4M 取上整.
-	mov	eax, [dwMemSize]
+	; 所需页表数, 即 PDE 个数 = (dwAvailMemSize + 4M - 1) / 4M -- 除以 4M 取上整.
+	mov	eax, [dwAvailMemSize]
 	mov	ebx, 400000h		; 页表大小为 4MB
 	add	eax, ebx
 	dec	eax
 	xor	edx, edx
 	div	ebx			; eax = edx:eax / ebx
 	mov	ecx, eax		; ecx <- PDE 个数
-	;call	DispMemInfo_NewLine
-	;call	Disp_DWORD
+	mov	[dwNrPDE], ecx
 	mov	edi, [dwPageDirBase]	; es:edi -> 页目录的物理基地址
 	mov	eax, [dwPageTblBase]
 	or	eax, PG_P | PG_RWW | PG_US1
@@ -381,14 +383,12 @@ SetupPaging:
 	loop	.init_pagedir
 
 	; 初始化页表
-	; 计算页表项 PTE 的个数, 即计算 dwMemSize 大小的物理内存可分为多少个页框.
-	mov	eax, [dwMemSize]
+	; 计算页表项 PTE 的个数, 即计算 dwAvailMemSize 大小的物理内存可分为多少个页框.
+	mov	eax, [dwAvailMemSize]
 	mov	ebx, 4096		; 虚页和物理页的大小都是 4K
 	xor	edx, edx
 	div	ebx
 	mov	ecx, eax		; ecx <- PTE 个数
-	;call	DispMemInfo_NewLine
-	;call	Disp_DWORD
 	mov	edi, [dwPageTblBase]	; es:edi -> 第一个页表的物理基地址
 	xor	eax, eax		; 映射的物理页的基地址为0, 这将使得线性地址=物理地址
 	or	eax, PG_P | PG_RWW | PG_US1
@@ -410,19 +410,6 @@ SetupPaging:
 	or	eax, 80000000h
 	mov	cr0, eax
 	
-	; 打印分页信息
-	call	DispMemInfo_NewLine
-	mov	esi, szPageDirBase
-	call	DispStr
-	mov	eax, [dwPageDirBase]
-	call	Disp_DWORD
-	
-	call	DispMemInfo_NewLine
-	mov	esi, szPageTblBase
-	call	DispStr
-	mov	eax, [dwPageTblBase]
-	call	Disp_DWORD	
-
 	ret
 ;--------------------------------------------------------------------------
 
@@ -454,9 +441,9 @@ DispMemInfo:
 	mov	eax, [edx + OffBaseAddrLow]	;	if (BaseAddrLow + LengthLow > MemSize)
 	mov	[dwAvailMemBase], eax		;	{
 	add	eax, [edx + OffLengthLow]	;		AvailMemBase = BaseAddrLow
-	cmp	eax, dword [dwMemSize]		;		MemSize = BaseAddrLow + LengthLow
+	cmp	eax, dword [dwAvailMemSize]		;		MemSize = BaseAddrLow + LengthLow
 	jb	.2				;	}
-	mov	[dwMemSize], eax		; }
+	mov	[dwAvailMemSize], eax		; }
 .2:
 	add	edx, 20				; `. esi 指向下一个 ARDS 结构
 	mov	esi, edx			;  /
@@ -465,13 +452,7 @@ DispMemInfo:
 	
 	mov	esi, szMemSize			; printf("RAM Size: xxx")
 	call	DispStr
-	mov	eax, [dwMemSize]
-	call	Disp_DWORD
-	call	DispMemInfo_NewLine		; printf("\n")
-	
-	mov	esi, szAvailMemBase
-	call	DispStr				; printf("Availabel Physical Memory Base: xxx")
-	mov	eax, [dwAvailMemBase]
+	mov	eax, [dwAvailMemSize]
 	call	Disp_DWORD
 	
 	ret
@@ -479,19 +460,30 @@ DispMemInfo:
 
 
 ;--------------------------------------------------------------------------
-; DispMemInfo_NewLine
+; SaveMemInfo 将内存信息保持至虚拟地址 MEM_INFO_VA_BASE
 ;--------------------------------------------------------------------------
-DispMemInfo_NewLine:
-	add	dword [dwMemDispPos], 160
-	mov	edi, [dwMemDispPos]
+SaveMemInfo:
+	mov	eax, MEM_INFO_VA_BASE
+	mov	ecx, [dwAvailMemBase]
+	mov	[eax + AVAIL_PM_BASE], ecx	; avali_pm_base
+	mov	ecx, [dwAvailMemSize]
+	mov	[eax + AVAIL_PM_SIZE], ecx	; avali_pm_size
+	mov	ecx, [dwPageDirBase]
+	mov	[eax + PAGE_DIR_BASE], ecx	; page_dir_base
+	mov	ecx, [dwPageTblBase]
+	mov	[eax + PAGE_TBL_BASE], ecx	; page_tbl_base
+	mov	ecx, [dwNrPDE]
+	mov	[eax + NR_PDE], ecx		; nr_pde
+	
 	ret
 ;--------------------------------------------------------------------------
+
 
 ;--------------------------------------------------------------------------
 ; InitKernel
 ;--------------------------------------------------------------------------
 InitKernel:
-	mov	ax, Selector_FlatRW
+	mov	ax, SelectorFlatRW
 	mov	es, ax
 
 	mov	cx, [KernelBasePhyAddr + 2Ch]	; cx <- ELF32_Ehdr.e_phnum
@@ -515,6 +507,16 @@ InitKernel:
 	ret
 ;--------------------------------------------------------------------------
 
+;--------------------------------------------------------------------------
+; DispMemInfo_NewLine
+;--------------------------------------------------------------------------
+DispMemInfo_NewLine:
+	add	dword [dwMemDispPos], 160
+	mov	edi, [dwMemDispPos]
+	ret
+;--------------------------------------------------------------------------
+
+
 %include	"lib32.inc"
 
 ; ///////////////////////////////// End of [SECTION .C32] /////////////////////////////////
@@ -537,14 +539,14 @@ _MemChkBuf: 	times 256 db 0
 _dwNumOfARDS:		dd	0 ; 地址范围描述符结构(ARDS)个数
 _szMemChkTitle:		db	'BaseAddrL  BaseAddrH  LengthLow  LengthHigh  Type', 0
 _szMemSize:		db	'RAM Size: ', 0
-_szAvailMemBase:	db	'Available Physical Memory Base: ', 0
-_dwMemSize:		dd	0
+_dwAvailMemSize:	dd	0
 _dwAvailMemBase:	dd	0
 _dwMemDispPos:		dd	(80 * 4 + 0) * 2 ; DispMemInfo 打印内存信息起始位置
 _szPageDirBase		db	'Page Directory Base: ', 0
 _szPageTblBase		db	'Page Table Base: ';
 _dwPageDirBase		dd	0 ; 页目录的物理基地址
 _dwPageTblBase		dd	0 ; 页表的物理基地址
+_dwNrPDE		dd	0 ; PDE 个数
 
 _MsgBase: ; 以下字符串固定长度为 13
 _MsgLen			equ	13
@@ -560,14 +562,14 @@ MemChkBuf		equ	LoaderBasePhyAddr + _MemChkBuf
 dwNumOfARDS		equ	LoaderBasePhyAddr + _dwNumOfARDS
 szMemChkTitle		equ	LoaderBasePhyAddr + _szMemChkTitle
 szMemSize		equ	LoaderBasePhyAddr + _szMemSize
-szAvailMemBase		equ	LoaderBasePhyAddr + _szAvailMemBase
-dwMemSize		equ	LoaderBasePhyAddr + _dwMemSize
 dwAvailMemBase		equ	LoaderBasePhyAddr + _dwAvailMemBase
+dwAvailMemSize		equ	LoaderBasePhyAddr + _dwAvailMemSize
 dwMemDispPos		equ	LoaderBasePhyAddr + _dwMemDispPos
 szPageDirBase		equ	LoaderBasePhyAddr + _szPageDirBase
 szPageTblBase		equ	LoaderBasePhyAddr + _szPageTblBase
 dwPageDirBase		equ	LoaderBasePhyAddr + _dwPageDirBase
 dwPageTblBase		equ	LoaderBasePhyAddr + _dwPageTblBase
+dwNrPDE			equ	LoaderBasePhyAddr + _dwNrPDE
 
 
 ; ARDS　各成员相对结构体开头的偏移

@@ -16,9 +16,9 @@ u16 hd_buf[SECTOR_SIZE];
  */
 
 /* Ring1 */
-void Task_hd()
+void TaskHD()
 {
-	printf("\n-----Task_hd-----");
+	printf("\n-----TaskHD-----");
 	
 	init_hd();
 	

@@ -2,13 +2,13 @@
 
 ASMBFLAGS=	-I boot/include/
 ASMKFLAGS=	-I include/ -f elf
-LDKFLAGS=	-s -melf_i386 -Ttext 0x1b400 -Map kernel.map
-CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin
+LDKFLAGS=	-s -melf_i386 -Ttext 0x1b400 -Map kernel.map # -s 剔除符号信息
+CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin # -g3 加入符号信息
 
 KOBJS=		kernel.o klib.o start.o 8259A.o main.o protect.o clock.o \
 		syscall.o keyboard.o tty.o string.o printf.o vsprintf.o hd.o \
 		fs_main.o io.o console.o proc.o open.o misc.o close.o rdwt.o \
-                unlink.o mm_main.o fork.o irq.o
+                unlink.o mm_main.o fork.o irq.o vmalloc.o
 
 all: boot.bin loader.bin kernel.bin
 
@@ -101,6 +101,9 @@ fork.o: mm/fork.c
 	gcc $(CFLAGS) $< -o $@
 
 irq.o: kernel/irq.c
+	gcc $(CFLAGS) $< -o $@
+
+vmalloc.o: mm/vmalloc.c
 	gcc $(CFLAGS) $< -o $@
 
 ####################################################################

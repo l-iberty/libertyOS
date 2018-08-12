@@ -21,7 +21,8 @@ u8	task_stack_hd[TASK_STACK_SIZE];
 u8	task_stack_fs[TASK_STACK_SIZE];
 u8	task_stack_mm[TASK_STACK_SIZE];
 
-typedef struct {
+typedef struct 
+{
 	u32	gs;	/* \							*/
 	u32	fs;	/* |							*/
 	u32	es;	/* | pushed manually.					*/
@@ -42,7 +43,8 @@ typedef struct {
 
 } STACK_FRAME;
 
-struct mess1 {
+struct mess1 
+{
 	int	m1i1;
 	int	m1i2;
 	int	m1i3;
@@ -53,7 +55,8 @@ struct mess1 {
 	int	m1i8;
 };
 
-struct mess2 {
+struct mess2 
+{
 	void*	m2p1;
 	void*	m2p2;
 	void*	m2p3;
@@ -63,11 +66,13 @@ struct mess2 {
 	void*	m2p7;
 };
 
-typedef struct {
+typedef struct 
+{
 	int	source;
 	int	dest;
 	int	value;
-	union {
+	union 
+	{
 		struct mess1 m1;
 		struct mess2 m2;
 	} u;
@@ -85,20 +90,26 @@ typedef struct {
 #define FD		u.m1.m1i6
 #define RETVAL		u.m1.m1i7
 #define FORK_PID        u.m1.m1i8
+#define VM_ADDR		u.m2.m2p1
+#define VM_SIZE		u.m1.m1i2
+#define VM_PROTECT	u.m1.m1i3
+#define VM_BASE		u.m2.m2p4
 
 
 typedef struct S_PROCESS_QUEUE	SEND_QUEUE;
 typedef struct S_PROCESS_QUEUE	WAIT_QUEUE;
 typedef struct S_PROCESS	PROCESS;
 
-struct S_PROCESS_QUEUE {
+struct S_PROCESS_QUEUE 
+{
 	int		count;
 	PROCESS**	p_head;
 	PROCESS** 	p_tail;
 	PROCESS*	proc_queue[NR_PROCS];
 };
 
-struct S_PROCESS {
+struct S_PROCESS 
+{
 	STACK_FRAME	regs;
 	u16		ldt_selector;
 	u8		LDT[LDT_DESC_NUM * DESC_SIZE];
@@ -117,12 +128,14 @@ struct S_PROCESS {
 	FILE_DESC*	filp[NR_FILES];
 };
 
-typedef struct {
+typedef struct 
+{
 	fpPROC		task_entry;
 	u8*		task_stack;
 } TASK;
 
-typedef struct {
+typedef struct 
+{
 	int		value;
 	WAIT_QUEUE	wait_queue;
 } SEMAPHORE;
@@ -132,8 +145,6 @@ PROCESS		proc_table[NR_PROCS];
 
 #define FIRST_PROC	proc_table[0]
 #define LAST_PROC	proc_table[NR_PROCS - 1]
-
-//PROCESS*	p_current_proc;
 
 /* pid */
 #define PID_INIT        0
@@ -167,6 +178,7 @@ PROCESS		proc_table[NR_PROCS];
 #define FILE_WRITE	1007
 #define FILE_UNLINK	1008
 #define FORK            1009
+#define VM_ALLOC	1010
 #define HARD_INT	2001
 
 void Init();
@@ -174,9 +186,9 @@ void TaskA();
 void TaskB();
 void TaskC();
 void Task_tty();
-void Task_hd();
-void Task_fs();
-void Task_mm();
+void TaskHD();
+void TaskFS();
+void TaskMM();
 
 int	sys_get_ticks();
 int	sys_sendrecv(int func_type, int pid, MESSAGE* p_msg);

@@ -10,9 +10,9 @@ TASK task_table[NR_PROCS] = {{ Init, task_stack_init },
                              { TaskB, task_stack_b },
                              { TaskC, task_stack_c },
                              { Task_tty, task_stack_tty },
-                             { Task_hd, task_stack_hd },
-                             { Task_fs, task_stack_fs },
-                             { Task_mm, task_stack_mm } };
+                             { TaskHD, task_stack_hd },
+                             { TaskFS, task_stack_fs },
+                             { TaskMM, task_stack_mm } };
 		   	          
 SYSCALL syscall_table[NR_SYSCALL] = { sys_get_ticks,
                                       sys_sendrecv,

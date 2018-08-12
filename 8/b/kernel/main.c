@@ -16,7 +16,7 @@
 #define USER_PROC_PRIORITY	5
 #define N			10
 
-int f_reenter;
+int re_enter;
 
 SEMAPHORE sem_mutex;
 int array[N];
@@ -28,7 +28,7 @@ void kernel_main()
 {
 	print("\n------------kernel_main------------\n");
 	
-	f_reenter = 0;
+	re_enter = 0;
 	
 	ticks = 0;
 	
@@ -171,9 +171,6 @@ void TaskB()
 	
 	printf("\n{Task-B}\n");
 	
-	int *p = (int*)0x08000000;
-	i = *p;
-	
 	for (;;)
 	{
 		sem_wait(&sem_mutex);
@@ -190,7 +187,10 @@ void TaskB()
 
 void TaskC()
 {
-	int i;
+	printf("\n{Task-C}\n");
+	
+	printf("vmalloc: %.8x\n", (u32)vm_alloc((void*)0x1ff00, 0x256, 0x1009));
+	
 	for (;;)
 	{
 		while(1){}

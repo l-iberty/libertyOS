@@ -23,7 +23,8 @@
 #define ATA_READ	0x20
 #define ATA_WRITE	0x30
 
-typedef struct {
+typedef struct 
+{
 	u8	features;
 	u8	nr_sectors;
 	u8	lba_low;

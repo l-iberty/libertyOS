@@ -103,98 +103,98 @@ void cstart()
 
 	/* 初始化前 20 个 IDT 描述符 */
 
-	init_idt_desc(IDT, INT_VECTOR_DE, SELECTOR_FLATC, (u32) divide_error, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_DE, SELECTOR_FLATC, (u32) divide_error, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_DB, SELECTOR_FLATC, (u32) debug_exception, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_DB, SELECTOR_FLATC, (u32) debug_exception, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_02H, SELECTOR_FLATC, (u32) nmi, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_02H, SELECTOR_FLATC, (u32) nmi, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_BP, SELECTOR_FLATC, (u32) breakpoint, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_BP, SELECTOR_FLATC, (u32) breakpoint, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_OF, SELECTOR_FLATC, (u32) overflow, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_OF, SELECTOR_FLATC, (u32) overflow, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_BR, SELECTOR_FLATC, (u32) out_of_bound, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_BR, SELECTOR_FLATC, (u32) out_of_bound, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_UD, SELECTOR_FLATC, (u32) invalid_opcode, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_UD, SELECTOR_FLATC, (u32) invalid_opcode, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_NM, SELECTOR_FLATC, (u32) no_math_coprocessor, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_NM, SELECTOR_FLATC, (u32) no_math_coprocessor, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_DF, SELECTOR_FLATC, (u32) double_fault, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_DF, SELECTOR_FLATC, (u32) double_fault, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_09H, SELECTOR_FLATC, (u32) coprocessor_error, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_09H, SELECTOR_FLATC, (u32) coprocessor_error, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_TS, SELECTOR_FLATC, (u32) invalid_tss, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_TS, SELECTOR_FLATC, (u32) invalid_tss, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_NP, SELECTOR_FLATC, (u32) not_present, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_NP, SELECTOR_FLATC, (u32) not_present, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_SS, SELECTOR_FLATC, (u32) stack_error, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_SS, SELECTOR_FLATC, (u32) stack_error, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_GP, SELECTOR_FLATC, (u32) general_protect, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_GP, SELECTOR_FLATC, (u32) general_protect, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_PF, SELECTOR_FLATC, (u32) page_fault, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_PF, SELECTOR_FLATC, (u32) page_fault, DA_386IGATE);
 	
-	init_idt_desc(IDT, INT_VECTOR_MF, SELECTOR_FLATC, (u32) mcu_fault, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_MF, SELECTOR_FLATC, (u32) mcu_fault, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_AC, SELECTOR_FLATC, (u32) align_check, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_AC, SELECTOR_FLATC, (u32) align_check, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_MC, SELECTOR_FLATC, (u32) mechine, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_MC, SELECTOR_FLATC, (u32) mechine, DA_386IGATE);
 
-	init_idt_desc(IDT, INT_VECTOR_XM, SELECTOR_FLATC, (u32) simd_error, DA_IGATE);
+	init_idt_desc(IDT, INT_VECTOR_XM, SELECTOR_FLATC, (u32) simd_error, DA_386IGATE);
 
 	/* 8259A */
 	init_idt_desc(IDT, INT_VECTOR_IRQ00, SELECTOR_FLATC,
-		(u32) hwint_0, DA_IGATE);
+		(u32) hwint_0, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ01, SELECTOR_FLATC,
-		(u32) hwint_1, DA_IGATE);
+		(u32) hwint_1, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ02, SELECTOR_FLATC,
-		(u32) hwint_2, DA_IGATE);
+		(u32) hwint_2, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ03, SELECTOR_FLATC,
-		(u32) hwint_3, DA_IGATE);
+		(u32) hwint_3, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ04, SELECTOR_FLATC,
-		(u32) hwint_4, DA_IGATE);
+		(u32) hwint_4, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ05, SELECTOR_FLATC,
-		(u32) hwint_5, DA_IGATE);
+		(u32) hwint_5, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ06, SELECTOR_FLATC,
-		(u32) hwint_6, DA_IGATE);
+		(u32) hwint_6, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ07, SELECTOR_FLATC,
-		(u32) hwint_7, DA_IGATE);
+		(u32) hwint_7, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ08, SELECTOR_FLATC,
-		(u32) hwint_8, DA_IGATE);
+		(u32) hwint_8, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ09, SELECTOR_FLATC,
-		(u32) hwint_9, DA_IGATE);
+		(u32) hwint_9, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ10, SELECTOR_FLATC,
-		(u32) hwint_10, DA_IGATE);
+		(u32) hwint_10, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ11, SELECTOR_FLATC,
-		(u32) hwint_11, DA_IGATE);
+		(u32) hwint_11, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ12, SELECTOR_FLATC,
-		(u32) hwint_12, DA_IGATE);
+		(u32) hwint_12, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ13, SELECTOR_FLATC,
-		(u32) hwint_13, DA_IGATE);
+		(u32) hwint_13, DA_386IGATE);
 
 	init_idt_desc(IDT, INT_VECTOR_IRQ14, SELECTOR_FLATC,
-		(u32) hwint_14, DA_IGATE);
+		(u32) hwint_14, DA_386IGATE);
 	
 	init_idt_desc(IDT, INT_VECTOR_IRQ15, SELECTOR_FLATC,
-		(u32) hwint_15, DA_IGATE);
+		(u32) hwint_15, DA_386IGATE);
 		
 	/* system call */
 	init_idt_desc(IDT, INT_VECTOR_SYSCALL, SELECTOR_FLATC,
-		(u32) sys_call, DA_IGATE | DPL_3);
+		(u32) sys_call, DA_386IGATE | DPL_3);
 		
 	/* 初始化 GDT 中的 TSS 描述符 */
-	init_desc(&GDT[INDEX_TSS_DESC * DESC_SIZE], (u32) TSS, sizeof(TSS) - 1, DA_TSS);
+	init_desc(&GDT[INDEX_TSS_DESC * DESC_SIZE], (u32) TSS, sizeof(TSS) - 1, DA_386TSS);
 }
 

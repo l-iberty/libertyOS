@@ -18,9 +18,9 @@ int unlink(const char* pathname)
 {
 	MESSAGE msg;
 	
-	msg.value		= FILE_UNLINK;
+	msg.value	= FILE_UNLINK;
 	msg.PATHNAME	= (void*) pathname;
-	msg.NAMELEN		= strlen(pathname);
+	msg.NAMELEN	= strlen(pathname);
 	
 	sendrecv(BOTH, PID_TASK_FS, &msg);
 	

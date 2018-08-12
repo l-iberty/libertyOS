@@ -12,7 +12,7 @@ SELECTOR_FLATRW		equ	24
 SELECTOR_TSS		equ	32
 
 extern	p_current_proc
-extern	f_reenter
+extern	re_enter
 extern	syscall_table
 extern	irq_table
 extern	memcpy
@@ -293,8 +293,8 @@ call_excep_handler:
 	mov	al, EOI			; `.
 	out	INT_M_CTL, al		; / 向主8259A发送 EOI
 	
-	inc	dword [f_reenter]
-	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
+	inc	dword [re_enter]
+	cmp	dword [re_enter], 0	; re_enter = 0 则没有发生中断重入
 	jne	.reenter
 	mov	esp, BottomOfStack	; 中断重入未发生, 切换到内核栈
 	push	proc_begin
@@ -358,8 +358,8 @@ hwint_7:
 	out	INT_M_CTL, al	; / 向主8259A发送 EOI
 	out	INT_S_CTL, al	; 向从8259A发送 EOI
 	
-	inc	dword [f_reenter]
-	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
+	inc	dword [re_enter]
+	cmp	dword [re_enter], 0	; re_enter = 0 则没有发生中断重入
 	jne	.reenter
 	mov	esp, BottomOfStack	; 中断重入未发生, 切换到内核栈
 	push	proc_begin
@@ -418,8 +418,8 @@ sys_call:
 	mov	fs, ax
 	
 	mov	eax, esi	; resume eax
-	inc	dword [f_reenter]
-	cmp	dword [f_reenter], 0	; f_reenter = 0 则没有发生中断重入
+	inc	dword [re_enter]
+	cmp	dword [re_enter], 0	; re_enter = 0 则没有发生中断重入
 	jne	.reenter
 	mov	esp, BottomOfStack	; 中断重入未发生, 切换到内核栈
 	push	proc_begin
@@ -449,7 +449,7 @@ proc_begin:
 	lea	eax, [esp + STACK_BUTTOM_OFFSET]
 	mov	dword [TSS_ESP0], eax
 proc_begin_reenter:
-	dec	dword [f_reenter]
+	dec	dword [re_enter]
 	pop	gs
 	pop	fs
 	pop	es
