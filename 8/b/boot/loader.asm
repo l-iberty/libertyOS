@@ -354,53 +354,42 @@ LABEL_SEG_CODE32:
 ;--------------------------------------------------------------------------
 SetupPaging:
 	; 设置页目录和页表的物理基地址
-	mov	eax, [dwAvailMemBase]
-	mov	[dwPageDirBase], eax
+	mov	eax, [dwPageDirBase]
 	add	eax, 4096		; 页目录大小为 4K, 页表紧随页目录存放
 	mov	[dwPageTblBase], eax
 	
 	; 初始化页目录
-	; 计算页目录项 PDE 的个数, 即计算大小为 dwAvailMemSize 的物理内存需要使用
-	; 多少个页表来映射.
-	; 一个页表有 1024 个页表项(PTE), 每个页表项映射一个大小为 4K 的物理页框,
-	; 则一个页表映射 4MB 物理内存.
-	; 所需页表数, 即 PDE 个数 = (dwAvailMemSize + 4M - 1) / 4M -- 除以 4M 取上整.
-	mov	eax, [dwAvailMemSize]
-	mov	ebx, 400000h		; 页表大小为 4MB
-	add	eax, ebx
-	dec	eax
-	xor	edx, edx
-	div	ebx			; eax = edx:eax / ebx
-	mov	ecx, eax		; ecx <- PDE 个数
+	mov	eax, [dwAvailMemSize]	;`.
+	mov	ebx, 400000h		; | 一个页表映射 4M 内存, 映射大小为 dwAvailMemSize 的内存需要多少页表?
+	add	eax, ebx		; | 即需要几个页目录项 PDE ?
+	dec	eax			; |
+	xor	edx, edx		; | eax = dwAvailMemSize / 4M 取上整
+	div	ebx			; /
+	mov	ecx, eax		; ecx = PDE 个数
 	mov	[dwNrPDE], ecx
-	mov	edi, [dwPageDirBase]	; es:edi -> 页目录的物理基地址
+	mov	edi, [dwPageDirBase]
 	mov	eax, [dwPageTblBase]
-	or	eax, PG_P | PG_RWW | PG_US1
+	or	eax, PG_P | PG_RWW | PG_USU
 	cld
 .init_pagedir:
-	stosd				; STOSD: Store EAX at address ES:EDI
+	stosd	; [es:edi] <- (eax)
 	add	eax, 4096
 	loop	.init_pagedir
-
+	
 	; 初始化页表
-	; 计算页表项 PTE 的个数, 即计算 dwAvailMemSize 大小的物理内存可分为多少个页框.
-	mov	eax, [dwAvailMemSize]
-	mov	ebx, 4096		; 虚页和物理页的大小都是 4K
-	xor	edx, edx
-	div	ebx
-	mov	ecx, eax		; ecx <- PTE 个数
-	mov	edi, [dwPageTblBase]	; es:edi -> 第一个页表的物理基地址
-	xor	eax, eax		; 映射的物理页的基地址为0, 这将使得线性地址=物理地址
-	or	eax, PG_P | PG_RWW | PG_US1
+	mov	eax, [dwAvailMemSize]	;`.
+	mov	ebx, 4096		; | 大小为 dwAvailMemSize 的内存可以分为多少页? 即需要几个页表项 PTE ?
+	xor	edx, edx		; | eax = dwAvailMemSize / 4K
+	div	ebx			; /
+	mov	ecx, eax		; ecx = PTE 个数
+	mov	edi, [dwPageTblBase]
+	mov	eax, PG_P | PG_RWW | PG_USU
 	cld
 .init_pagetbl:
 	stosd
 	add	eax, 4096
 	loop	.init_pagetbl
-
-	; 共 1024 * 1024 个页表项, 每个页表项指向一块 4K 大小的物理内存，
-	; 因此页表映射了 4G 内存空间.
-
+	
 	; 在 CR3 (Page Directory Base Register) 登记页目录物理基地址
 	mov	eax, [dwPageDirBase]
 	mov	cr3, eax
@@ -436,15 +425,29 @@ DispMemInfo:
 	add	esi, 4			; esi 指向下一个 ARDS 成员
 	dec	ebx
 	jnz	.1
-	cmp	dword [edx + OffType], 1	; if (Type == 1)
+	mov	ebx, [MemInfoBuf]		; ebx 记录 Type=1 的内存块数量
+	mov	edi, MemInfoBuf	+ 4		; edi 指向 MemInfoBuf.MemDs
+	cmp	dword [edx + Type], 1		; if (Type == 1)
 	jne	.2				; {
-	mov	eax, [edx + OffBaseAddrLow]	;	if (BaseAddrLow + LengthLow > MemSize)
-	mov	[dwAvailMemBase], eax		;	{
-	add	eax, [edx + OffLengthLow]	;		AvailMemBase = BaseAddrLow
-	cmp	eax, dword [dwAvailMemSize]		;		MemSize = BaseAddrLow + LengthLow
-	jb	.2				;	}
-	mov	[dwAvailMemSize], eax		; }
-.2:
+	mov	eax, [edx + BaseAddrLow]	;
+	mov	[edi + ebx*8], eax		;	MemInfoBuf.MemDs[ebx].BaseAddrLow = BaseAddrLow
+	mov	eax, [edx + LengthLow]		;	
+	mov	[edi + ebx*8+4], eax		;	MemInfoBuf.MemDs[ebx].LengthLow = LengthLow
+	add	eax, [edx + BaseAddrLow]	;	if (BaseAddrLow + LengthLow > dwAvailMemSize)
+	cmp	eax, [dwAvailMemSize]		;	{
+	jb	.3				;	    dwAvailMemSize = BaseAddrLow + LengthLow
+	mov	[dwAvailMemSize], eax		;	}
+.3:	inc	dword [MemInfoBuf]		;	MemInfoBuf.AvailBlockNum++
+; 两级页表最大需要 4MB + 4KB 空间来存放, 现按照	;
+; 首次适应原则来确定页表应放在哪里.		;
+	cmp	byte [bChk], 1			;	if (bChk != 1)
+	je	.2				;	{
+	cmp	dword [edx + LengthLow], 401000h;	    if (LengthLow < 401000h)
+	jb	.2				;           {
+	mov	eax, [edx + BaseAddrLow]	;	        dwPageDirBase = BaseAddrLow 
+	mov	[dwPageDirBase], eax		;	        bChk = 1
+	mov	byte [bChk], 1			;	    }
+.2:						;       }
 	add	edx, 20				; `. esi 指向下一个 ARDS 结构
 	mov	esi, edx			;  /
 	call	DispMemInfo_NewLine		; printf("\n")
@@ -464,16 +467,19 @@ DispMemInfo:
 ;--------------------------------------------------------------------------
 SaveMemInfo:
 	mov	eax, MEM_INFO_VA_BASE
-	mov	ecx, [dwAvailMemBase]
-	mov	[eax + AVAIL_PM_BASE], ecx	; avali_pm_base
-	mov	ecx, [dwAvailMemSize]
-	mov	[eax + AVAIL_PM_SIZE], ecx	; avali_pm_size
-	mov	ecx, [dwPageDirBase]
-	mov	[eax + PAGE_DIR_BASE], ecx	; page_dir_base
-	mov	ecx, [dwPageTblBase]
-	mov	[eax + PAGE_TBL_BASE], ecx	; page_tbl_base
-	mov	ecx, [dwNrPDE]
-	mov	[eax + NR_PDE], ecx		; nr_pde
+	mov	edx, [dwPageDirBase]
+	mov	[eax + page_dir_base], edx	; page_dir_base
+	mov	edx, [dwPageTblBase]
+	mov	[eax + page_tbl_base], edx	; page_tbl_base
+	mov	edx, [dwNrPDE]
+	mov	[eax + nr_pde], edx		; nr_pde
+	mov	ecx, [MemInfoBuf]
+	mov	[eax + nr_pm_block], ecx	; nr_pm_block
+	shl	ecx, 1
+	mov	esi, MemInfoBuf + 4
+	mov	edi, MEM_INFO_VA_BASE + pm_block_info
+	cld
+	rep	movsd				; 填充结构数组 pm_block_info
 	
 	ret
 ;--------------------------------------------------------------------------
@@ -536,6 +542,19 @@ _ppDst:			dw	0
 _LoopCnt:		db	RootDirItemCnt
 
 _MemChkBuf: 	times 256 db 0
+_MemInfoBuf:	times 128 db 0
+;
+; _MemInfoBuf 数据结构:
+;	int AvailBlockNum; Type=1的物理内存块个数
+;	MEM_DS MemDs[AvailBlockNum];
+;
+;	内存块描述结构 MEM_DS 定义为:
+;	{
+;		u32 BaseAddrLow;
+;		u32 LengthLow;
+;	}
+;	用于记录 ARDS 中的两个字段
+;
 _dwNumOfARDS:		dd	0 ; 地址范围描述符结构(ARDS)个数
 _szMemChkTitle:		db	'BaseAddrL  BaseAddrH  LengthLow  LengthHigh  Type', 0
 _szMemSize:		db	'RAM Size: ', 0
@@ -547,6 +566,7 @@ _szPageTblBase		db	'Page Table Base: ';
 _dwPageDirBase		dd	0 ; 页目录的物理基地址
 _dwPageTblBase		dd	0 ; 页表的物理基地址
 _dwNrPDE		dd	0 ; PDE 个数
+_bChk			db	0 ; 标记, 详见 DispMemInfo
 
 _MsgBase: ; 以下字符串固定长度为 13
 _MsgLen			equ	13
@@ -559,6 +579,7 @@ _Msg1:			db	'Kernel loaded'
 ; 相对 LOADER 加载基地址的偏移.
 szPMMessage		equ	LoaderBasePhyAddr + _szPMMessage
 MemChkBuf		equ	LoaderBasePhyAddr + _MemChkBuf
+MemInfoBuf		equ	LoaderBasePhyAddr + _MemInfoBuf
 dwNumOfARDS		equ	LoaderBasePhyAddr + _dwNumOfARDS
 szMemChkTitle		equ	LoaderBasePhyAddr + _szMemChkTitle
 szMemSize		equ	LoaderBasePhyAddr + _szMemSize
@@ -570,14 +591,15 @@ szPageTblBase		equ	LoaderBasePhyAddr + _szPageTblBase
 dwPageDirBase		equ	LoaderBasePhyAddr + _dwPageDirBase
 dwPageTblBase		equ	LoaderBasePhyAddr + _dwPageTblBase
 dwNrPDE			equ	LoaderBasePhyAddr + _dwNrPDE
+bChk			equ	LoaderBasePhyAddr + _bChk
 
 
 ; ARDS　各成员相对结构体开头的偏移
-OffBaseAddrLow		equ	0
-OffBaseAddrHigh		equ	4
-OffLengthLow		equ	8
-OffLengthHigh		equ	12
-OffType			equ	16
+BaseAddrLow		equ	0
+BaseAddrHigh		equ	4
+LengthLow		equ	8
+LengthHigh		equ	12
+Type			equ	16
 
 
 ; ///////////////////////////////// End of [SECTION .data] /////////////////////////////////

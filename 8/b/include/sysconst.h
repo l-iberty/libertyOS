@@ -46,8 +46,8 @@
 #define INDEX_LDT_DESC_FIRST	5	/* GDT 中索引为 5 的描述符是第一个进程 TaskA 的 LDT 描述符 */
 #define	NR_PROCS		32	/* 进程数 */
 #define NR_NATIVE_PROCS		4	/* 系统初启动时的进程数 */
-#define NR_TASKS		4	/* 任务数 */
-#define NR_SYSCALL		8	/* 系统调用数 */
+#define NR_TASKS		5	/* 任务数 */
+#define NR_SYSCALL		12	/* 系统调用数 */
 #define NR_IRQ			16	/* 主从8259A芯片引脚数 */
 
 #define SEND			1			/* \			*/

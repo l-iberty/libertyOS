@@ -10,6 +10,10 @@ _NR_printk		equ	4
 _NR_sem_init		equ	5
 _NR_sem_post		equ	6
 _NR_sem_wait		equ	7
+_NR_disable_paging	equ	8
+_NR_enable_paging	equ	9
+_NR_reload_cr3		equ	10
+_NR_getcr3		equ	11
 
 INT_VECTOR_SYSCALL	equ	0x80
 
@@ -21,6 +25,10 @@ global	printk		; void	printk(const char* sz);
 global	sem_init	; int	sem_init(SEMAPHORE* p_sem, int value);
 global	sem_post	; int	sem_post(SEMAPHORE* p_sem);
 global	sem_wait	; int	sem_wait(SEMAPHORE* p_sem);
+global	disable_paging	; void	disable_paging();
+global	enable_paging	; void	enable_paging();
+global	reload_cr3	; void	reload_cr3(u32 cr3);
+global	getcr3		; u32	getcr3();
 
 
 [SECTION .text]
@@ -71,6 +79,27 @@ sem_post:
 sem_wait:
 	mov	ebx, [esp + 4]		; p_sem
 	mov	eax, _NR_sem_wait
+	int	INT_VECTOR_SYSCALL
+	ret
+
+disable_paging:
+	mov	eax, _NR_disable_paging
+	int	INT_VECTOR_SYSCALL
+	ret
+
+enable_paging:
+	mov	eax, _NR_enable_paging
+	int	INT_VECTOR_SYSCALL
+	ret
+
+reload_cr3:
+	mov	ebx, [esp + 4]		; cr3
+	mov	eax, _NR_reload_cr3
+	int	INT_VECTOR_SYSCALL
+	ret
+
+getcr3:
+	mov	eax, _NR_getcr3
 	int	INT_VECTOR_SYSCALL
 	ret
 

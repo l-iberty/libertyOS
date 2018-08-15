@@ -1,11 +1,12 @@
 #include "type.h"
 #include "proc.h"
+#include "tty.h"
 #include "fs.h"
 #include "mm.h"
+#include "exe.h"
 #include "sysconst.h"
 #include "protect.h"
 #include "keyboard.h"
-#include "tty.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -157,7 +158,7 @@ void TaskA()
 		for (i = 0; i < N; i++)
 		{
 			array[i] = i + 1;
-			sleep(3000);
+			sleep(1000);
 		}
 		sem_post(&sem_mutex);
 
@@ -177,7 +178,7 @@ void TaskB()
 		printf("\n\nTask-B sem_wait succeeds\n");
 		for (i = 0; i < N; i++)
 		{
-			printf("%.1x ", array[i]);
+			printf("%d ", array[i]);
 		}
 		sem_post(&sem_mutex);
 		
@@ -189,11 +190,20 @@ void TaskC()
 {
 	printf("\n{Task-C}\n");
 	
-	printf("vmalloc: %.8x\n", (u32)vm_alloc((void*)0x1ff00, 0x256, 0x1009));
+	printf("vmalloc: %.8x\n",(u32)vm_alloc((void*)0xb00080, 0x200000, PAGE_READ | PAGE_WRITE));
+	
+/*	int fd = open("/test", O_CREAT | O_RDWR);*/
+/*	int nr = write(fd, "12345", 5);*/
+/*	close(fd);*/
+/*	char str[10];*/
+/*	fd = open("/test", O_RDWR);*/
+/*	nr = read(fd, str, 10);*/
+/*	str[nr] = 0;*/
+/*	printf("%d, %s", nr, str);*/
 	
 	for (;;)
 	{
-		while(1){}
+
 	}
 }
 

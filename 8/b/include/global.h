@@ -27,6 +27,10 @@ void	printk(const char* sz);
 int	sem_init(SEMAPHORE* p_sem, int value);
 int	sem_post(SEMAPHORE* p_sem);
 int	sem_wait(SEMAPHORE* p_sem);
+void	disable_paging();
+void	enable_paging();
+void	reload_cr3(u32 cr3);
+u32	getcr3();
 
 /* init */
 void init_clock();

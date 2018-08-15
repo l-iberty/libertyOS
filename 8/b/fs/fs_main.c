@@ -6,7 +6,7 @@
 #include "stdlib.h"
 #include "string.h"
 
-/* Ring1 */
+
 void TaskFS()
 {
 	printf("\n-----TaskFS-----");

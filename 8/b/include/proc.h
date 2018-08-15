@@ -1,7 +1,3 @@
-/**
- * proc.h 进程相关
- */
-
 #ifndef PROC_H
 #define PROC_H
 
@@ -20,6 +16,7 @@ u8	task_stack_tty[TASK_STACK_SIZE];
 u8	task_stack_hd[TASK_STACK_SIZE];
 u8	task_stack_fs[TASK_STACK_SIZE];
 u8	task_stack_mm[TASK_STACK_SIZE];
+u8	task_stack_exe[TASK_STACK_SIZE];
 
 typedef struct 
 {
@@ -142,6 +139,13 @@ typedef struct
 
 
 PROCESS		proc_table[NR_PROCS];
+TASK		task_table[NR_PROCS];
+SYSCALL 	syscall_table[NR_SYSCALL];
+
+MESSAGE hd_msg;
+MESSAGE fs_msg;
+MESSAGE mm_msg;
+MESSAGE exe_msg;
 
 #define FIRST_PROC	proc_table[0]
 #define LAST_PROC	proc_table[NR_PROCS - 1]
@@ -155,6 +159,7 @@ PROCESS		proc_table[NR_PROCS];
 #define PID_TASK_HD	5
 #define PID_TASK_FS	6
 #define PID_TASK_MM	7
+#define PID_TASK_EXE	8
 
 /* flag */
 /* 进程状态 flag 的二进制串不能有重叠的 "1" */
@@ -185,10 +190,11 @@ void Init();
 void TaskA();
 void TaskB();
 void TaskC();
-void Task_tty();
+void TaskTTY();
 void TaskHD();
 void TaskFS();
 void TaskMM();
+void TaskEXE();
 
 int	sys_get_ticks();
 int	sys_sendrecv(int func_type, int pid, MESSAGE* p_msg);
@@ -198,6 +204,10 @@ void	sys_printk(const char* sz);
 int	sys_sem_init(SEMAPHORE* p_sem, int value);
 int	sys_sem_post(SEMAPHORE* p_sem);
 int	sys_sem_wait(SEMAPHORE* p_sem);
+void	sys_disable_paging();
+void	sys_enable_paging();
+void	sys_reload_cr3(u32 cr3);
+u32	sys_getcr3();
 
 void	    enqueue(SEMAPHORE* p_sem, PROCESS* proc);
 PROCESS*    dequeue(SEMAPHORE* p_sem);
@@ -221,15 +231,7 @@ void	    halt(const char* fmt, ...);
 
 #define assert(exp) if(exp); \
 			else failure(#exp, __FILE__, __BASE_FILE__, __LINE__)
-
 void	schedule();
-
-MESSAGE hd_msg;
-MESSAGE fs_msg;
-MESSAGE mm_msg;
-
-TASK		task_table[NR_PROCS];
-SYSCALL 	syscall_table[NR_SYSCALL];
 
 
 #endif /* PROC_H */

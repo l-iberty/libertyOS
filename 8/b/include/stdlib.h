@@ -12,6 +12,6 @@ void	port_read(u16 port, void* buf, int len);
 void	port_write(u16 port, void* buf, int len);
 void	disable_int();
 void	enable_int();
-void    c_sldt(u16* p_ldt_sel);
+
 
 #endif /* STDLIB */

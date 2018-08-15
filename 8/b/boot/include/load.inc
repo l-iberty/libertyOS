@@ -19,7 +19,7 @@ BaseOfRootBuf		equ	9000h		; 根目录区专用读缓冲区基地址 (len = 14 * 
 BaseOfExBuf		equ	0ac00h		; 扩展缓冲区基地址 (len = 0x200)
 
 ; loader 将内存信息保存到虚拟地址 8000h 处, 便于 kernel 的内存管理模块获取.
-; 一下定义需要与 include/mm.h 保持一致!
+; 以下定义需要与 include/mm.h 保持一致!
 
 MEM_INFO_VA_BASE	equ	8000h
 
@@ -27,18 +27,22 @@ MEM_INFO_VA_BASE	equ	8000h
 ;
 ;	struct MEMINFO
 ;	{
-;		u32 avail_pm_base; 可用的物理内存起始地址
-;		u32 avail_pm_size; 可用的物理内存大小
 ;		u32 page_dir_base; 页目录物理基地址
 ;		u32 page_tbl_base; 页表物理基地址
-;		u32 nr_pde;	   页目录项个数
+;		int nr_pde;	   页目录项个数
+;		int nr_pm_block;   可用的物理内存块个数
+;		struct PM_BLOCK_INFO
+;		{
+;			u32 avail_base;
+;			u32 avail_size;
+;		} pm_block_info[MAX_PM_BLOCK]; 描述每个内存块
 ;	}
 
 ; MEMINFO 成员变量的偏移:
-AVAIL_PM_BASE		equ	0
-AVAIL_PM_SIZE		equ	AVAIL_PM_BASE + 4
-PAGE_DIR_BASE		equ	AVAIL_PM_SIZE + 4
-PAGE_TBL_BASE		equ	PAGE_DIR_BASE + 4
-NR_PDE			equ	PAGE_TBL_BASE + 4
+page_dir_base		equ	0
+page_tbl_base		equ	4
+nr_pde			equ	8
+nr_pm_block		equ	12
+pm_block_info		equ	16
 
 

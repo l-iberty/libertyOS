@@ -57,10 +57,10 @@ SA_TI_LDT	equ	4	; TI = 1, 描述符在 LDT 中
 	dw	(%2 >> 16) & 0FFFFh		; Offset 高 16 bits
 %endmacro ; 8 Bytes
 	
-; 页目录/页表属性
+; PDE/PTE 属性位
 PG_P	equ	00000000000_1b			; P=1
 PG_RWR	equ	0000000000_0_0b			; RW=0, read only
 PG_RWW	equ	0000000000_1_0b			; RW=1, read/write
-PG_US0	equ	000000000_0_00b			; US=0, 特权级为0,1,2的程序访问
-PG_US1	equ	000000000_1_00b			; US=1, 所有特权级的程序都能访问
+PG_USS	equ	000000000_0_00b			; US=0, 特权级为0,1,2的代码访问
+PG_USU	equ	000000000_1_00b			; US=1, 所有特权级的代码都能访问
 

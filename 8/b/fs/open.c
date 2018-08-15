@@ -34,6 +34,7 @@ int open(const char* pathname, int flags)
  */
 int do_open()
 {
+	int i, j;
 	int fd = -1;
 	PROCESS* pcaller = proc_table + fs_msg.source;
 	
@@ -54,9 +55,7 @@ int do_open()
 			namelen);
 	filename[namelen] = 0;
 	
-	
 	/* find a free slot in PROCESS::filp[] */
-	int i;
 	for (i = 0; i < NR_FILES; i++) 
 	{
 		if (pcaller->filp[i] == NULL) 
@@ -84,20 +83,24 @@ int do_open()
 	I_NODE* pin; /* `pin` is ptr to the slot in inode_table[] */
 	
 	/* check whether `pcaller` tries to open a file which has already been opened */
-	for (int j = 0; j < NR_FILES; j++) 
+	for (j = 0; j < NR_FILES; j++) 
 	{
-		pin = pcaller->filp[j]->fd_inode;
-		if (pin) 
+		if (pcaller->filp[j])
 		{
-			if (pin->i_nr_inode == nr_inode) 
+			pin = pcaller->filp[j]->fd_inode;
+			if (pin) 
 			{
-				printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:0x%.8x}",
-						fs_msg.PATHNAME, pcaller->pid);
-				return -1;
+				if (pin->i_nr_inode == nr_inode) 
+				{
+					printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:0x%.8x}",
+							fs_msg.PATHNAME, pcaller->pid);
+					return -1;
+				}
 			}
 		}
+		
 	}
-	
+
 	pin = NULL;
 	if (flags & O_CREAT) 
 	{

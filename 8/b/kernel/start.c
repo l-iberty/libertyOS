@@ -75,8 +75,8 @@ void excep_handler(int vecno, u32 err_code, u32 eip, u16 cs, u32 eflags)
 {
 	char* err = err_msg_list[vecno];
 	char msg[160];
-	sprintf(msg, "%s {CS:%.4x EIP:%.8x EFLAGS:%.8x ERROR-CODE:%.8x}",
-		err, cs, eip, eflags, err_code);
+	sprintf(msg, "%s PID: %d {CS:%.4x EIP:%.8x EFLAGS:%.8x ERROR-CODE:%.8x}",
+		err, p_current_proc->pid, cs, eip, eflags, err_code);
 	
 	/* 0x74 => 0111 灰底, 0100 暗红 */
 	printmsg(msg, 0x74, (80 * 24 + 0) * 2);
@@ -92,7 +92,7 @@ void default_irq_handler(int irq)
 
 void cstart()
 {
-	println("\n\n\n\n\n\n\n\n------------cstart------------");
+	println("\n\n\n\n------------cstart------------");
 	
 	init_8259A();
 	

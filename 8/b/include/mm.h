@@ -3,30 +3,47 @@
 
 #include "type.h"
 
-
-#define PROCS_BASE		0xA00000 /* 10 MB */
-#define PROC_IMAGE_SIZE		0x100000 /* 1 MB */
-
-#define PAGE_SIZE		0x1000 /* 4K */
+#define PAGE_SIZE		0x1000		/* 4K */
+#define MAX_PAGE_ITEM		(PAGE_SIZE / 4)	/* 一个页目录/页表最多有几项? */
+#define PAGE_MAPPING_SIZE	0x400000	/* 一个页表的内存映射范围: 4M */
 #define PAGE_USED		1
 #define PAGE_FREE		(PAGE_USED << 1)
 #define PAGE_RESERVED		(PAGE_FREE << 1)
 #define PAGE_READ		1
 #define PAGE_WRITE		(PAGE_READ << 1)
-#define PAGE_EXECUTE		(PAGE_WRITE << 1)
 
-#define ROUND_UP(a,b)		((((a)+(b)-1)/(b))*(b))
-#define ROUND_DOWN(a,b)		(((a)/(b))*(b))
+#define ROUND_UP(a,b)		((((u32)a + (u32)b - 1) / (u32)b) * (u32)b)
+#define ROUND_DOWN(a,b)		(((u32)a / (u32)b) * (u32)b)
+
+/* 从线性地址 la 获得页目录索引、页表索引和页内偏移 */
+#define PDE_INDEX(la)		((la >> 22) & 0x3FF)
+#define PTE_INDEX(la)		((la >> 12) & 0x3FF)
+#define PAGE_OFFSET(la)		(la & 0xFFF)
+
+/* 从 PDE 获得页表基地址, 或从 PTE 获得物理页基地址 */
+#define GET_BASE(x)		(x & 0xFFFFF000)
+
+/* PDE/PTE 属性位 */
+#define PG_P			0x1 /* Present */
+#define PG_RWR			0x0 /* Read */
+#define PG_RWW			0x2 /* Read/Write */
+#define PG_USS			0x0 /* Supervisor */
+#define PG_USU			0x4 /* User */
 
 #define MEM_INFO_VA_BASE	0x8000 /* loader 将 MEMINFO 描述的内存信息放在该虚拟地址处 */
+#define MAX_PM_BLOCK		8
 
 typedef struct
 {
-	u32 avail_pm_base; /* 可用的物理内存起始地址 */
-	u32 avail_pm_size; /* 可用的物理内存大小 */
 	u32 page_dir_base; /* 页目录物理基地址 */
 	u32 page_tbl_base; /* 页表物理基地址 */
-	u32 nr_pde;	   /* 页目录项个数 */
+	int nr_pde;	   /* 页目录项个数 */
+	int nr_pm_block;   /* 可用的物理内存块个数 */
+	struct PM_BLOCK_INFO
+	{
+		u32 avail_base;
+		u32 avail_size;
+	} pm_block_info[MAX_PM_BLOCK];  /* 描述 nr_pm_block 个物理内存块 */
 } MEMINFO;
 
 /* 双向循环列表 */
@@ -59,13 +76,11 @@ typedef struct
 #define TYPE	page_area.type
 #define PROTECT	page_area.protect
 
+extern PAGE_FRAME *pf_list;
+extern MEMINFO    *mi;
 
 void	init_mm();
-u32 	fork();
 void	*vm_alloc(void *vm_addr, u32 vm_size, u32 vm_protect);
-u32 	do_fork();
 void	*do_vm_alloc();
-
-u32	alloc_mem();
 
 #endif // MM_H

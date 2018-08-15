@@ -14,7 +14,7 @@ extern u32 PrintPos;
 extern u32 MainPrintPos;
 
 /* Ring1 终端任务, 用户交互接口 */
-void Task_tty()
+void TaskTTY()
 {
 	TTY* p_tty;
 	
