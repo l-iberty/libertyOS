@@ -5,10 +5,11 @@
 #include "stdlib.h"
 #include "global.h"
 
+struct console console_table[NR_CONSOLE];
 
 void select_console(int nr_console)
 {
-	if ((nr_console < 0) || (nr_console >= NR_CONSOLES))
+	if ((nr_console < 0) || (nr_console >= NR_CONSOLE))
 		return;
 
 	nr_current_console = nr_console;
@@ -20,7 +21,7 @@ void select_console(int nr_console)
 /**
  * 滚动屏幕, 滚动范围在 p_con 占据的两个屏幕范围内
  */
-void scroll_screen(CONSOLE* p_con, int direction)
+void scroll_screen(struct console* p_con, int direction)
 {
 	if (direction == SCROLL_UP) 
 	{

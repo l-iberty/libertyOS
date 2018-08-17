@@ -7,9 +7,9 @@
 #include "string.h"
 #include "protect.h"
 
-u32 fork()
+uint32_t fork()
 {
-	MESSAGE msg;
+	struct message msg;
 	msg.value = FORK;
 
 	sendrecv(BOTH, PID_TASK_EXE, &msg);
@@ -18,11 +18,11 @@ u32 fork()
 	return msg.FORK_PID;
 }
 
-u32 do_fork()
+uint32_t do_fork()
 {
 	/* find a free slot in proc_table[] */
-	PROCESS* p_proc;
-	u32 child_pid = NONE;
+	struct proc* p_proc;
+	uint32_t child_pid = NONE;
 	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) 
 	{
 		if (p_proc->flag == FREE_SLOT) 
@@ -39,31 +39,31 @@ u32 do_fork()
 	}
 
 	/* Duplicate the process table */
-	u32 pid = exe_msg.source;
-	u16 child_ldt_sel = p_proc->ldt_selector;
-	memcpy(p_proc, &proc_table[pid], sizeof(PROCESS));
+	uint32_t pid = exe_msg.source;
+	uint16_t child_ldt_sel = p_proc->ldt_selector;
+	memcpy(p_proc, &proc_table[pid], sizeof(struct proc));
 	proc_table[child_pid].pid = child_pid;
 	proc_table[child_pid].pid_parent = pid;
 	proc_table[child_pid].ldt_selector = child_ldt_sel;
 	
 	/* Duplicate text segment, data segment */
-	u8* p_desc;
+	uint8_t* p_desc;
 	
 	/* Text segment */
 	p_desc = &proc_table[pid].LDT[INDEX_LDT_C * DESC_SIZE];
-	u32 caller_T_base = get_base(p_desc);
-	u32 caller_T_limit = get_limit(p_desc);
-	u32 caller_T_size = (caller_T_limit + 1) * granularity(p_desc);
+	uint32_t caller_T_base = get_base(p_desc);
+	uint32_t caller_T_limit = get_limit(p_desc);
+	uint32_t caller_T_size = (caller_T_limit + 1) * granularity(p_desc);
 
 	/* Data segment */	
 	p_desc = &proc_table[pid].LDT[INDEX_LDT_RW * DESC_SIZE];
-	u32 caller_D_base = get_base(p_desc);
-	u32 caller_D_limit = get_limit(p_desc);
-	u32 caller_D_size = (caller_D_limit + 1) * granularity(p_desc);
+	uint32_t caller_D_base = get_base(p_desc);
+	uint32_t caller_D_limit = get_limit(p_desc);
+	uint32_t caller_D_size = (caller_D_limit + 1) * granularity(p_desc);
 	
 	/* Allocate memory for child process */
 	assert(caller_T_size > 0);
-	u32 child_base = alloc_mem(child_pid, caller_T_size);
+	uint32_t child_base = alloc_mem(child_pid, caller_T_size);
 
 	assert(child_base != NULL);
 	assert((caller_T_base == caller_D_base) &&
@@ -71,7 +71,7 @@ u32 do_fork()
 	       (caller_T_size == caller_D_size));
 		
 	p_current_proc = proc_table + child_pid;
-	
+
 	memcpy((void*) child_base, (void*) caller_T_base, caller_T_size);
 
 	/* child's LDT */
@@ -96,7 +96,7 @@ u32 do_fork()
 	 * child will be also calling `fork()`, and the return-value getting from
 	 * `fork()` will be zero, which specifies its identification as a child.
 	 */
-	MESSAGE msg;
+	struct message msg;
 	msg.RETVAL = 0;
 	msg.FORK_PID = 0;
 	sendrecv(SEND, child_pid, &msg);

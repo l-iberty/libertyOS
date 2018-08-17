@@ -10,16 +10,15 @@
 #include "global.h"
 #include "sysconst.h"
 
-extern u32 PrintPos;
-extern u32 MainPrintPos;
+struct tty tty_table[NR_CONSOLE];
 
 /* Ring1 终端任务, 用户交互接口 */
 void TaskTTY()
 {
-	TTY* p_tty;
+	struct tty* p_tty;
 	
 	/* 初始化所有 TTY */
-	for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) 
+	for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLE; p_tty++) 
 	{
 		init_tty(p_tty);
 	}
@@ -33,7 +32,7 @@ void TaskTTY()
 	 */
 	while (1) 
 	{
-		for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) 
+		for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLE; p_tty++) 
 		{
 			if (is_current_console(p_tty)) 
 			{
@@ -43,7 +42,7 @@ void TaskTTY()
 	}
 }
 
-void init_tty(TTY* p_tty)
+void init_tty(struct tty* p_tty)
 {
 	/* 初始化键盘输入缓冲 */
 	p_tty->kb_in.p_head = p_tty->kb_in.p_tail = p_tty->kb_in.buf_queue;
@@ -56,13 +55,13 @@ void init_tty(TTY* p_tty)
 	init_console(p_tty);
 }
 
-void init_console(TTY* p_tty)
+void init_console(struct tty* p_tty)
 {
 	int nr_tty = p_tty - tty_table;
 	
-	int con_v_mem_size			= V_MEM_SCREEN; /* V_MEM_SIZE = 2 * SCREEN_SIZE, 一个 console 有两个屏幕的显示空间 */
-	p_tty->p_console->orig_addr		= nr_tty * con_v_mem_size;	
-	p_tty->p_console->v_mem_limit		= con_v_mem_size;
+	int con_v_mem_size						= V_MEM_SCREEN; /* V_MEM_SIZE = 2 * SCREEN_SIZE, 一个 console 有两个屏幕的显示空间 */
+	p_tty->p_console->orig_addr				= nr_tty * con_v_mem_size;	
+	p_tty->p_console->v_mem_limit			= con_v_mem_size;
 	p_tty->p_console->current_start_addr	= p_tty->p_console->orig_addr;
 	
 	if (nr_tty == 0) /* 0 号控制台沿用原来的光标位置 */
@@ -79,7 +78,7 @@ void init_console(TTY* p_tty)
 /**
  * 判断 p_tty 对应的控制台是否是当前控制台
  */
-int is_current_console(TTY* p_tty)
+int is_current_console(struct tty* p_tty)
 {
 	int nr_console;
 	nr_console = p_tty->p_console - console_table;
@@ -91,7 +90,7 @@ int is_current_console(TTY* p_tty)
  * 回显键盘输入.
  * tty_printchar 是对 printchar 的封装, 使其适用于不同终端
  */
-void tty_printchar(TTY* p_tty, char ch)
+void tty_printchar(struct tty* p_tty, char ch)
 {
 	PrintPos = p_tty->p_console->cursor_pos << 1;
 	printchar(ch);
@@ -102,7 +101,7 @@ void tty_printchar(TTY* p_tty, char ch)
 /**
  * 借助 tty_printchar 在终端打印字符串
  */
-void tty_printstr(TTY* p_tty, char* str)
+void tty_printstr(struct tty* p_tty, char* str)
 {
 	int len = strlen(str);
 	for (int i = 0; i < len; i++)
@@ -112,10 +111,10 @@ void tty_printstr(TTY* p_tty, char* str)
 /**
  * 封装 backspace, 使其适用于终端环境, 不至于将终端提示符删掉
  */
-void tty_backspace(TTY* p_tty)
+void tty_backspace(struct tty* p_tty)
 {
-	u32 next_cursor = p_tty->p_console->cursor_pos - 1; /* 退格后的光标位置, 不一定采用 */
-	u32 min_cursor =
+	uint32_t next_cursor = p_tty->p_console->cursor_pos - 1; /* 退格后的光标位置, 不一定采用 */
+	uint32_t min_cursor =
 	        (p_tty->p_console->current_start_addr % SCREEN_WIDTH ) + 2; /* 终端提示符有 2 个字符 */
 	if ((next_cursor % SCREEN_WIDTH) > min_cursor) 
 	{
@@ -128,7 +127,7 @@ void tty_backspace(TTY* p_tty)
 /**
  * 打印终端提示符
  */
-void disp_tips(TTY* p_tty)
+void disp_tips(struct tty* p_tty)
 {
 	int nr_tty = p_tty - tty_table;
 	
@@ -140,7 +139,7 @@ void disp_tips(TTY* p_tty)
 /**
  * 重置键盘输入缓冲
  */
-void reset_kb_buf(TTY* p_tty)
+void reset_kb_buf(struct tty* p_tty)
 {
 	p_tty->kb_in.p_head = p_tty->kb_in.p_tail = p_tty->kb_in.buf_queue;
 	p_tty->kb_in.count = 0;
@@ -150,7 +149,7 @@ void reset_kb_buf(TTY* p_tty)
 /**
  * 解析键盘输入
  */
-void parse_input(TTY* p_tty)
+void parse_input(struct tty* p_tty)
 {
 	char input[KB_BUFSIZE];
 	

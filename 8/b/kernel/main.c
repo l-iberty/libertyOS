@@ -19,7 +19,7 @@
 
 int re_enter;
 
-SEMAPHORE sem_mutex;
+struct semaphore sem_mutex;
 int array[N];
 
 void proc_begin(); /* lib/klib.asm */
@@ -33,12 +33,12 @@ void kernel_main()
 	
 	ticks = 0;
 	
-	PROCESS* p_proc = proc_table;
-	TASK* p_task = task_table;
+	struct proc* p_proc = proc_table;
+	struct task* p_task = task_table;
 	
-	u8 _DPL;	/* 描述符特权级 */
-	u16 _RPL_MASK;	/* 请求特权级掩码 */
-	u32 _eflags;
+	uint8_t _DPL;	/* 描述符特权级 */
+	uint16_t _RPL_MASK;	/* 请求特权级掩码 */
+	uint32_t _eflags;
 	
 	/* initialize proc_table */
 	
@@ -85,10 +85,10 @@ void kernel_main()
 		p_proc->regs.fs = SELECTOR_LDT_FLATRW & _RPL_MASK;
 		p_proc->regs.es = SELECTOR_LDT_FLATRW & _RPL_MASK;
 		p_proc->regs.ds = SELECTOR_LDT_FLATRW & _RPL_MASK;
-		p_proc->regs.eip = (u32) p_task->task_entry;
+		p_proc->regs.eip = (uint32_t) p_task->task_entry;
 		p_proc->regs.cs = SELECTOR_LDT_FLATC & _RPL_MASK;
 		p_proc->regs.eflags = _eflags;
-		p_proc->regs.esp = (u32) p_task->task_stack + TASK_STACK_SIZE;
+		p_proc->regs.esp = (uint32_t) p_task->task_stack + TASK_STACK_SIZE;
 		p_proc->regs.ss = SELECTOR_LDT_FLATRW & _RPL_MASK;
 		
 		p_proc->pid = i;
@@ -101,7 +101,7 @@ void kernel_main()
 		
 		init_send_queue(p_proc);
 		
-		memset(p_proc->filp, 0, sizeof(FILE_DESC*) * NR_FILES);
+		memset(p_proc->filp, 0, sizeof(struct file_desc*) * NR_FILES);
 	}
 	
 	init_clock();
@@ -123,23 +123,34 @@ void sleep(int ms)
 
 void Init()
 {
-	for (;;) 
+	int pid;
+	
+	sleep(5000);
+
+	pid = fork();
+	
+	if (pid != 0) 
 	{
-		sleep(5000);
-		printf("\n-----Init-----");
+		printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
 		
-		int pid = fork();
-		
-		if (pid != 0) 
+		pid = fork();
+		if (pid != 0)
 		{
-			printf("\nparent 0x%.8x is running, child pid: 0x%.8x", getpid(), pid);
-			while(1) {}
+			printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
 		}
 		else
 		{
-			printf("\nchild 0x%.8x is running, parent pid: 0x%.8x", getpid(), getppid());
-			while(1) {}
+			printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
 		}
+	}
+	else
+	{
+		printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
+	}
+
+	for (;;) 
+	{
+	
 	}
 }
 
@@ -147,22 +158,22 @@ void TaskA()
 {
 	int i;
 	
-	printf("\n\n{Task-A}");
+	printf("\n{Task-A}");
 	
 	sem_init(&sem_mutex, 1);
+
+	sem_wait(&sem_mutex);
+	printf("\nTask-A sem_wait succeeds\n");
+	for (i = 0; i < N; i++)
+	{
+		array[i] = i + 1;
+		sleep(1000);
+	}
+	sem_post(&sem_mutex);
 	
 	for (;;)
 	{
-		sem_wait(&sem_mutex);
-		printf("\nTask-A sem_wait succeeds\n");
-		for (i = 0; i < N; i++)
-		{
-			array[i] = i + 1;
-			sleep(1000);
-		}
-		sem_post(&sem_mutex);
 
-		while(1){}
 	}
 }
 
@@ -170,37 +181,73 @@ void TaskB()
 {
 	int i;
 	
-	printf("\n{Task-B}\n");
+	printf("\n{Task-B}");
 	
+	sem_wait(&sem_mutex);
+	printf("\n\nTask-B sem_wait succeeds\n");
+	for (i = 0; i < N; i++)
+	{
+		printf("%d ", array[i]);
+	}
+	sem_post(&sem_mutex);
+	printf("\n");
+
 	for (;;)
 	{
-		sem_wait(&sem_mutex);
-		printf("\n\nTask-B sem_wait succeeds\n");
-		for (i = 0; i < N; i++)
-		{
-			printf("%d ", array[i]);
-		}
-		sem_post(&sem_mutex);
 		
-		while(1){}
 	}
 }
 
 void TaskC()
 {
-	printf("\n{Task-C}\n");
+	printf("\n{Task-C}");
 	
-	printf("vmalloc: %.8x\n",(u32)vm_alloc((void*)0xb00080, 0x200000, PAGE_READ | PAGE_WRITE));
+	void *la;
 	
-/*	int fd = open("/test", O_CREAT | O_RDWR);*/
-/*	int nr = write(fd, "12345", 5);*/
-/*	close(fd);*/
-/*	char str[10];*/
-/*	fd = open("/test", O_RDWR);*/
-/*	nr = read(fd, str, 10);*/
-/*	str[nr] = 0;*/
-/*	printf("%d, %s", nr, str);*/
+	/* 11M ~ 13M */
+	la = vm_alloc((void*)0xb00080, 0x200000, PAGE_READWRITE);
+	printf("\n(1) vmalloc: %.8x",(uint32_t)la);
+	assert(la);
+	memset(la, 0xcd, 0x200000);
+
+	/* 8M ~ 12M */
+	la = vm_alloc((void*)0x800600, 0x400000, PAGE_READWRITE);
+	printf("\n(2) vmalloc: %.8x",(uint32_t)la);
+	assert(la);
+	memset(la, 0xcc, 0x400000);
 	
+	/* 12M ~ 12M + 7K */
+	la = vm_alloc((void*)0x1c00000, 7 * 1024, PAGE_READWRITE);
+	printf("\n(3) vmalloc: %.8x", (uint32_t)la);
+	assert(la);
+	memset(la, 0xdd, 4096 * 2);
+
+	/* 9M ~ 12M */
+	la = vm_alloc((void*)0x900000, 0x300000, PAGE_READWRITE);
+	printf("\n(4) vmalloc: %.8x", (uint32_t)la);
+	assert(la);
+	memset(la, 0xdd, 0x300000);
+
+	int fd;
+	char s[32];
+	fd = open("/test1", O_CREAT | O_RDWR);
+	write(fd, "testfile", 9);
+	close(fd);
+	
+	fd = open("/test2", O_CREAT | O_RDWR);
+	write(fd, "hello, world", 13);
+	close(fd);
+
+	fd = open("/test1", O_RDWR);
+	read(fd, s, sizeof(s));
+	close(fd);
+	printf("\ntest1: %s",s);
+
+	fd = open("/test2", O_RDWR);
+	read(fd, s, sizeof(s));
+	close(fd);
+	printf("\ntest2: %s",s);
+
 	for (;;)
 	{
 

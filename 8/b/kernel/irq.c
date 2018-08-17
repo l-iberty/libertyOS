@@ -1,6 +1,8 @@
 #include "irq.h"
 #include "stdlib.h"
 
+IRQ_HANDLER irq_table[NR_IRQ];
+
 void put_irq_handler(int irq, IRQ_HANDLER handler)
 {
 	disable_irq(irq);

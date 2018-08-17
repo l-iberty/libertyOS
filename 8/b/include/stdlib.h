@@ -3,13 +3,16 @@
 
 #include "type.h"
 
+extern uint32_t PrintPos;
+extern uint32_t MainPrintPos;
+
 void	memcpy(void* pDst, void* pSrc, int len);
-void	memset(void* pDst, u8 value, int len);
+void	memset(void* pDst, uint8_t value, int len);
 int	memcmp(void* p1, void* p2, int len);
-u8 	in_byte(u16 port);
-void	out_byte(u16 port, u8 byte);
-void	port_read(u16 port, void* buf, int len);
-void	port_write(u16 port, void* buf, int len);
+uint8_t in_byte(uint16_t port);
+void	out_byte(uint16_t port, uint8_t byte);
+void	port_read(uint16_t port, void* buf, int len);
+void	port_write(uint16_t port, void* buf, int len);
 void	disable_int();
 void	enable_int();
 

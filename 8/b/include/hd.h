@@ -23,24 +23,25 @@
 #define ATA_READ	0x20
 #define ATA_WRITE	0x30
 
-typedef struct 
-{
-	u8	features;
-	u8	nr_sectors;
-	u8	lba_low;
-	u8	lba_mid;
-	u8	lba_high;
-	u8	device;
-	u8	command;
-} HD_CMD;
-
-
 #define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) | \
 					     ((drv) << 4)  | \
 					     ((lba_highest) & 0xF) | 0xA0)
 
+struct hd_cmd
+{
+	uint8_t	features;
+	uint8_t	nr_sectors;
+	uint8_t	lba_low;
+	uint8_t	lba_mid;
+	uint8_t	lba_high;
+	uint8_t	device;
+	uint8_t	command;
+};
+
+extern struct message hd_msg;
+
 void init_hd();
-void hd_cmd_out(HD_CMD* cmd);
+void hd_cmd_out(struct hd_cmd* cmd);
 void get_hd_info(int drive);
 void disp_hd_info();
 void hd_open();

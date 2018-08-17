@@ -6,23 +6,21 @@
 #include "global.h"
 #include "irq.h"
 
-#define SECTOR_SIZE 512
+struct message hd_msg;
 
-u16 hd_buf[SECTOR_SIZE];
+uint16_t hd_buf[SECTOR_SIZE];
 /**
- * port_read 必须使用 `insw` 以字为单位读取, 缓冲区 hd_buf 必须是 u16 数组,
- * 或长度为 SECTOR_SIZE*2 的 u8 数组.
+ * port_read 必须使用 `insw` 以字为单位读取, 缓冲区 hd_buf 必须是 uint16_t 数组,
+ * 或长度为 SECTOR_SIZE*2 的 uint8_t 数组.
  * 读写规则使用小端序, 因此对于 ASCII 字符串, 需重新组织字节顺序.
  */
 
-/* Ring1 */
 void TaskHD()
 {
 	printf("\n-----TaskHD-----");
 	
 	init_hd();
 	
-	/* 主循环 */
 	for (;;)
 	{
 		sendrecv(RECEIVE, PID_TASK_FS, &hd_msg);
@@ -57,7 +55,7 @@ void init_hd()
 {
 	printf("\n{HD}    initializing hard-disk driver...");
 	
-	u8* pNrDrives = (u8*) (0x475);
+	uint8_t* pNrDrives = (uint8_t*) (0x475);
 	printf("\n{HD}    NrDrives: %.2x", *pNrDrives);
 	assert(*pNrDrives);
 	
@@ -68,7 +66,7 @@ void init_hd()
 	printf("\n{HD}    hard-disk driver initializaion done");
 }
 
-void hd_cmd_out(HD_CMD* cmd)
+void hd_cmd_out(struct hd_cmd* cmd)
 {
 	/* 只有当 Status Register 的 BSY 位为 0, 才能继续 */
 	while ((in_byte(REG_STATUS) & 0x80)) {printf("-");}
@@ -89,7 +87,7 @@ void hd_cmd_out(HD_CMD* cmd)
 
 void get_hd_info(int drive)
 {
-	HD_CMD cmd;
+	struct hd_cmd cmd;
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.device = MAKE_DEVICE_REG(0, drive, 0);
 	cmd.command = ATA_IDENTIFY;
@@ -123,11 +121,11 @@ void disp_hd_info()
 		printf("\n{HD}    %s: %s", info[i].desc, sz);
 	}
 	
-	u16 cap = hd_buf[49];
+	uint16_t cap = hd_buf[49];
 	printf("\n{HD}    Capabilities: 0x%.4x (LBA supported: %s)",
 		cap, (cap & 0x0200) ? "YES" : "NO");
 
-	u16 cmd_set_supported = hd_buf[83];
+	uint16_t cmd_set_supported = hd_buf[83];
 	printf("\n{HD}    LBA48 supported: %s",
 		(cmd_set_supported & 0x0400) ? "YES" : "NO");
 }
@@ -152,7 +150,7 @@ void hd_open()
  */
 void hd_write(int drive, int sector, void* buf, int len)
 {
-	HD_CMD cmd;
+	struct hd_cmd cmd;
 	cmd.features	= 0;
 	cmd.nr_sectors	= (len + SECTOR_SIZE - 1) >> SECTOR_SIZE_SHIFT;
 	cmd.lba_low	= sector & 0xFF;
@@ -176,7 +174,7 @@ void hd_write(int drive, int sector, void* buf, int len)
  */
 void hd_read(int drive, int sector, void* buf, int len)
 {
-	HD_CMD cmd;
+	struct hd_cmd cmd;
 	cmd.features	= 0;
 	cmd.nr_sectors	= (len + SECTOR_SIZE - 1) >> SECTOR_SIZE_SHIFT;
 	cmd.lba_low	= sector & 0xFF;
@@ -204,7 +202,7 @@ void hd_handler(int irq)
 	 *   - issues a reset, or
 	 *   - writes to the Command Register.
 	 */
-	u8 status = in_byte(REG_STATUS);
+	uint8_t status = in_byte(REG_STATUS);
 	inform_int(PID_TASK_HD);
 }
 

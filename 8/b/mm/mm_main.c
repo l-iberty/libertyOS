@@ -6,8 +6,9 @@
 #include "stdlib.h"
 #include "string.h"
 
-PAGE_FRAME *pf_list; /* 管理页框的双向循环链表 */
-MEMINFO    *mi;      /* 保存内存信息 */
+struct message   mm_msg;
+struct page_list *pf_list; /* 管理页框的双向循环链表 */
+struct meminfo   *mi;      /* 保存内存信息 */
 
 void TaskMM()
 {
@@ -21,11 +22,6 @@ void TaskMM()
 		
 		switch (mm_msg.value)
 		{
-			case FORK:
-			{
-				mm_msg.RETVAL = do_fork();
-				break;
-			}
 			case VM_ALLOC:
 			{
 				mm_msg.VM_BASE = do_vm_alloc();
@@ -54,7 +50,7 @@ void init_mm()
 {
 	int i;
 	
-	mi = (MEMINFO*)(MEM_INFO_VA_BASE);
+	mi = (struct meminfo*)(MEM_INFO_VA_BASE);
 	
 	printf("\n{MM}    Page Directory Base: 0x%.8x", mi->page_dir_base);
 	printf("\n{MM}    Page Table Base: 0x%.8x", mi->page_tbl_base);
@@ -62,8 +58,9 @@ void init_mm()
 	
 	/* 所管理的物理内存是存放页表的那一块 */
 	
-	u32 avail_pm_base = mi->page_dir_base;
-	u32 avail_pm_size = 0;
+	uint32_t avail_pm_base = mi->page_dir_base;
+	uint32_t avail_pm_size = 0;
+	uint32_t ram_size = 0;
 	int avail_pm_pages;
 	
 	for (i = 0; i < mi->nr_pm_block; i++)
@@ -72,12 +69,16 @@ void init_mm()
 			mi->pm_block_info[i].avail_base,
 			mi->pm_block_info[i].avail_size);
 		
+		int n = mi->pm_block_info[i].avail_base + mi->pm_block_info[i].avail_size;
+		if (n > ram_size) { ram_size = n; }
+		
 		if (mi->pm_block_info[i].avail_base == mi->page_dir_base)
 		{
 			avail_pm_size = mi->pm_block_info[i].avail_size;
 			avail_pm_pages = avail_pm_size / PAGE_SIZE;
 		}
 	}
+	printf("\n{MM}    RAM Size: %dM", ram_size >> 20);
 	int reserved_pages = 1 + 1024; /* 二级页表最大占据的页面数: 1 个页目录, 1024 个页表 */
 	
 	/**
@@ -85,13 +86,13 @@ void init_mm()
 	 * 由于页目录和页表从 avail_pm_base 开始存放, 因此将其占据的页框 type 设为 PAGE_RESERVED,
 	 * 被OS保留; 其余设为 PAGE_FREE, 以便后续分配.
 	 *
-	 * 链表紧随页表存放, 所占内存大小 sizeof(PAGE_FRAME) * avail_pages, 这部分内存也要保留.
+	 * 链表紧随页表存放, 所占内存大小 sizeof(struct page_list) * avail_pages, 这部分内存也要保留.
 	 */
 
-	PAGE_FRAME *current, *next;
-	pf_list = (PAGE_FRAME*)(avail_pm_base + reserved_pages * PAGE_SIZE);
+	struct page_list *current, *next;
+	pf_list = (struct page_list*)(avail_pm_base + reserved_pages * PAGE_SIZE);
 	current = pf_list;
-	reserved_pages += (sizeof(PAGE_FRAME) * avail_pm_pages + PAGE_SIZE - 1) / PAGE_SIZE;
+	reserved_pages += (sizeof(struct page_list) * avail_pm_pages + PAGE_SIZE - 1) / PAGE_SIZE;
 	
 	for (i = 0; i < avail_pm_pages; i++, current = next)
 	{
@@ -99,7 +100,7 @@ void init_mm()
 		{
 			current->REF = 1;
 			current->TYPE = PAGE_RESERVED;
-			current->PROTECT = PAGE_READ | PAGE_WRITE;
+			current->PROTECT = PAGE_READ | PAGE_READWRITE;
 		}
 		else
 		{
@@ -117,15 +118,12 @@ void init_mm()
 	pf_list->PREV = current;
 	
 	/* 将 TYPE=PAGE_FREE 的页框从页表中解除映射, 需要的时候再建立映射 */
-	u32 *pde = (u32*) mi->page_dir_base;
-	u32 *pte = (u32*) mi->page_tbl_base;
+	uint32_t *pde = (uint32_t*) mi->page_dir_base;
+	uint32_t *pte = (uint32_t*) mi->page_tbl_base;
 	
 	/* (1) 将对应的 PTE 清零 */
-	disable_int();
-	disable_paging();
-	
 	current = pf_list;
-	while (current->NEXT != pf_list)
+	do
 	{
 		if (current->TYPE == PAGE_FREE)
 		{
@@ -133,19 +131,17 @@ void init_mm()
 			    PTE_INDEX(current->BASE)] = 0;
 		}
 		current = current->NEXT;
-	}
+	} while (current != pf_list);
+	
 	/* (2) 如果某一页目录项对应的页表已被全部清零, 则将该页目录项清零 */
 	for (i = 0; i < mi->nr_pde; i++)
 	{
-		pte = (u32*) GET_BASE(pde[i]);
+		pte = (uint32_t*) GET_BASE(pde[i]);
 		if (pte[0] == 0) /* 如果第一个 PTE 为零, 则后面的一定也是零 */
 		{
 			pde[i] = 0;
 		}
 	}
-	enable_int();
-	reload_cr3(getcr3());
-	enable_paging();
 }
 
 

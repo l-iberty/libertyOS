@@ -6,7 +6,7 @@ LDKFLAGS=	-s -melf_i386 -Ttext 0x1b400 -Map kernel.map # -s 剔除符号信息
 CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin # -g3 加入符号信息
 
 KOBJS=		kernel.o start.o 8259A.o main.o protect.o clock.o syscall.o \
-		keyboard.o tty.o hd.o console.o proc.o irq.o klib.o string.o \
+		proc.o irq.o keyboard.o tty.o hd.o console.o klib.o string.o \
 		printf.o vsprintf.o io.o fs_main.o open.o misc.o close.o \
 		rdwt.o unlink.o mm_main.o vmalloc.o exe_main.o fork.o
 
@@ -46,24 +46,24 @@ clock.o: kernel/clock.c
 syscall.o: kernel/syscall.asm
 	nasm $(ASMKFLAGS) $< -o $@
 
-keyboard.o: kernel/keyboard.c
-	gcc $(CFLAGS) $< -o $@
-
-tty.o: kernel/tty.c
-	gcc $(CFLAGS) $< -o $@
-	
-hd.o: kernel/hd.c
-	gcc $(CFLAGS) $< -o $@
-
-console.o: kernel/console.c
-	gcc $(CFLAGS) $< -o $@
-
 proc.o: kernel/proc.c
 	gcc $(CFLAGS) $< -o $@
 
 irq.o: kernel/irq.c
 	gcc $(CFLAGS) $< -o $@
 	
+keyboard.o: driver/keyboard.c
+	gcc $(CFLAGS) $< -o $@
+
+tty.o: driver/tty.c
+	gcc $(CFLAGS) $< -o $@
+	
+hd.o: driver/hd.c
+	gcc $(CFLAGS) $< -o $@
+
+console.o: driver/console.c
+	gcc $(CFLAGS) $< -o $@
+
 klib.o: lib/klib.asm
 	nasm $(ASMKFLAGS) $< -o $@
 

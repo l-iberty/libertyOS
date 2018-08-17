@@ -40,6 +40,6 @@
 
 #define KEYMAP_SIZE	0x45
 
-char keymap[KEYMAP_SIZE];
+extern char keymap[KEYMAP_SIZE];
 
 #endif /* KEYMAP_H */

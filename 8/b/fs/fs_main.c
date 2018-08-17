@@ -6,6 +6,15 @@
 #include "stdlib.h"
 #include "string.h"
 
+uint8_t fsbuf[BUFSIZE];
+uint8_t imap_buf[NR_IMAP_SECTORS * SECTOR_SIZE];
+uint8_t smap_buf[NR_SMAP_SECTORS * SECTOR_SIZE];
+uint8_t inode_buf[NR_INODE_SECTORS * SECTOR_SIZE];
+uint8_t dirent_buf[NR_ROOTDIR_SECTORS * SECTOR_SIZE];
+
+struct file_desc f_desc_table[NR_FILES];
+struct i_node	 inode_table[NR_INODES];
+struct message   fs_msg;
 
 void TaskFS()
 {
@@ -54,12 +63,12 @@ void init_fs()
 	printf("\n{FS}    initializing file system...");
 
 	/* initialize f_desc_table & inode_table */
-	memset(f_desc_table, 0, sizeof(FILE_DESC) * NR_FILES);
-	memset(inode_table, 0, sizeof(I_NODE) * NR_FILES);
+	memset(f_desc_table, 0, sizeof(struct file_desc) * NR_FILES);
+	memset(inode_table, 0, sizeof(struct i_node) * NR_FILES);
 
 	/* open hd driver */	
 	printf("\n{FS}    opening hard-disk driver...");
-	MESSAGE msg;
+	struct message msg;
 	msg.value = DEV_OPEN;
 	sendrecv(BOTH, PID_TASK_HD, &msg);
 	
@@ -76,7 +85,7 @@ void mkfs()
 	/***************************/
 	/*	Super Block	   */
 	/***************************/
-	SUPER_BLOCK sb;
+	struct super_block sb;
 	sb.nr_inodes		= NR_INODES;
 	sb.nr_inode_sectors	= NR_INODE_SECTORS;
 	sb.nr_sectors		= NR_SECTORS;
@@ -93,7 +102,7 @@ void mkfs()
 	/*	inode map	   */
 	/***************************/
 	idx = SECTOR_SIZE;
-	for (i = 0; i < (NR_CONSOLES + 1); i++)
+	for (i = 0; i < (NR_CONSOLE + 1); i++)
 		fsbuf[idx] |= (1 << i);
 
 /************************************************************
@@ -127,8 +136,8 @@ void mkfs()
 	/***************************/
 	_idx += sb.nr_smap_sectors * SECTOR_SIZE;
 	idx = _idx;
-	I_NODE* pin = (I_NODE*) &fsbuf[idx];
-	I_NODE* pin2 = inode_table;
+	struct i_node* pin = (struct i_node*) &fsbuf[idx];
+	struct i_node* pin2 = inode_table;
 	
 	/* inode for `/` */
 	pin2->i_mode = pin->i_mode = I_MODE_DIR;
@@ -142,13 +151,13 @@ void mkfs()
 	idx += INODE_DISK_SIZE; 
 	
 	/* inodes for dev_tty0~3 */
-	u8* pch = &fsbuf[idx];
-	for (i = 0; i < NR_CONSOLES; i++, pch += INODE_DISK_SIZE, pin2++) 
+	uint8_t* pch = &fsbuf[idx];
+	for (i = 0; i < NR_CONSOLE; i++, pch += INODE_DISK_SIZE, pin2++) 
 	{
-		pin = (I_NODE*) pch;
+		pin = (struct i_node*) pch;
 		pin2->i_mode = pin->i_mode = I_MODE_CHARDEV;
 		pin2->i_size = pin->i_size = 0; /* dev_tty 不存在于磁盘上 */
-		pin2->i_start_sector = pin->i_start_sector = (u32) (-1);
+		pin2->i_start_sector = pin->i_start_sector = (uint32_t) (-1);
 		pin2->i_nr_sectors = pin->i_nr_sectors = 0;
 		pin2->i_nr_inode = i + 2;
 		pin2->i_cnt = 0;
@@ -162,12 +171,12 @@ void mkfs()
 	idx = _idx;
 	
 	/* `.` */
-	DIR_ENTRY* pde = (DIR_ENTRY*) &fsbuf[idx];
+	struct dir_entry* pde = (struct dir_entry*) &fsbuf[idx];
 	pde->nr_inode = 1;
 	strcpy(pde->name, ".");
 	
 	/* `dev_tty0~3` */
-	for (i = 0; i < NR_CONSOLES; i++) 
+	for (i = 0; i < NR_CONSOLE; i++) 
 	{
 		pde++;
 		pde->nr_inode = i + 2;
@@ -184,7 +193,7 @@ void mkfs()
  */
 void write_hd(int sector, void* buf, int len)
 {
-	MESSAGE msg;
+	struct message msg;
 	msg.value = DEV_WRITE;
 	msg.DRIVE = 0;
 	msg.SECTOR = sector;
@@ -201,7 +210,7 @@ void write_hd(int sector, void* buf, int len)
  */
 void read_hd(int sector, void* buf, int len)
 {
-	MESSAGE msg;
+	struct message msg;
 	msg.value = DEV_READ;
 	msg.DRIVE = 0;
 	msg.SECTOR = sector;

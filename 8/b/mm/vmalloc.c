@@ -3,6 +3,7 @@
 #include "type.h"
 #include "sysconst.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "global.h"
 
 
@@ -18,11 +19,11 @@
  * @param vm_protect
  *	The type of memory allocation. This parameter must contain one of the following values:
  *	- PAGE_READ
- *	- PAGE_WRITE
+ *	- PAGE_READWRITE
  */
-void *vm_alloc(void *vm_addr, u32 vm_size, u32 vm_protect)
+void *vm_alloc(void *vm_addr, uint32_t vm_size, uint32_t vm_protect)
 {
-	MESSAGE msg;
+	struct message msg;
 
 	msg.value	= VM_ALLOC;
 	msg.VM_ADDR	= vm_addr;
@@ -30,6 +31,11 @@ void *vm_alloc(void *vm_addr, u32 vm_size, u32 vm_protect)
 	msg.VM_PROTECT	= vm_protect;
 	
 	sendrecv(BOTH, PID_TASK_MM, &msg);
+	
+	if (msg.VM_BASE == NULL)
+	{
+		panic("%d->%d %.8x", msg.source, msg.dest, msg.VM_ADDR);
+	}
 
 	return msg.VM_BASE;
 }
@@ -37,33 +43,48 @@ void *vm_alloc(void *vm_addr, u32 vm_size, u32 vm_protect)
 void *do_vm_alloc()
 {
 	int i;
-	u32 laddr = 0; /* return value */
-	
+	uint32_t laddr = 0; /* return value */
+
 	int nr_pages = (mm_msg.VM_SIZE + PAGE_SIZE - 1) / PAGE_SIZE;
-	u32 vm_addr = (u32)mm_msg.VM_ADDR;
-	u32 vm_protect = mm_msg.VM_PROTECT;
+	uint32_t vm_addr = (uint32_t)mm_msg.VM_ADDR;
+	uint32_t vm_protect = mm_msg.VM_PROTECT;
 	
-	PAGE_FRAME *current, *p;
-	u32 pde_idx, pte_idx, pde_val, pte_val;
-	u32 *pde = (u32*)mi->page_dir_base;
-	u32 *pte = (u32*)mi->page_tbl_base;
+	struct page_list *current, *p;
+	uint32_t pde_idx, pte_idx, pde_val, pte_val;
+	uint32_t *pde = (uint32_t*)mi->page_dir_base;
+	uint32_t *pte = (uint32_t*)mi->page_tbl_base;
 	
 	current = pf_list;
 	p = NULL;
 
-	while (current->NEXT != pf_list)
+	do
 	{
 		if (vm_addr >= current->BASE &&
-		    vm_addr < ((PAGE_FRAME*)current->NEXT)->BASE)
+		    vm_addr < ((struct page_list*)current->NEXT)->BASE)
 		{
-			p = current;
-			break;
+			/* 检查: 从 current->BASE 开始是否有连续可用的 nr_pages 个页框可共分配? */
+			for (p = current, i = 0; i < nr_pages; i++, p = p->NEXT)
+			{
+				if (p->TYPE != PAGE_FREE) break;
+			}
+			
+			if (i >= nr_pages) /* current->BASE is available */
+			{
+				p = current;
+				break;
+			}
+			else /* current->BASE is not available, try next */
+			{
+				p = NULL;
+				vm_addr = ((struct page_list*)current->NEXT)->BASE;
+			}
 		}
 		current = current->NEXT;
-	}
+	} while (current != pf_list);
+	
 	if (p != NULL)
 	{
-		printf("\n{do_vm_alloc} actual base: 0x%.8x, type: ", p->BASE);
+		printf("\n{do_vm_alloc} actual base: 0x%.8x", p->BASE);
 		laddr = p->BASE;
 		if (p->TYPE == PAGE_FREE)
 		{
@@ -75,7 +96,7 @@ void *do_vm_alloc()
 			pte += pde_idx * MAX_PAGE_ITEM;
 			
 			/* 填写 PDE */
-			int t = &pte[pte_idx] - (u32*)ROUND_DOWN(&pte[pte_idx], PAGE_SIZE);
+			int t = &pte[pte_idx] - (uint32_t*)ROUND_DOWN(&pte[pte_idx], PAGE_SIZE);
 			int nr_pde = ((nr_pages + t) * PAGE_SIZE + 
 				     PAGE_MAPPING_SIZE - 1) / PAGE_MAPPING_SIZE;
 			
@@ -83,11 +104,15 @@ void *do_vm_alloc()
 			{
 				if (vm_protect & PAGE_READ)
 				{
-					pde[pde_idx] = pde_val | (PG_P | PG_RWR | PG_USU);
+					pde_val |= (PG_P | PG_RWR | PG_USU);
 				}
-				if (vm_protect & PAGE_WRITE)
+				if (vm_protect & PAGE_READWRITE)
 				{
-					pde[pde_idx] = pde_val | (PG_P | PG_RWW | PG_USU);
+					pde_val |= (PG_P | PG_RWW | PG_USU);
+				}
+				if (pde[pde_idx] == 0)
+				{
+					pde[pde_idx] = pde_val;
 				}
 			}
 			
@@ -99,10 +124,10 @@ void *do_vm_alloc()
 					pte[pte_idx] = pte_val | (PG_P | PG_RWR | PG_USU);
 					p->PROTECT |= PAGE_READ;
 				}
-				if (vm_protect & PAGE_WRITE)
+				if (vm_protect & PAGE_READWRITE)
 				{
 					pte[pte_idx] = pte_val | (PG_P | PG_RWW | PG_USU);
-					p->PROTECT |= PAGE_WRITE;
+					p->PROTECT |= PAGE_READWRITE;
 				}
 				p->REF++;
 				p->TYPE = PAGE_USED;
@@ -110,16 +135,8 @@ void *do_vm_alloc()
 			}
 			reload_cr3(getcr3());
 		}
-		else if (p->TYPE == PAGE_RESERVED)
-		{
-			printf("RESERVED ");
-		}
-		else if (p->TYPE == PAGE_USED)
-		{
-			printf("USED ");
-		}
 	}
-
+	
 	return (void*)laddr;
 }
 

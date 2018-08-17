@@ -1,7 +1,3 @@
-/**
- * keyboard.h 键盘相关
- */
-
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
@@ -14,11 +10,12 @@
 
 void keyboard_read();
 
-typedef struct {
-	u8	*p_head;		/* 队列头指针 */
-	u8	*p_tail;		/* 队列尾指针 */
+struct kb_input
+{
+	uint8_t	*p_head;		/* 队列头指针 */
+	uint8_t	*p_tail;		/* 队列尾指针 */
 	int	count;			/* 缓冲区内待处理元素数 */
-	u8	buf_queue[KB_BUFSIZE];	/* 缓冲区(队列), 存储 Scan Code */
-} KB_INPUT;
+	uint8_t	buf_queue[KB_BUFSIZE];	/* 缓冲区(队列), 存储 Scan Code */
+};
 
 #endif /* KEYBOARD_H */

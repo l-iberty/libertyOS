@@ -17,7 +17,7 @@
  */
 int open(const char* pathname, int flags)
 {
-	MESSAGE msg;
+	struct message msg;
 	
 	msg.value	= FILE_OPEN;
 	msg.PATHNAME	= (void*) pathname;
@@ -36,7 +36,7 @@ int do_open()
 {
 	int i, j;
 	int fd = -1;
-	PROCESS* pcaller = proc_table + fs_msg.source;
+	struct proc* pcaller = proc_table + fs_msg.source;
 	
 	/* dump parameters */
 	int flags = fs_msg.FLAGS;
@@ -51,11 +51,11 @@ int do_open()
 	}
 	
 	memcpy(va2la(proc_table + PID_TASK_FS, filename),
-			va2la(pcaller, fs_msg.PATHNAME + 1), /* `+1` skip root dir `/` */
-			namelen);
+	       va2la(pcaller, fs_msg.PATHNAME + 1), /* `+1` skip root dir `/` */
+	       namelen);
 	filename[namelen] = 0;
 	
-	/* find a free slot in PROCESS::filp[] */
+	/* find a free slot in struct proc::filp[] */
 	for (i = 0; i < NR_FILES; i++) 
 	{
 		if (pcaller->filp[i] == NULL) 
@@ -65,7 +65,7 @@ int do_open()
 		}
 	}
 	if (fd < 0 || fd >= NR_FILES)
-		halt("\n#ERROR#-do_open: No available slot in PROCESS::filp[] {PID:0x%.8x}", pcaller->pid);
+		panic("\n#ERROR#-do_open: No available slot in struct proc::filp[] {PID:0x%.8x}", pcaller->pid);
 	
 	/* find a free slot in f_desc_table[] */
 	for (i = 0; i < NR_FILES; i++) 
@@ -74,13 +74,13 @@ int do_open()
 			break;
 	}
 	if (i < 0 || i >= NR_FILES)
-		halt("\n#ERROR#-do_open: No available slot in f_desc_table[] {PID:0x%.8x}", pcaller->pid);
+		panic("\n#ERROR#-do_open: No available slot in f_desc_table[] {PID:0x%.8x}", pcaller->pid);
 
 	/* Now, `i` is the index of a free slot in f_desc_table[] */		
 	
 	int nr_inode = find_file(filename);
 	
-	I_NODE* pin; /* `pin` is ptr to the slot in inode_table[] */
+	struct i_node* pin; /* `pin` is ptr to the slot in inode_table[] */
 	
 	/* check whether `pcaller` tries to open a file which has already been opened */
 	for (j = 0; j < NR_FILES; j++) 
@@ -93,7 +93,7 @@ int do_open()
 				if (pin->i_nr_inode == nr_inode) 
 				{
 					printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:0x%.8x}",
-							fs_msg.PATHNAME, pcaller->pid);
+						fs_msg.PATHNAME, pcaller->pid);
 					return -1;
 				}
 			}
@@ -127,7 +127,7 @@ int do_open()
 	
 	if (pin) 
 	{
-		/* connect PROCESS::filp[] with f_desc_table[] */
+		/* connect struct proc::filp[] with f_desc_table[] */
 		pcaller->filp[fd] = &f_desc_table[i];
 		
 		/* connect f_desc_table[] with inode_table[] */
@@ -147,9 +147,9 @@ int do_open()
  * 3. 在 inode_array 中创建一个 inode - alloc_inode()
  * 4. 在 root dir 中创建一个目录项 - alloc_dir_entry()
  */
-I_NODE* create_file(char* filename, int flags)
+struct i_node* create_file(char* filename, int flags)
 {
-	I_NODE* pin;
+	struct i_node* pin;
 	int inode_idx, sec_idx, nr_inode;
     
 	inode_idx = alloc_imap_bit();
@@ -261,18 +261,18 @@ int alloc_smap_bits(int nr_sectors)
  *
  * @return ptr to the slot in inode_table[]
  */
-I_NODE* alloc_inode(int nr_inode, u32 mode, u32 size, u32 start_sector, u32 nr_sectors)
+struct i_node* alloc_inode(int nr_inode, uint32_t mode, uint32_t size, uint32_t start_sector, uint32_t nr_sectors)
 {
-	I_NODE *pin, *pin2;
+	struct i_node *pin, *pin2;
 	
 	read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 	
 	/* find a free slot in inode_array */
-	u8* pch = inode_buf;
+	uint8_t* pch = inode_buf;
 	for (int i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) 
 	{
-        pin = (I_NODE*) pch;
-		/* if I_NODE::i_mode == 0, it's a free slot in inode_array */
+        pin = (struct i_node*) pch;
+		/* if struct i_node::i_mode == 0, it's a free slot in inode_array */
 		if (pin->i_mode == 0) 
 		{
 			pin->i_mode		= mode;
@@ -304,15 +304,15 @@ I_NODE* alloc_inode(int nr_inode, u32 mode, u32 size, u32 start_sector, u32 nr_s
  */
 void alloc_dir_entry(int nr_inode, char* filename)
 {
-	DIR_ENTRY* pde;
+	struct dir_entry* pde;
 	
 	read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 	
 	/* find a free slot in root dir */
-	pde = (DIR_ENTRY*) dirent_buf;
+	pde = (struct dir_entry*) dirent_buf;
 	for (int i = 0; i < NR_FILES; i++, pde++) 
 	{
-		/* if DIR_ENTRY::nr_inode == 0, it's a free slot in root dir */
+		/* if struct dir_entry::nr_inode == 0, it's a free slot in root dir */
 		if (pde->nr_inode == 0) 
 		{
 			pde->nr_inode = nr_inode;
@@ -331,9 +331,9 @@ void alloc_dir_entry(int nr_inode, char* filename)
 /**
  * @return	ptr to the slot in inode_table[], or NULL if failed
  */
-I_NODE* get_inode(int nr_inode)
+struct i_node* get_inode(int nr_inode)
 {
-	I_NODE* pin = NULL;
+	struct i_node* pin = NULL;
 	
 	for (int i = 0; i < NR_INODES; i++) 
 	{

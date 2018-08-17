@@ -120,8 +120,8 @@
 #define SCREEN_SIZE		(SCREEN_HIGH * SCREEN_WIDTH)
 #define V_MEM_SCREEN		(SCREEN_SIZE * 2) /* 一个屏幕映射到显存空间的大小 = 80*25*2 = 4000 字节 */
 
-#define NR_CONSOLES		4	/* 控制台个数 (也是终端个数) */
-#define NR_FILES		32	/* 根目录最大文件数 = SECTOR_SIZE / sizeof(DIR_ENTRY) */
+#define NR_CONSOLE		4	/* 控制台个数 (也是终端个数) */
+#define NR_FILES		32	/* 根目录最大文件数 = SECTOR_SIZE / sizeof(struct dir_entry) */
 
 /* I/O ports for 8253/8254 PIT (Programmable Interval Timer) */
 #define TIMER_0			0x40

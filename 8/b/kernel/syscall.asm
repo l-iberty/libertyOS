@@ -18,17 +18,17 @@ _NR_getcr3		equ	11
 INT_VECTOR_SYSCALL	equ	0x80
 
 global	get_ticks	; int	get_ticks();
-global	sendrecv	; void	sendrecv(int func_type, int pid, MESSAGE* p_msg);
-global	getpid		; u32	getpid();
-global	getppid		; u32	getppid();
+global	sendrecv	; void	sendrecv(int func_type, int pid, struct message* p_msg);
+global	getpid		; uint32_t	getpid();
+global	getppid		; uint32_t	getppid();
 global	printk		; void	printk(const char* sz);
-global	sem_init	; int	sem_init(SEMAPHORE* p_sem, int value);
-global	sem_post	; int	sem_post(SEMAPHORE* p_sem);
-global	sem_wait	; int	sem_wait(SEMAPHORE* p_sem);
+global	sem_init	; int	sem_init(struct semaphore* p_sem, int value);
+global	sem_post	; int	sem_post(struct semaphore* p_sem);
+global	sem_wait	; int	sem_wait(struct semaphore* p_sem);
 global	disable_paging	; void	disable_paging();
 global	enable_paging	; void	enable_paging();
-global	reload_cr3	; void	reload_cr3(u32 cr3);
-global	getcr3		; u32	getcr3();
+global	reload_cr3	; void	reload_cr3(uint32_t cr3);
+global	getcr3		; uint32_t	getcr3();
 
 
 [SECTION .text]

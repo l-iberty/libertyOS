@@ -25,20 +25,20 @@ MEM_INFO_VA_BASE	equ	8000h
 
 ; 组织内存信息的结构体定义如下:
 ;
-;	struct MEMINFO
+;	struct meminfo
 ;	{
-;		u32 page_dir_base; 页目录物理基地址
-;		u32 page_tbl_base; 页表物理基地址
+;		uint32_t page_dir_base; 页目录物理基地址
+;		uint32_t page_tbl_base; 页表物理基地址
 ;		int nr_pde;	   页目录项个数
 ;		int nr_pm_block;   可用的物理内存块个数
 ;		struct PM_BLOCK_INFO
 ;		{
-;			u32 avail_base;
-;			u32 avail_size;
+;			uint32_t avail_base;
+;			uint32_t avail_size;
 ;		} pm_block_info[MAX_PM_BLOCK]; 描述每个内存块
 ;	}
 
-; MEMINFO 成员变量的偏移:
+; struct meminfo 成员变量的偏移:
 page_dir_base		equ	0
 page_tbl_base		equ	4
 nr_pde			equ	8

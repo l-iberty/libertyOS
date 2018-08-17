@@ -10,11 +10,7 @@
 #include "global.h"
 #include "irq.h"
 
-extern TTY	tty_table[NR_CONSOLES];
-extern CONSOLE	console_table[NR_CONSOLES];
-
-TTY* p_current_tty;
-
+struct tty* p_current_tty;
 
 char keymap[KEYMAP_SIZE] = {
 // Make Code
@@ -92,7 +88,7 @@ char keymap[KEYMAP_SIZE] = {
 
 void keyboard_handler(int irq)
 {
-	u8 scan_code = in_byte(0x60);
+	uint8_t scan_code = in_byte(0x60);
 	
 	p_current_tty = tty_table + nr_current_console;
 	
@@ -112,7 +108,7 @@ void keyboard_handler(int irq)
 
 void keyboard_read()
 {
-	u8 scan_code;
+	uint8_t scan_code;
 	
 	int nr_console = p_current_tty - tty_table;
 	
@@ -165,7 +161,7 @@ void keyboard_read()
 			{
 				init_video();
 				/* 初始化所有 TTY */
-				for (TTY* p_tty = tty_table; p_tty < tty_table + NR_CONSOLES; p_tty++) 
+				for (struct tty* p_tty = tty_table; p_tty < tty_table + NR_CONSOLE; p_tty++) 
 				{
 					init_tty(p_tty);
 				}

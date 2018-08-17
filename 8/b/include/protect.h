@@ -1,17 +1,13 @@
-/**
- * protect.h 与保护模式相关的函数声明
- */
-
 #ifndef PROTECT_H
 #define PROTECT_H
 
 #include "proc.h"
 
-void	init_desc(u8* p_desc, u32 base, u32 limit, u16 attr);
-void	init_idt_desc(u8* idt_base, int vecno, u16 selector, u32 proc_offset, u8 attr);
-void	init_prot();
-u32	get_base(u8* p_desc);
-u32	get_limit(u8* p_desc);
-u32	granularity(u8* p_desc);
+void		init_desc(uint8_t* p_desc, uint32_t base, uint32_t limit, uint16_t attr);
+void		init_idt_desc(uint8_t* idt_base, int vecno, uint16_t selector, uint32_t proc_offset, uint8_t attr);
+void		init_prot();
+uint32_t	get_base(uint8_t* p_desc);
+uint32_t	get_limit(uint8_t* p_desc);
+uint32_t	granularity(uint8_t* p_desc);
 
 #endif /* PROTECT_H */

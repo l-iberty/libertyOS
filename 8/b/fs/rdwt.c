@@ -9,7 +9,7 @@
 
 size_t write(int fd, void* buf, size_t len)
 {
-	MESSAGE msg;
+	struct message msg;
 	
 	msg.FD		= fd;
 	msg.BUF		= buf;
@@ -23,7 +23,7 @@ size_t write(int fd, void* buf, size_t len)
 
 size_t read(int fd, void* buf, size_t len)
 {
-	MESSAGE msg;
+	struct message msg;
 	
 	msg.FD		= fd;
 	msg.BUF		= buf;
@@ -37,7 +37,7 @@ size_t read(int fd, void* buf, size_t len)
 
 size_t do_rdwt()
 {
-	PROCESS* pcaller = proc_table + fs_msg.source;
+	struct proc* pcaller = proc_table + fs_msg.source;
 	
 	size_t nr_bytes = 0; /* num of bytes RD/WR */
 	
@@ -47,12 +47,12 @@ size_t do_rdwt()
 	size_t len = fs_msg.LEN;
 	int type = fs_msg.value;
 	
-	FILE_DESC* pfd = pcaller->filp[fd];
+	struct file_desc* pfd = pcaller->filp[fd];
 	
 	if (pfd == NULL) /* file is closed */
 		return -1;
 	
-	I_NODE* pin = pfd->fd_inode;
+	struct i_node* pin = pfd->fd_inode;
 	int nr_inode = pin->i_nr_inode;
 	int chunk; /* 每轮迭代读写多少字节? */
 	

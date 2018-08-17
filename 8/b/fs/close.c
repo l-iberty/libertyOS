@@ -14,7 +14,7 @@
  */
 int close(int fd)
 {
-	MESSAGE msg;
+	struct message msg;
 	
 	msg.value = FILE_CLOSE;
 	msg.FD = fd;
@@ -29,21 +29,19 @@ int close(int fd)
  */
 int do_close()
 {
-	
 	int fd = fs_msg.FD;
-	PROCESS* pcaller = proc_table + fs_msg.source;
+	struct proc* pcaller = proc_table + fs_msg.source;
 	
-	if (fd < 0 || fd >= NR_FILES)
-		return -1;
+	if (fd < 0 || fd >= NR_FILES) { return -1; }
 	
 	clear_inode(pcaller->filp[fd]->fd_inode);	/* 1.释放 inode_table[] 里相应槽位 */
-	pcaller->filp[fd]->fd_inode = NULL;			/* 2.释放指向 inode_table[] 槽位的指针 */
-	pcaller->filp[fd] = NULL;					/* 3.释放指向 f_desc_table[] 槽位的指针 */
+	pcaller->filp[fd]->fd_inode = NULL;		/* 2.释放指向 inode_table[] 槽位的指针 */
+	pcaller->filp[fd] = NULL;			/* 3.释放指向 f_desc_table[] 槽位的指针 */
 	
 	return 0;
 }
 
-void clear_inode(I_NODE* pin)
+void clear_inode(struct i_node* pin)
 {
 	assert(pin);
 	assert(pin->i_cnt > 0);

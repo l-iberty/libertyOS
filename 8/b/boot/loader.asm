@@ -550,8 +550,8 @@ _MemInfoBuf:	times 128 db 0
 ;
 ;	内存块描述结构 MEM_DS 定义为:
 ;	{
-;		u32 BaseAddrLow;
-;		u32 LengthLow;
+;		uint32_t BaseAddrLow;
+;		uint32_t LengthLow;
 ;	}
 ;	用于记录 ARDS 中的两个字段
 ;

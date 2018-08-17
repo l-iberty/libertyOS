@@ -8,16 +8,18 @@
 #define SCROLL_DOWN	1
 
 
-typedef struct {
-	u32	current_start_addr;	/* 当前显示到什么位置 */
-	u32	orig_addr;		/* 当前控制塔对应显存位置 */
-	u32	v_mem_limit;		/* 当前控制台占的显存大小 */
-	u32	cursor_pos;		/* 当前光标位置 */
-} CONSOLE;
+struct console
+{
+	uint32_t	current_start_addr;	/* 当前显示到什么位置 */
+	uint32_t	orig_addr;		/* 当前控制塔对应显存位置 */
+	uint32_t	v_mem_limit;		/* 当前控制台占的显存大小 */
+	uint32_t	cursor_pos;		/* 当前光标位置 */
+};
 
-CONSOLE	console_table[NR_CONSOLES];
+extern struct console console_table[NR_CONSOLE];
 
 void select_console(int nr_console);
-void scroll_screen(CONSOLE* p_con, int direction);
+void scroll_screen(struct console* p_con, int direction);
 
-#endif /* CONSOLE_H */
+#endif // CONSOLE_H
+

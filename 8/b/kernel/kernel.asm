@@ -457,7 +457,7 @@ proc_begin_reenter:
 	popad
 	iretd
 
-; STACK_FRAME 结构体内各个字段相对结构体首部的偏移
+; struct stack_frame  结构体内各个字段相对结构体首部的偏移
 EAX_OFFSET		equ	44
 K_ESP_OFFSET		equ	28
 SS_OFFSET		equ	64

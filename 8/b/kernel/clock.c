@@ -18,7 +18,7 @@
  */
 void schedule()
 {
-	PROCESS* p_proc;
+	struct proc* p_proc;
 	int max_ticks = 0;
 	
 	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) 
@@ -42,7 +42,7 @@ void schedule()
 
 void disp_time()
 {
-	u8 second, minute, hour, day, month, year;
+	uint8_t second, minute, hour, day, month, year;
 	
 	out_byte(CMOS_ADDR_REG, NR_SECOND);
 	second = in_byte(CMOS_DATA_REG);
@@ -84,8 +84,8 @@ void init_clock()
 	/* Initialize 8253 PIT */
 	int v = TIMER_IN_FREQ / CLK_FREQ;
 	out_byte(TIMER_MODE_CTL, RATE_GENERATOR);
-	out_byte(TIMER_0, (u8) v); /* Low-Byte */
-	out_byte(TIMER_0, (u8) (v >> 8)); /* High-Byte */
+	out_byte(TIMER_0, (uint8_t) v); /* Low-Byte */
+	out_byte(TIMER_0, (uint8_t) (v >> 8)); /* High-Byte */
 	
 	put_irq_handler(IRQ_CLOCK, clock_handler);
 	enable_irq(IRQ_CLOCK);

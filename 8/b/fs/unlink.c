@@ -16,7 +16,7 @@
  */
 int unlink(const char* pathname)
 {
-	MESSAGE msg;
+	struct message msg;
 	
 	msg.value	= FILE_UNLINK;
 	msg.PATHNAME	= (void*) pathname;
@@ -30,7 +30,7 @@ int unlink(const char* pathname)
 int do_unlink()
 {
 	int i;
-	PROCESS* pcaller = proc_table + fs_msg.source;
+	struct proc* pcaller = proc_table + fs_msg.source;
 	
 	/* dump parameters */
 	int namelen = fs_msg.NAMELEN;
@@ -56,7 +56,7 @@ int do_unlink()
 		return -1;
 	}
 	
-	I_NODE* pin;
+	struct i_node* pin;
 	for (pin = inode_table; pin < inode_table + NR_INODES; pin++) 
 	{
 		if (pin->i_nr_inode == nr_inode)
@@ -99,7 +99,7 @@ int do_unlink()
 		/*****************************/
 		/* clear inode_table[] entry */
 		/*****************************/
-		memset(pin, 0, sizeof(I_NODE));
+		memset(pin, 0, sizeof(struct i_node));
 		
 		int byte_idx, bit_idx;
 		
@@ -132,7 +132,7 @@ int do_unlink()
 		/* clear inode_array entry  */
 		/****************************/
 		read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
-		u8* pch = inode_buf;
+		uint8_t* pch = inode_buf;
 		for (i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) 
 		{
 			if (!memcmp(pch, pin, INODE_DISK_SIZE)) /* i-node found! */
@@ -148,12 +148,12 @@ int do_unlink()
 		/* clear root_dir entry     */
 		/****************************/
 		read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
-		DIR_ENTRY* pde = (DIR_ENTRY*) dirent_buf;
+		struct dir_entry* pde = (struct dir_entry*) dirent_buf;
 		for (i = 0; i < NR_FILES; i++, pde++) 
 		{
 			if (pde->nr_inode == nr_inode) /* dir entry found! */
 			{ 
-				memset(pde, 0, sizeof(DIR_ENTRY));
+				memset(pde, 0, sizeof(struct dir_entry));
 				write_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 				break;
 			}

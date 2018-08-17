@@ -4,16 +4,29 @@
 #include "stdlib.h"
 #include "global.h"
 
+uint8_t	task_stack_init[TASK_STACK_SIZE];
+uint8_t	task_stack_a[TASK_STACK_SIZE];
+uint8_t	task_stack_b[TASK_STACK_SIZE];
+uint8_t	task_stack_c[TASK_STACK_SIZE];
+uint8_t	task_stack_tty[TASK_STACK_SIZE];
+uint8_t	task_stack_hd[TASK_STACK_SIZE];
+uint8_t	task_stack_fs[TASK_STACK_SIZE];
+uint8_t	task_stack_mm[TASK_STACK_SIZE];
+uint8_t	task_stack_exe[TASK_STACK_SIZE];
 
-TASK task_table[NR_PROCS] = {{ Init, task_stack_init },
-                             { TaskA, task_stack_a },
-                             { TaskB, task_stack_b },
-                             { TaskC, task_stack_c },
-                             { TaskTTY, task_stack_tty },
-                             { TaskHD, task_stack_hd },
-                             { TaskFS, task_stack_fs },
-                             { TaskMM, task_stack_mm },
-                             { TaskEXE, task_stack_exe} };
+struct proc	proc_table[NR_PROCS];
+struct task	task_table[NR_PROCS];
+SYSCALL 	syscall_table[NR_SYSCALL];
+
+struct task  task_table[NR_PROCS] = {{ Init, task_stack_init },
+                                     { TaskA, task_stack_a },
+                                     { TaskB, task_stack_b },
+                                     { TaskC, task_stack_c },
+                                     { TaskTTY, task_stack_tty },
+                                     { TaskHD, task_stack_hd },
+                                     { TaskFS, task_stack_fs },
+                                     { TaskMM, task_stack_mm },
+                                     { TaskEXE, task_stack_exe} };
 		   	          
 SYSCALL syscall_table[NR_SYSCALL] = { sys_get_ticks,
                                       sys_sendrecv,
@@ -42,42 +55,42 @@ int sys_get_ticks()
 	return ticks;
 }
 
-int sys_sendrecv(int func_type, int pid, MESSAGE* p_msg)
+int sys_sendrecv(int func_type, int pid, struct message* p_msg)
 {
 	int ret = 1; /* assume failed */
+	int current_pid = p_current_proc->pid;
 	
 	switch (func_type)
 	{
 		case BOTH:
 		{
-			ret = msg_send(p_current_proc->pid, pid, p_msg);
+			ret = msg_send(current_pid, pid, p_msg);
 			if (ret == 0)
 			{
-				ret = msg_recv(pid, p_current_proc->pid, p_msg);
+				ret = msg_recv(pid, current_pid, p_msg);
 			}
 			break;
 		}
 		case SEND:
 		{
-		    	ret = msg_send(p_current_proc->pid, pid, p_msg);
+		    	ret = msg_send(current_pid, pid, p_msg);
 		    	break;
 		}
 		case RECEIVE:
 		{
-			ret = msg_recv(pid, p_current_proc->pid, p_msg);
+			ret = msg_recv(pid, current_pid, p_msg);
 		    	break;
 		}
 	}
 	return ret;
 }
 
-u32 sys_getpid()
+uint32_t sys_getpid()
 {
-	//return p_current_proc - &FIRST_PROC;
 	return p_current_proc->pid;
 }
 
-u32 sys_getppid()
+uint32_t sys_getppid()
 {
 	return p_current_proc->pid_parent;
 }
@@ -88,7 +101,7 @@ void sys_printk(const char* sz)
 	set_cursor_pos(MainPrintPos >> 1);
 }
 
-int sys_sem_init(SEMAPHORE* p_sem, int value)
+int sys_sem_init(struct semaphore* p_sem, int value)
 {
 	if (p_sem == NULL)
 		return 1;
@@ -102,7 +115,7 @@ int sys_sem_init(SEMAPHORE* p_sem, int value)
 	return 0;
 }
 
-int sys_sem_post(SEMAPHORE* p_sem)
+int sys_sem_post(struct semaphore* p_sem)
 /**
  *	V(S)
  *	{
@@ -112,7 +125,7 @@ int sys_sem_post(SEMAPHORE* p_sem)
  *	}
  */
 {
-	PROCESS* p_proc;
+	struct proc* p_proc;
 	
 	if (p_sem == NULL)
 		return 1;
@@ -123,7 +136,7 @@ int sys_sem_post(SEMAPHORE* p_sem)
 	
 	if (p_sem->value <= 0)
 	{
-		p_proc = dequeue(p_sem);
+		p_proc = dequeue(&p_sem->wait_queue);
 		p_proc->flag &= (~WAITING);
 		unblock(p_proc);
 	}
@@ -133,7 +146,7 @@ int sys_sem_post(SEMAPHORE* p_sem)
 	return 0;
 }
 
-int sys_sem_wait(SEMAPHORE* p_sem)
+int sys_sem_wait(struct semaphore* p_sem)
 /**
  *	P(S)
  *	{
@@ -153,7 +166,7 @@ int sys_sem_wait(SEMAPHORE* p_sem)
 	if (p_sem->value < 0)
 	{
 		p_current_proc->flag |= WAITING;
-		enqueue(p_sem, p_current_proc);
+		enqueue(&p_sem->wait_queue, p_current_proc);
 		block(p_current_proc);
 	}
 	
@@ -164,64 +177,61 @@ int sys_sem_wait(SEMAPHORE* p_sem)
 
 /***************************************************************/
 
-void enqueue(SEMAPHORE* p_sem, PROCESS* proc)
+void enqueue(struct proc_queue* queue, struct proc* p_proc)
 {
-	if (p_sem->wait_queue.count < NR_PROCS)
+	if (queue->count < NR_PROCS)
 	{
-		*p_sem->wait_queue.p_tail++ = proc;
-		p_sem->wait_queue.count++;
+		*queue->p_tail++ = p_proc;
+		queue->count++;
 		
-		assert(p_sem->wait_queue.count <= (NR_PROCS));
+		assert(queue->count <= NR_PROCS);
 		
-		if (p_sem->wait_queue.p_tail > &p_sem->wait_queue.proc_queue[NR_PROCS - 1])
+		if (queue->p_tail > &queue->procs[NR_PROCS - 1])
 		{
-			p_sem->wait_queue.p_tail = p_sem->wait_queue.proc_queue;
+			queue->p_tail = queue->procs;
 		}
 	}
 }
 
-PROCESS* dequeue(SEMAPHORE* p_sem)
+struct proc* dequeue(struct proc_queue* queue)
 {
-	PROCESS* proc = NULL;
+	struct proc* p_proc = NULL;
 	
-	if (p_sem->wait_queue.count > 0) 
+	if (queue->count > 0)
 	{
-		proc = *p_sem->wait_queue.p_head++;
-		p_sem->wait_queue.count--;
+		p_proc = *queue->p_head++;
+		queue->count--;
 		
-		assert(p_sem->wait_queue.count >= 0);
+		assert(queue->count >= 0);
 		
-		if (p_sem->wait_queue.p_head > &p_sem->wait_queue.proc_queue[NR_PROCS - 1]) 
+		if (queue->p_head > &queue->procs[NR_PROCS - 1])
 		{
-			p_sem->wait_queue.p_head = p_sem->wait_queue.proc_queue;
+			queue->p_head = queue->procs;
 		}
 	}
-	return proc;
+	return p_proc;
 }
 
 
 /* 由 virtual address 求 linear address */
 /* selector:offset 形式的地址称为 logical address, */
 /* 其中的`offset`称为 virtual address. */
-void* va2la(PROCESS* proc, void* va)
+void* va2la(struct proc* proc, void* va)
 {
-	u8* p_desc = &proc->LDT[INDEX_LDT_RW * DESC_SIZE]; /* Data segment descriptor */
+	uint8_t* p_desc = &proc->LDT[INDEX_LDT_RW * DESC_SIZE]; /* Data segment descriptor */
 
-	u32 base = get_base(p_desc);
-	u32 la = base + (u32) va; /* linear address */
+	uint32_t base = get_base(p_desc);
+	uint32_t la = base + (uint32_t) va; /* linear address */
 	
 	return (void*) la;
 }
 
-int msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
+int msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg)
 {
-	PROCESS* sender = proc_table + pid_sender;
-	PROCESS* receiver = proc_table + pid_receiver;
-	
-	if (deadlock(pid_sender, pid_receiver)) 
-	{
-		halt("\n>>DEADLOCK<< {pid: 0x%.4x->0x%.4x}\n", pid_sender, pid_receiver);
-	}
+	struct proc* sender = proc_table + pid_sender;
+	struct proc* receiver = proc_table + pid_receiver;
+
+	while (deadlock(pid_sender, pid_receiver)) { } /* 等待死锁解除 */
 	
 	p_msg->source = pid_sender;
 	p_msg->dest = pid_receiver;
@@ -231,8 +241,8 @@ int msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 		/* 将消息复制给 receiver 并将其取消阻塞 */
 		assert(receiver->p_msg);
 		memcpy(va2la(receiver, receiver->p_msg),
-				va2la(sender, p_msg),
-				sizeof(MESSAGE));
+		       va2la(sender, p_msg),
+		       sizeof(struct message));
 		receiver->flag &= (~RECEIVING);
 		unblock(receiver);
 	} 
@@ -243,31 +253,31 @@ int msg_send(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 		sender->p_msg = p_msg;
 		sender->pid_sendto = pid_receiver;
 		sender->pid_recvfrom = NONE;
-		enqueue_send(receiver, sender);
+		enqueue(&receiver->send_queue, sender);
 		block(sender);
 	}
 	
 	return 0;
 }
 
-int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
+int msg_recv(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg)
 {
-	PROCESS* sender = 0;
-	PROCESS* receiver = proc_table + pid_receiver;
-	int bOk = 0;
+	struct proc* sender = 0;
+	struct proc* receiver = proc_table + pid_receiver;
+	int flag = 0;
 	
 	receiver->pid_sendto = NONE;
 	receiver->pid_recvfrom = NONE;
 	
 	if (receiver->has_int_msg && (pid_sender == INTERRUPT)) 
 	{
-		MESSAGE msg;
+		struct message msg;
 		reset_msg(&msg);
 		msg.source = INTERRUPT;
 		msg.dest = pid_receiver;
 		msg.value = HARD_INT;
 		
-		memcpy(va2la(receiver, p_msg), &msg, sizeof(MESSAGE));
+		memcpy(va2la(receiver, p_msg), &msg, sizeof(struct message));
 		
 		receiver->has_int_msg = 0;
 		return 0;
@@ -275,13 +285,13 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 	
 	if (pid_sender == ANY) 
 	{
-		if (!isEmpty(&receiver->send_queue)) 
+		if (!empty(&receiver->send_queue)) 
 		{
 			/* 从 receiver 的发送队列里取第一个 */
-			sender = dequeue_send(receiver);
+			sender = dequeue(&receiver->send_queue);
 			if ((sender >= &FIRST_PROC) && (sender <= &LAST_PROC)) 
 			{
-				bOk = 1;
+				flag = 1;
 			}
 		}
 	} 
@@ -292,19 +302,19 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
 		if ((sender->flag & SENDING) &&
 		    (sender->pid_sendto == pid_receiver)) 
 		{
-		    	bOk = 1;
+		    	flag = 1;
 		}
 	}
 	
-	if (bOk) 
+	if (flag) 
 	{
 		/* 接收 sender 的消息, 并将 sender 取消阻塞 */
 		assert(p_msg);
 		assert(sender->p_msg);
 		
 		memcpy(va2la(receiver, p_msg),
-				va2la(sender, sender->p_msg),
-				sizeof(MESSAGE));
+		       va2la(sender, sender->p_msg),
+		       sizeof(struct message));
 		sender->flag &= (~SENDING);
 		unblock(sender);
 	}
@@ -325,7 +335,7 @@ int msg_recv(u32 pid_sender, u32 pid_receiver, MESSAGE* p_msg)
  * p_proc 便被"阻塞"了. 若要阻塞 p_proc, 需确保 p_proc->flag != 0, 再
  * 调用 schedule() 调度进程.
  */
-void block(PROCESS* p_proc)
+void block(struct proc* p_proc)
 {
 	assert(p_proc->flag);
 	schedule();
@@ -335,9 +345,9 @@ void block(PROCESS* p_proc)
  * unblock 不做实质性工作, p_proc 是否被阻塞取决与 p_proc->flag 是否为 0,
  * 若 p_proc->flag == 0 则 p_proc 已被取消阻塞, unblock 仅检查之.
  */
-void unblock(PROCESS* p_proc)
+void unblock(struct proc* p_proc)
 {
-	assert(p_proc->flag == 0);
+	//assert(p_proc->flag == 0);
 }
 
 /**
@@ -346,8 +356,8 @@ void unblock(PROCESS* p_proc)
  */
 int deadlock(int src, int dst)
 {
-	PROCESS* p_proc = proc_table + dst;
-	int isDeadLock = 1;
+	struct proc* p_proc = proc_table + dst;
+	int flag = 1;
 	
 	for (;;) 
 	{
@@ -355,19 +365,19 @@ int deadlock(int src, int dst)
 		{
 			if (p_proc->pid_sendto == src) 
 			{
-				isDeadLock = 1;
+				flag = 1;
 				break;
 			}
 		} 
 		else 
 		{
-			isDeadLock = 0;
+			flag = 0;
 			break;
 		}
 		
 		if (p_proc->pid_sendto < 0 || p_proc->pid_sendto >= (NR_PROCS)) 
 		{
-			isDeadLock = 0;
+			flag = 0;
 			break;
 		} 
 		else
@@ -375,7 +385,7 @@ int deadlock(int src, int dst)
 			p_proc = proc_table + p_proc->pid_sendto;
 		}
 	}
-	return isDeadLock;
+	return flag;
 }
 
 /**
@@ -383,7 +393,7 @@ int deadlock(int src, int dst)
  */
 void inform_int(int pid)
 {
-	PROCESS* p_proc = proc_table + pid;
+	struct proc* p_proc = proc_table + pid;
 	
 	if ((p_proc->flag & RECEIVING) && (p_proc->pid_recvfrom == INTERRUPT)) 
 	{
@@ -407,73 +417,30 @@ void inform_int(int pid)
  */
 void interrupt_wait()
 {
-	MESSAGE msg;
+	struct message msg;
 	sendrecv(RECEIVE, INTERRUPT, &msg);
 }
 
-void reset_msg(MESSAGE* p_msg)
+void reset_msg(struct message* p_msg)
 {
-	memset(p_msg, 0, sizeof(MESSAGE));
+	memset(p_msg, 0, sizeof(struct message));
 }
 
-void init_send_queue(PROCESS* p_proc)
+void init_send_queue(struct proc* p_proc)
 {
-	SEND_QUEUE* p_send_queue = &p_proc->send_queue;
-	
-	p_send_queue->count = 0;
-	p_send_queue->p_head = p_send_queue->p_tail = p_send_queue->proc_queue;
+	p_proc->send_queue.count = 0;
+	p_proc->send_queue.p_head = p_proc->send_queue.p_tail = p_proc->send_queue.procs;
 }
 
-/**
- * 将 p_proc 放进 p 的 send_queue.
- */
-void enqueue_send(PROCESS* p, PROCESS* p_proc)
-{
-	if (p->send_queue.count < NR_PROCS) 
-	{
-		*p->send_queue.p_tail++ = p_proc;
-		p->send_queue.count++;
-		
-		assert(p->send_queue.count <= (NR_PROCS));
-		
-		if (p->send_queue.p_tail > &p->send_queue.proc_queue[NR_PROCS - 1]) 
-		{
-			p->send_queue.p_tail = p->send_queue.proc_queue;
-		}
-	}
-}
-
-/**
- * 从 p 的 send_queue 里取出.
- */
-PROCESS* dequeue_send(PROCESS* p)
-{
-	PROCESS* p_proc = NULL;
-	
-	if (p->send_queue.count > 0) 
-	{
-		p_proc = *p->send_queue.p_head++;
-		p->send_queue.count--;
-		
-		assert(p->send_queue.count >= 0);
-		
-		if (p->send_queue.p_head > &p->send_queue.proc_queue[NR_PROCS - 1]) 
-		{
-			p->send_queue.p_head = p->send_queue.proc_queue;
-		}
-	}
-	return p_proc;
-}
-
-int isEmpty(SEND_QUEUE* queue)
+int empty(struct proc_queue* queue)
 {
 	return (queue->count == 0);
 }
 
 /* 保留 p_proc 参数 */
-void dump_proc(PROCESS* p_proc)
+void dump_proc(struct proc* p_proc)
 {
-	PROCESS* p;
+	struct proc* p;
 	for (p = &FIRST_PROC; p <= &LAST_PROC; p++) 
 	{
 		printf("\n[pid:%.2x,ticks:%.2x,flag:%.8x,pid_sendto:%.8x,pid_recvfrom:%.8x]",
@@ -481,7 +448,7 @@ void dump_proc(PROCESS* p_proc)
 	}
 }
 
-void dump_msg(MESSAGE* p_msg)
+void dump_msg(struct message* p_msg)
 {
 	printf("\n{msg>> src=%.2x, dst=%.2x, value=%.8x}\n",
 		p_msg->source, p_msg->dest, p_msg->value);
@@ -490,7 +457,7 @@ void dump_msg(MESSAGE* p_msg)
 void failure(char* exp, char* file, char* base_file, int line)
 {
 	char buf[256] = { 0 };
-	sprintf(buf, "{exp: %s, file: %s, base_file: %s, line: 0x%.4x}",
+	sprintf(buf, "{exp: %s, file: %s, base_file: %s, line: %d}",
 		exp, file, base_file, line);
 	/* 蓝底黄字, 1 行 0 列 */
 	printmsg(buf, 0x1E, (80*1+0)*2);
@@ -498,7 +465,7 @@ void failure(char* exp, char* file, char* base_file, int line)
 	for (;;);
 }
 
-void halt(const char* fmt, ...)
+void panic(const char* fmt, ...)
 {
 	char buf[256] = { 0 };
 	va_list arg = (va_list) ((char *) &fmt + 4);	/* 4 是参数 fmt 所占堆栈的大小 */

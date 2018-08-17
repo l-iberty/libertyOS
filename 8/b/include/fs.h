@@ -3,42 +3,46 @@
 
 #include "type.h"
 
-typedef struct {
-	u32	nr_inodes;		/* 文件系统最多允许有多少个 i-node */
-	u32	nr_inode_sectors;	/* inode_array 占用多少个扇区 */
-	u32	nr_sectors;		/* 文件系统总共扇区数 */
-	u32	nr_imap_sectors;	/* inode_map 占用多少扇区 */
-	u32	nr_smap_sectors;	/* sector_map 占用多少扇区 */
-	u32	first_sector;		/* 第一个文件数据扇区的扇区号 */
-	u32	root_inode;		/* 根目录区的 i_node 号 */
-} SUPER_BLOCK;
+struct super_block
+{
+	uint32_t	nr_inodes;		/* 文件系统最多允许有多少个 i-node */
+	uint32_t	nr_inode_sectors;	/* inode_array 占用多少个扇区 */
+	uint32_t	nr_sectors;		/* 文件系统总共扇区数 */
+	uint32_t	nr_imap_sectors;	/* inode_map 占用多少扇区 */
+	uint32_t	nr_smap_sectors;	/* sector_map 占用多少扇区 */
+	uint32_t	first_sector;		/* 第一个文件数据扇区的扇区号 */
+	uint32_t	root_inode;		/* 根目录区的 i_node 号 */
+};
 
 
 #define NR_DEFAULT_FILE_SECS	64	/* 64 * 512 Bytes = 32 KB */
-typedef struct {
-	u32	i_mode;			/* Access mode */
-	u32	i_size;			/* File size */
-	u32	i_start_sector;		/* The first sector of the data */
-	u32	i_nr_sectors;		/* How many sectors does the file occupy */
+struct i_node
+{
+	uint32_t	i_mode;			/* Access mode */
+	uint32_t	i_size;			/* File size */
+	uint32_t	i_start_sector;		/* The first sector of the data */
+	uint32_t	i_nr_sectors;		/* How many sectors does the file occupy */
         
         /* The following members only exist in memory */
-        u32     i_nr_inode;             /* nr_inode of the file recorded in root_dir entry */
-        int	i_cnt;			/* How many procs share this i-node */
-} I_NODE;
+        uint32_t	i_nr_inode;             /* nr_inode of the file recorded in root_dir entry */
+        uint32_t	i_cnt;			/* How many procs share this i-node */
+};
 #define INODE_DISK_SIZE         16
 
 #define MAX_FILENAME_LEN	12
-typedef struct {
+struct dir_entry
+{
 	int	nr_inode;		/* 文件的 i_node 号 */
 	char	name[MAX_FILENAME_LEN];
-} DIR_ENTRY;
+};
 
 
-typedef struct {
-	int	fd_mode;	/* Read or Write */
-	int	fd_pos;		/* Current file pointer for R/W */
-	I_NODE*	fd_inode;	/* Ptr to the i-node */
-} FILE_DESC;
+struct file_desc
+{
+	int		fd_mode;	/* Read or Write */
+	int		fd_pos;		/* Current file pointer for R/W */
+	struct i_node*	fd_inode;	/* Ptr to the i-node */
+};
 
 
 #define SECTOR_SIZE		512
@@ -69,16 +73,15 @@ typedef struct {
 #define ROOTDIR_SEC		(INODE_ARRAY_SEC + NR_INODE_SECTORS)
 #define FIRST_SECTOR		(ROOTDIR_SEC + NR_ROOTDIR_SECTORS)
 
-u8 fsbuf[BUFSIZE];
-u8 imap_buf[NR_IMAP_SECTORS * SECTOR_SIZE];
-u8 smap_buf[NR_SMAP_SECTORS * SECTOR_SIZE];
-u8 inode_buf[NR_INODE_SECTORS * SECTOR_SIZE];
-u8 dirent_buf[NR_ROOTDIR_SECTORS * SECTOR_SIZE];
+extern uint8_t fsbuf[BUFSIZE];
+extern uint8_t imap_buf[NR_IMAP_SECTORS * SECTOR_SIZE];
+extern uint8_t smap_buf[NR_SMAP_SECTORS * SECTOR_SIZE];
+extern uint8_t inode_buf[NR_INODE_SECTORS * SECTOR_SIZE];
+extern uint8_t dirent_buf[NR_ROOTDIR_SECTORS * SECTOR_SIZE];
 
-
-FILE_DESC	f_desc_table[NR_FILES];
-I_NODE		inode_table[NR_INODES];
-
+extern struct file_desc	f_desc_table[NR_FILES];
+extern struct i_node	inode_table[NR_INODES];
+extern struct message   fs_msg;
 
 /* fs/fs_main.c */
 void		init_fs();
@@ -92,18 +95,18 @@ int		find_file(char* filename);
 /* fs/open.c */
 int		open(const char* pathname, int flags);
 int		do_open();
-I_NODE*		create_file(char* filename, int flags);
 int		alloc_imap_bit();
 int		alloc_smap_bits(int nr_sectors);
-I_NODE*		alloc_inode(int nr_inode, u32 mode, u32 size, u32 start_sector, u32 nr_sector);
 void		alloc_dir_entry(int nr_inode, char* filename);
-I_NODE*		get_inode(int nr_inode);
+struct i_node*	alloc_inode(int nr_inode, uint32_t mode, uint32_t size, uint32_t start_sector, uint32_t nr_sector);
+struct i_node*	create_file(char* filename, int flags);
+struct i_node*	get_inode(int nr_inode);
 
 /* fs/close.c */
 int		close(int fd);
 int		do_close();
-void		clear_inode(I_NODE* pin);
-void		clear_fd_tbl(FILE_DESC* pfd);
+void		clear_inode(struct i_node* pin);
+void		clear_fd_tbl(struct file_desc* pfd);
 
 /* fs/rdwt.c */
 size_t		read(int fd, void* buf, size_t len);

@@ -16,7 +16,7 @@
 #define	INT_S_CTL		0xA0
 #define	INT_S_CTLMASK		0xA1
 
-IRQ_HANDLER	irq_table[NR_IRQ];
+extern IRQ_HANDLER irq_table[NR_IRQ];
 
 void	put_irq_handler(int irq, IRQ_HANDLER handler);
 void	enable_irq(int irq);
