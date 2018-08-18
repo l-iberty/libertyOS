@@ -70,8 +70,8 @@ void kernel_main()
 		if (i == PID_INIT)
 		{
 			/* 0~1M */
-			init_desc(&p_proc->LDT[INDEX_LDT_C * DESC_SIZE], 0, 0xFF, DA_C32 | DA_G_4K | _DPL);
-			init_desc(&p_proc->LDT[INDEX_LDT_RW * DESC_SIZE], 0, 0xFF, DA_D32 | DA_G_4K | _DPL);
+			init_desc(&p_proc->LDT[INDEX_LDT_C * DESC_SIZE],  0, PROC_IMAGE_SIZE - 1, DA_C32 | _DPL);
+			init_desc(&p_proc->LDT[INDEX_LDT_RW * DESC_SIZE], 0, PROC_IMAGE_SIZE - 1, DA_D32 | _DPL);
 		}
 		else
 		{
@@ -206,28 +206,56 @@ void TaskC()
 	
 	/* 11M ~ 13M */
 	la = vm_alloc((void*)0xb00080, 0x200000, PAGE_READWRITE);
-	printf("\n(1) vmalloc: %.8x",(uint32_t)la);
-	assert(la);
-	memset(la, 0xcd, 0x200000);
+	if (la)
+	{
+		printf("\n(1) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
+		memset(la, 0xcd, 0x200000);
+		memset(la, 0x12, 8);
+	}
+	else
+	{
+		printf("\n(1) vm_alloc failed: laddr = 0x%.8x\n", 0xb00080);
+	}
 
 	/* 8M ~ 12M */
 	la = vm_alloc((void*)0x800600, 0x400000, PAGE_READWRITE);
-	printf("\n(2) vmalloc: %.8x",(uint32_t)la);
-	assert(la);
-	memset(la, 0xcc, 0x400000);
+	if (la)
+	{
+		printf("\n(2) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
+		memset(la, 0xcc, 0x400000);
+		memset(la, 0x34, 8);
+	}
+	else
+	{
+		printf("\n(2) vm_alloc failed: laddr = 0x%.8x\n", 0x800600);
+	}
 	
-	/* 12M ~ 12M + 7K */
+	/* 28M ~ 28M + 7K */
 	la = vm_alloc((void*)0x1c00000, 7 * 1024, PAGE_READWRITE);
-	printf("\n(3) vmalloc: %.8x", (uint32_t)la);
-	assert(la);
-	memset(la, 0xdd, 4096 * 2);
+	if (la)
+	{
+		printf("\n(3) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
+		memset(la, 0xdd, 4096 * 2);
+		memset(la, 0x56, 8);
+	}
+	else
+	{
+		printf("\n(3) vm_alloc failed: laddr = 0x%.8x\n", 0x1c00000);
+	}
+	
 
 	/* 9M ~ 12M */
 	la = vm_alloc((void*)0x900000, 0x300000, PAGE_READWRITE);
-	printf("\n(4) vmalloc: %.8x", (uint32_t)la);
-	assert(la);
-	memset(la, 0xdd, 0x300000);
-
+	if (la)
+	{
+		printf("\n(4) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
+		memset(la, 0xdd, 0x300000);
+	}
+	else
+	{
+		printf("\n(4) vm_alloc failed: laddr = 0x%.8x\n", 0x900000);
+	}
+	
 	int fd;
 	char s[32];
 	fd = open("/test1", O_CREAT | O_RDWR);

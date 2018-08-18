@@ -64,7 +64,7 @@ uint32_t do_fork()
 	/* Allocate memory for child process */
 	assert(caller_T_size > 0);
 	uint32_t child_base = alloc_mem(child_pid, caller_T_size);
-
+	
 	assert(child_base != NULL);
 	assert((caller_T_base == caller_D_base) &&
 	       (caller_T_limit == caller_D_limit) &&

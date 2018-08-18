@@ -3,7 +3,7 @@
 #######################################################
 
 # how many memory the emulated machine will have
-megs: 64 
+megs: 32 
 
 # filename or ROM images
 romimage: file=$BXSHARE/BIOS-bochs-latest

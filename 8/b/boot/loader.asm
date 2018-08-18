@@ -438,17 +438,14 @@ DispMemInfo:
 	jb	.3				;	    dwAvailMemSize = BaseAddrLow + LengthLow
 	mov	[dwAvailMemSize], eax		;	}
 .3:	inc	dword [MemInfoBuf]		;	MemInfoBuf.AvailBlockNum++
-; 两级页表最大需要 4MB + 4KB 空间来存放, 现按照	;
-; 首次适应原则来确定页表应放在哪里.		;
-	cmp	byte [bChk], 1			;	if (bChk != 1)
-	je	.2				;	{
-	cmp	dword [edx + LengthLow], 401000h;	    if (LengthLow < 401000h)
-	jb	.2				;           {
-	mov	eax, [edx + BaseAddrLow]	;	        dwPageDirBase = BaseAddrLow 
-	mov	[dwPageDirBase], eax		;	        bChk = 1
-	mov	byte [bChk], 1			;	    }
-.2:						;       }
-	add	edx, 20				; `. esi 指向下一个 ARDS 结构
+; 寻找最大的内存块来存放页表			;
+	mov	eax, [edx + LengthLow]		;       if (LengthLow > dwTemp)
+	cmp	eax, [dwTemp]			;	{
+	jl	.2				;	    dwTemp = LengthLow
+	mov	[dwTemp], eax			;	    dwPageDirBase = BaseAddrLow
+	mov	eax, [edx + BaseAddrLow]	;	}
+	mov	[dwPageDirBase], eax		;
+.2:	add	edx, 20				; `. esi 指向下一个 ARDS 结构
 	mov	esi, edx			;  /
 	call	DispMemInfo_NewLine		; printf("\n")
 	loop	.loop
@@ -566,7 +563,7 @@ _szPageTblBase		db	'Page Table Base: ';
 _dwPageDirBase		dd	0 ; 页目录的物理基地址
 _dwPageTblBase		dd	0 ; 页表的物理基地址
 _dwNrPDE		dd	0 ; PDE 个数
-_bChk			db	0 ; 标记, 详见 DispMemInfo
+_dwTemp			dd	0
 
 _MsgBase: ; 以下字符串固定长度为 13
 _MsgLen			equ	13
@@ -591,7 +588,7 @@ szPageTblBase		equ	LoaderBasePhyAddr + _szPageTblBase
 dwPageDirBase		equ	LoaderBasePhyAddr + _dwPageDirBase
 dwPageTblBase		equ	LoaderBasePhyAddr + _dwPageTblBase
 dwNrPDE			equ	LoaderBasePhyAddr + _dwNrPDE
-bChk			equ	LoaderBasePhyAddr + _bChk
+dwTemp			equ	LoaderBasePhyAddr + _dwTemp
 
 
 ; ARDS　各成员相对结构体开头的偏移

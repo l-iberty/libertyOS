@@ -6,9 +6,9 @@
 #define PAGE_SIZE		0x1000		/* 4K */
 #define MAX_PAGE_ITEM		(PAGE_SIZE / 4)	/* 一个页目录/页表最多有几项? */
 #define PAGE_MAPPING_SIZE	0x400000	/* 一个页表的内存映射范围: 4M */
-#define PAGE_USED		1
-#define PAGE_FREE		(PAGE_USED << 1)
+#define PAGE_FREE		1
 #define PAGE_RESERVED		(PAGE_FREE << 1)
+#define PAGE_MAPPED		(PAGE_RESERVED << 1)
 #define PAGE_READ		1
 #define PAGE_READWRITE		(PAGE_READ << 1)
 
@@ -56,9 +56,9 @@ struct link_list
 /* 描述虚页/物理页(页框)的数据结构 */
 struct page_area
 {
-	int ref;	/* 页面的引用计数 */
-	uint32_t base;	/* 虚页的虚拟基地址 or 页框的物理基地址 */
-	uint32_t type;	/* used, free, or reserved */
+	int ref;		/* 页面的引用计数 */
+	uint32_t base;		/* 虚页的虚拟基地址 or 页框的物理基地址 */
+	uint32_t type;		/* used, free, or reserved */
 	uint32_t protect;	/* 保护属性: 可读, 可写, 可执行 */
 };
 

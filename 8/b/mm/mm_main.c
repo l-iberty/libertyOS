@@ -94,6 +94,8 @@ void init_mm()
 	current = pf_list;
 	reserved_pages += (sizeof(struct page_list) * avail_pm_pages + PAGE_SIZE - 1) / PAGE_SIZE;
 	
+	printf("\n{MM}    Reserved pages: %d", reserved_pages);
+	
 	for (i = 0; i < avail_pm_pages; i++, current = next)
 	{
 		if (i < reserved_pages)

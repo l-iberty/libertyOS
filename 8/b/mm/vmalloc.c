@@ -32,11 +32,6 @@ void *vm_alloc(void *vm_addr, uint32_t vm_size, uint32_t vm_protect)
 	
 	sendrecv(BOTH, PID_TASK_MM, &msg);
 	
-	if (msg.VM_BASE == NULL)
-	{
-		panic("%d->%d %.8x", msg.source, msg.dest, msg.VM_ADDR);
-	}
-
 	return msg.VM_BASE;
 }
 
@@ -54,89 +49,109 @@ void *do_vm_alloc()
 	uint32_t *pde = (uint32_t*)mi->page_dir_base;
 	uint32_t *pte = (uint32_t*)mi->page_tbl_base;
 	
+	/* 是否有空闲页框可供分配? */
 	current = pf_list;
 	p = NULL;
-
 	do
 	{
-		if (vm_addr >= current->BASE &&
-		    vm_addr < ((struct page_list*)current->NEXT)->BASE)
+		if (current->TYPE == PAGE_FREE)
 		{
-			/* 检查: 从 current->BASE 开始是否有连续可用的 nr_pages 个页框可共分配? */
-			for (p = current, i = 0; i < nr_pages; i++, p = p->NEXT)
-			{
-				if (p->TYPE != PAGE_FREE) break;
-			}
-			
-			if (i >= nr_pages) /* current->BASE is available */
-			{
-				p = current;
-				break;
-			}
-			else /* current->BASE is not available, try next */
-			{
-				p = NULL;
-				vm_addr = ((struct page_list*)current->NEXT)->BASE;
-			}
+			p = current;
+			break;
 		}
 		current = current->NEXT;
 	} while (current != pf_list);
-	
-	if (p != NULL)
-	{
-		printf("\n{do_vm_alloc} actual base: 0x%.8x", p->BASE);
-		laddr = p->BASE;
-		if (p->TYPE == PAGE_FREE)
-		{
-			pde_idx = PDE_INDEX(p->BASE);
-			pte_idx = PTE_INDEX(p->BASE);
-			pde_val = mi->page_tbl_base + pde_idx * PAGE_SIZE;
-			pte_val = p->BASE;
 
-			pte += pde_idx * MAX_PAGE_ITEM;
-			
-			/* 填写 PDE */
-			int t = &pte[pte_idx] - (uint32_t*)ROUND_DOWN(&pte[pte_idx], PAGE_SIZE);
-			int nr_pde = ((nr_pages + t) * PAGE_SIZE + 
-				     PAGE_MAPPING_SIZE - 1) / PAGE_MAPPING_SIZE;
-			
-			for (i = 0; i < nr_pde; i++, pde_idx++, pde_val += PAGE_SIZE)
-			{
-				if (vm_protect & PAGE_READ)
-				{
-					pde_val |= (PG_P | PG_RWR | PG_USU);
-				}
-				if (vm_protect & PAGE_READWRITE)
-				{
-					pde_val |= (PG_P | PG_RWW | PG_USU);
-				}
-				if (pde[pde_idx] == 0)
-				{
-					pde[pde_idx] = pde_val;
-				}
-			}
-			
-			/* 填写 PTE; 更新双向循环链表里的信息 */
-			for (i = 0; i < nr_pages; i++, pte_idx++, pte_val += PAGE_SIZE)
-			{
-				if (vm_protect & PAGE_READ)
-				{
-					pte[pte_idx] = pte_val | (PG_P | PG_RWR | PG_USU);
-					p->PROTECT |= PAGE_READ;
-				}
-				if (vm_protect & PAGE_READWRITE)
-				{
-					pte[pte_idx] = pte_val | (PG_P | PG_RWW | PG_USU);
-					p->PROTECT |= PAGE_READWRITE;
-				}
-				p->REF++;
-				p->TYPE = PAGE_USED;
-				p = p->NEXT;
-			}
-			reload_cr3(getcr3());
+	if (p == NULL)
+	{
+		printf("\n#ERROR#{do_vm_alloc} no available memory.");
+		return NULL;
+	}
+
+	/* 从 p->BASE 开始是否有连续可用的 nr_pages 个页框可供分配? */
+	current = p;
+	i = 0;
+	do
+	{
+		i++;
+		current = current->NEXT;
+	} while (current != pf_list);
+
+	if (i < nr_pages)
+	{
+		printf("\n#ERROR#{do_vm_alloc} physical memory not enough.");
+		return NULL;
+	}
+	
+	/* Get linear address */
+	laddr = ROUND_DOWN(vm_addr, PAGE_SIZE);
+
+	/* 映射这些页框所需的 PTE 是否全部空闲? */
+	int flag = 0;
+	pde_idx = PDE_INDEX(laddr);
+	pte_idx = PTE_INDEX(laddr);
+	pte += pde_idx * MAX_PAGE_ITEM; /* 令 pte 指向 pde_idx 对应的页表 */
+	for (i = 0; i < nr_pages; i++, pte_idx++)
+	{
+		if (pte[pte_idx] != 0)
+		{
+			flag = 1;
+			break;
+		}
+	}
+	if (flag == 1)
+	{
+		/* 所需 PTE 被占用, 无法分配虚拟内存 */
+		printf("\n#ERROR#{do_vm_alloc} virual memory not enough.");
+		return NULL;
+	}
+
+	/* 将 p->BASE 开始的 nr_pages 个页框映射到线性地址 laddr */
+	pde_idx = PDE_INDEX(laddr);
+	pte_idx = PTE_INDEX(laddr);
+	pde_val = mi->page_tbl_base + pde_idx * PAGE_SIZE;
+	pte_val = p->BASE; /* physical address */
+	
+	/* 填写 PDE */
+	int t = &pte[pte_idx] - (uint32_t*)ROUND_DOWN(&pte[pte_idx], PAGE_SIZE);
+	int nr_pde = ((nr_pages + t) * PAGE_SIZE + 
+				PAGE_MAPPING_SIZE - 1) / PAGE_MAPPING_SIZE;
+	
+	for (i = 0; i < nr_pde; i++, pde_idx++, pde_val += PAGE_SIZE)
+	{
+		if (vm_protect & PAGE_READ)
+		{
+			pde_val |= (PG_P | PG_RWR | PG_USU);
+		}
+		if (vm_protect & PAGE_READWRITE)
+		{
+			pde_val |= (PG_P | PG_RWW | PG_USU);
+		}
+		if (pde[pde_idx] == 0)
+		{
+			pde[pde_idx] = pde_val;
 		}
 	}
 	
+	/* 填写 PTE; 更新双向循环链表里的信息 */
+	for (i = 0; i < nr_pages; i++, pte_idx++, pte_val += PAGE_SIZE)
+	{
+		if (vm_protect & PAGE_READ)
+		{
+			pte[pte_idx] = pte_val | (PG_P | PG_RWR | PG_USU);
+			p->PROTECT |= PAGE_READ;
+		}
+		if (vm_protect & PAGE_READWRITE)
+		{
+			pte[pte_idx] = pte_val | (PG_P | PG_RWW | PG_USU);
+			p->PROTECT |= PAGE_READWRITE;
+		}
+		p->REF++;
+		p->TYPE = PAGE_MAPPED;
+		p = p->NEXT;
+	}
+	reload_cr3(getcr3());
+
 	return (void*)laddr;
 }
 
