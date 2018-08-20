@@ -3,7 +3,7 @@
 ASMBFLAGS=	-I boot/include/
 ASMKFLAGS=	-I include/ -f elf
 LDKFLAGS=	-s -melf_i386 -Ttext 0x1b400 -Map kernel.map # -s 剔除符号信息
-CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin # -g3 加入符号信息
+CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin -std=c99 # -g3 加入符号信息
 
 KOBJS=		kernel.o start.o 8259A.o main.o protect.o clock.o syscall.o \
 		proc.o irq.o keyboard.o tty.o hd.o console.o klib.o string.o \

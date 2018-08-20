@@ -34,9 +34,8 @@ void do_vm_free()
 	uint32_t pte_idx = PTE_INDEX(vm_addr);
 	uint32_t *pde = (uint32_t*)mi->page_dir_base;
 	uint32_t *pte = (uint32_t*)mi->page_tbl_base + pde_idx * MAX_PAGE_ITEM;
-
-	/* Get base of the first page frame */
-	pm_addr = GET_BASE(pte[pte_idx]);
+	
+	pm_addr = GET_BASE(pte[pte_idx]); // addr of the first allocated page frame
 
 	/* Clear PTEs */
 	for (i = 0; i < nr_pages; i++, pte_idx++)
@@ -69,8 +68,9 @@ void do_vm_free()
 			pde[pde_idx] = 0;
 		}
 	}
+	reload_cr3(getcr3());
 
-	/* Mark occupied page frames as `PAGE_FREE' */
+	/* Free occupied page frames*/
 	struct page_list *current, *p;
 	current = pf_list;
 	p = NULL;
@@ -84,6 +84,8 @@ void do_vm_free()
 		current = current->NEXT;
 	} while (current != pf_list);
 	assert(p != NULL);
+	
+	/* `p' 所指向的节点对应于第一个需要被 free 的页框. */
 
 	for (i = 0; i < nr_pages; i++, p = p->NEXT)
 	{
