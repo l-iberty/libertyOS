@@ -1,5 +1,5 @@
 #ifndef STDIO_H
-#define STDLIO_H
+#define STDIO_H
 
 #include "type.h"
 

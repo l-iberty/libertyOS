@@ -50,32 +50,48 @@ void *do_vm_alloc()
 	uint32_t *pte = (uint32_t*)mi->page_tbl_base;
 	
 	/* 是否有空闲页框可供分配? */
+	/**
+	 * 页框分配算法:
+	 * 遍历 pf_list, 当找到一个 PAGE_FREE 页框 P 时, 检查从页框 P 开始是否
+	 * 有 nr_pages 个连续的 PAGE_FREE 页框可供分配:
+	 * <是> 页框 P 就是分配的
+	 */
 	current = pf_list;
 	p = NULL;
 	do
 	{
 		if (current->TYPE == PAGE_FREE)
 		{
+			/* 从 current->BASE 开始是否有连续可用的 nr_pages 个页框可供分配? */
+			int nr_free_frame = 0
 			p = current;
-			break;
+			do
+			{
+				if (p->TYPE == PAGE_FREE)
+				{
+					if (++nr_free_frame == nr_pages) break;
+				}
+				else
+				{
+					break;
+				}
+				p = p->NEXT;
+			} while (p != pf_list);
+
+			if (nr_free_frame == nr_pages)
+			{
+				p = current;
+				break;
+			}
 		}
 		current = current->NEXT;
 	} while (current != pf_list);
-
+	
 	if (p == NULL)
 	{
 		printf("\n#ERROR#{do_vm_alloc} no available memory.");
 		return NULL;
 	}
-
-	/* 从 p->BASE 开始是否有连续可用的 nr_pages 个页框可供分配? */
-	current = p;
-	i = 0;
-	do
-	{
-		i++;
-		current = current->NEXT;
-	} while (current != pf_list);
 
 	if (i < nr_pages)
 	{
@@ -85,7 +101,7 @@ void *do_vm_alloc()
 	
 	/* Get linear address */
 	laddr = ROUND_DOWN(vm_addr, PAGE_SIZE);
-
+	
 	/* 映射这些页框所需的 PTE 是否全部空闲? */
 	int flag = 0;
 	pde_idx = PDE_INDEX(laddr);

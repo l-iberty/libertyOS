@@ -21,7 +21,7 @@
 #define PAGE_OFFSET(la)		(la & 0xFFF)
 
 /* 从 PDE 获得页表基地址, 或从 PTE 获得物理页基地址 */
-#define GET_BASE(x)		(x & 0xFFFFF000)
+#define GET_BASE(x)		((uint32_t)x & 0xFFFFF000)
 
 /* PDE/PTE 属性位 */
 #define PG_P			0x1 /* Present */
@@ -83,5 +83,7 @@ extern struct meminfo   *mi;
 void	init_mm();
 void	*vm_alloc(void *vm_addr, uint32_t vm_size, uint32_t vm_protect);
 void	*do_vm_alloc();
+void	vm_free(void *vm_addr, uint32_t vm_size);
+void	do_vm_free();
 
 #endif // MM_H

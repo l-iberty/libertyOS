@@ -1,7 +1,3 @@
-/**
- * sysconst.h 系统级常量
- */
-
 #ifndef	SYSCONST_H
 #define SYSCONST_H
 

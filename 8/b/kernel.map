@@ -82,6 +82,8 @@ imap_buf            0x200             fs_main.o
  .note.GNU-stack
                 0x0000000000000000        0x0 vmalloc.o
  .note.GNU-stack
+                0x0000000000000000        0x0 vmfree.o
+ .note.GNU-stack
                 0x0000000000000000        0x0 exe_main.o
  .note.GNU-stack
                 0x0000000000000000        0x0 fork.o
@@ -120,6 +122,7 @@ LOAD rdwt.o
 LOAD unlink.o
 LOAD mm_main.o
 LOAD vmalloc.o
+LOAD vmfree.o
 LOAD exe_main.o
 LOAD fork.o
                 [!provide]                        PROVIDE (__executable_start, 0x8048000)
@@ -187,7 +190,7 @@ LOAD fork.o
 .plt.got
  *(.plt.got)
 
-.text           0x000000000001b400     0x578a
+.text           0x000000000001b400     0x5ba7
  *(.text.unlikely .text.*_unlikely .text.unlikely.*)
  *(.text.exit .text.exit.*)
  *(.text.startup .text.startup.*)
@@ -239,174 +242,177 @@ LOAD fork.o
  *fill*         0x000000000001bfa9        0x7 
  .text          0x000000000001bfb0       0x5c 8259A.o
                 0x000000000001bfb0                init_8259A
- .text          0x000000000001c00c      0x739 main.o
+ .text          0x000000000001c00c      0x8aa main.o
                 0x000000000001c00c                kernel_main
                 0x000000000001c271                sleep
                 0x000000000001c2ab                Init
-                0x000000000001c352                TaskA
-                0x000000000001c3df                TaskB
-                0x000000000001c465                TaskC
- .text          0x000000000001c745      0x1f7 protect.o
-                0x000000000001c745                init_desc
-                0x000000000001c7a7                init_idt_desc
-                0x000000000001c809                init_prot
-                0x000000000001c87f                get_base
-                0x000000000001c8cd                get_limit
-                0x000000000001c902                granularity
- .text          0x000000000001c93c      0x21f clock.o
-                0x000000000001c93c                schedule
-                0x000000000001c9b6                disp_time
-                0x000000000001cac4                clock_handler
-                0x000000000001caf2                init_clock
- *fill*         0x000000000001cb5b        0x5 
- .text          0x000000000001cb60       0x84 syscall.o
-                0x000000000001cb60                get_ticks
-                0x000000000001cb68                sendrecv
-                0x000000000001cb7c                getpid
-                0x000000000001cb84                getppid
-                0x000000000001cb8c                printk
-                0x000000000001cb98                sem_init
-                0x000000000001cba8                sem_post
-                0x000000000001cbb4                sem_wait
-                0x000000000001cbc0                disable_paging
-                0x000000000001cbc8                enable_paging
-                0x000000000001cbd0                reload_cr3
-                0x000000000001cbdc                getcr3
- .text          0x000000000001cbe4      0x9a8 proc.o
-                0x000000000001cbe4                sys_get_ticks
-                0x000000000001cbee                sys_sendrecv
-                0x000000000001cc90                sys_getpid
-                0x000000000001cc9d                sys_getppid
-                0x000000000001ccaa                sys_printk
-                0x000000000001cce6                sys_sem_init
-                0x000000000001cd23                sys_sem_post
-                0x000000000001cd91                sys_sem_wait
-                0x000000000001ce08                enqueue
-                0x000000000001ce81                dequeue
-                0x000000000001cf01                va2la
-                0x000000000001cf31                msg_send
-                0x000000000001d068                msg_recv
-                0x000000000001d285                block
-                0x000000000001d2b9                unblock
-                0x000000000001d2bf                deadlock
-                0x000000000001d338                inform_int
-                0x000000000001d3db                interrupt_wait
-                0x000000000001d3f7                reset_msg
-                0x000000000001d412                init_send_queue
-                0x000000000001d443                empty
-                0x000000000001d455                dump_proc
-                0x000000000001d4b1                dump_msg
-                0x000000000001d4db                failure
-                0x000000000001d537                panic
- .text          0x000000000001d58c      0x134 irq.o
-                0x000000000001d58c                put_irq_handler
-                0x000000000001d5b0                enable_irq
-                0x000000000001d63a                disable_irq
- .text          0x000000000001d6c0      0x2aa keyboard.o
-                0x000000000001d6c0                keyboard_handler
-                0x000000000001d755                keyboard_read
-                0x000000000001d942                init_keyboard
- .text          0x000000000001d96a      0x445 tty.o
-                0x000000000001d96a                TaskTTY
-                0x000000000001d9d2                init_tty
-                0x000000000001da32                init_console
-                0x000000000001dabe                is_current_console
-                0x000000000001daeb                tty_printchar
-                0x000000000001db40                tty_printstr
-                0x000000000001db8c                tty_backspace
-                0x000000000001dc15                disp_tips
-                0x000000000001dc6c                reset_kb_buf
-                0x000000000001dcac                parse_input
- .text          0x000000000001ddaf      0x57f hd.o
-                0x000000000001ddaf                TaskHD
-                0x000000000001de87                init_hd
-                0x000000000001df20                hd_cmd_out
-                0x000000000001e01d                get_hd_info
-                0x000000000001e058                disp_hd_info
-                0x000000000001e1cb                hd_open
-                0x000000000001e205                hd_write
-                0x000000000001e285                hd_read
-                0x000000000001e305                hd_handler
- .text          0x000000000001e32e       0xbf console.o
-                0x000000000001e32e                select_console
-                0x000000000001e37f                scroll_screen
- *fill*         0x000000000001e3ed        0x3 
- .text          0x000000000001e3f0      0x21e klib.o
-                0x000000000001e3f0                memcpy
-                0x000000000001e413                memset
-                0x000000000001e42e                memcmp
-                0x000000000001e457                println
-                0x000000000001e496                print
-                0x000000000001e4d1                printmsg
-                0x000000000001e51b                printchar
-                0x000000000001e549                backspace
-                0x000000000001e561                itoa
-                0x000000000001e5a0                in_byte
-                0x000000000001e5aa                out_byte
-                0x000000000001e5b6                port_read
-                0x000000000001e5ce                port_write
-                0x000000000001e5e6                disable_int
-                0x000000000001e5e8                enable_int
-                0x000000000001e5ea                sys_disable_paging
-                0x000000000001e5f6                sys_enable_paging
-                0x000000000001e602                sys_reload_cr3
-                0x000000000001e60a                sys_getcr3
- *fill*         0x000000000001e60e        0x2 
- .text          0x000000000001e610       0x50 string.o
-                0x000000000001e610                strlen
-                0x000000000001e625                strcpy
-                0x000000000001e63e                strncmp
- .text          0x000000000001e660       0x7c printf.o
-                0x000000000001e660                printf
-                0x000000000001e6b5                sprintf
- .text          0x000000000001e6dc      0x289 vsprintf.o
-                0x000000000001e6dc                pow
-                0x000000000001e715                tohex
-                0x000000000001e7ba                vsprintf
- .text          0x000000000001e965      0x122 io.o
-                0x000000000001e965                set_cursor_pos
-                0x000000000001e9cd                set_video_start
-                0x000000000001ea35                init_video
- .text          0x000000000001ea87      0x4d3 fs_main.o
-                0x000000000001ea87                TaskFS
-                0x000000000001eb3b                init_fs
-                0x000000000001ebd1                mkfs
-                0x000000000001eee2                write_hd
-                0x000000000001ef1e                read_hd
- .text          0x000000000001ef5a      0x855 open.o
-                0x000000000001ef5a                open
-                0x000000000001ef9c                do_open
-                0x000000000001f253                create_file
-                0x000000000001f2ae                alloc_imap_bit
-                0x000000000001f3d3                alloc_smap_bits
-                0x000000000001f520                alloc_inode
-                0x000000000001f62d                alloc_dir_entry
-                0x000000000001f6fd                get_inode
- .text          0x000000000001f7af       0x81 misc.o
-                0x000000000001f7af                find_file
- .text          0x000000000001f830      0x101 close.o
-                0x000000000001f830                close
-                0x000000000001f85b                do_close
-                0x000000000001f8d7                clear_inode
- .text          0x000000000001f931      0x374 rdwt.o
-                0x000000000001f931                write
-                0x000000000001f968                read
-                0x000000000001f99f                do_rdwt
- .text          0x000000000001fca5      0x467 unlink.o
-                0x000000000001fca5                unlink
-                0x000000000001fce1                do_unlink
- .text          0x000000000002010c      0x37f mm_main.o
-                0x000000000002010c                TaskMM
-                0x000000000002018d                init_mm
- .text          0x000000000002048b      0x358 vmalloc.o
-                0x000000000002048b                vm_alloc
-                0x00000000000204c2                do_vm_alloc
- .text          0x00000000000207e3       0xc5 exe_main.o
-                0x00000000000207e3                TaskEXE
-                0x000000000002085f                alloc_mem
- .text          0x00000000000208a8      0x2e2 fork.o
-                0x00000000000208a8                fork
-                0x00000000000208ed                do_fork
+                0x000000000001c2c3                TaskA
+                0x000000000001c350                TaskB
+                0x000000000001c4dc                TaskC
+ .text          0x000000000001c8b6      0x1f7 protect.o
+                0x000000000001c8b6                init_desc
+                0x000000000001c918                init_idt_desc
+                0x000000000001c97a                init_prot
+                0x000000000001c9f0                get_base
+                0x000000000001ca3e                get_limit
+                0x000000000001ca73                granularity
+ .text          0x000000000001caad      0x1a5 clock.o
+                0x000000000001caad                disp_time
+                0x000000000001cbbb                clock_handler
+                0x000000000001cbe9                init_clock
+ *fill*         0x000000000001cc52        0xe 
+ .text          0x000000000001cc60       0x84 syscall.o
+                0x000000000001cc60                get_ticks
+                0x000000000001cc68                sendrecv
+                0x000000000001cc7c                getpid
+                0x000000000001cc84                getppid
+                0x000000000001cc8c                printk
+                0x000000000001cc98                sem_init
+                0x000000000001cca8                sem_post
+                0x000000000001ccb4                sem_wait
+                0x000000000001ccc0                disable_paging
+                0x000000000001ccc8                enable_paging
+                0x000000000001ccd0                reload_cr3
+                0x000000000001ccdc                getcr3
+ .text          0x000000000001cce4      0xa22 proc.o
+                0x000000000001cce4                sys_get_ticks
+                0x000000000001ccee                sys_sendrecv
+                0x000000000001cd90                sys_getpid
+                0x000000000001cd9d                sys_getppid
+                0x000000000001cdaa                sys_printk
+                0x000000000001cde6                sys_sem_init
+                0x000000000001ce23                sys_sem_post
+                0x000000000001ce91                sys_sem_wait
+                0x000000000001cf08                schedule
+                0x000000000001cf82                msg_send
+                0x000000000001d0b9                msg_recv
+                0x000000000001d2d6                block
+                0x000000000001d30a                unblock
+                0x000000000001d310                deadlock
+                0x000000000001d389                inform_int
+                0x000000000001d42c                interrupt_wait
+                0x000000000001d448                reset_msg
+                0x000000000001d463                init_send_queue
+                0x000000000001d494                enqueue
+                0x000000000001d50d                dequeue
+                0x000000000001d58d                empty
+                0x000000000001d59f                va2la
+                0x000000000001d5cf                dump_proc
+                0x000000000001d62b                dump_msg
+                0x000000000001d655                failure
+                0x000000000001d6b1                panic
+ .text          0x000000000001d706      0x134 irq.o
+                0x000000000001d706                put_irq_handler
+                0x000000000001d72a                enable_irq
+                0x000000000001d7b4                disable_irq
+ .text          0x000000000001d83a      0x2aa keyboard.o
+                0x000000000001d83a                keyboard_handler
+                0x000000000001d8cf                keyboard_read
+                0x000000000001dabc                init_keyboard
+ .text          0x000000000001dae4      0x445 tty.o
+                0x000000000001dae4                TaskTTY
+                0x000000000001db4c                init_tty
+                0x000000000001dbac                init_console
+                0x000000000001dc38                is_current_console
+                0x000000000001dc65                tty_printchar
+                0x000000000001dcba                tty_printstr
+                0x000000000001dd06                tty_backspace
+                0x000000000001dd8f                disp_tips
+                0x000000000001dde6                reset_kb_buf
+                0x000000000001de26                parse_input
+ .text          0x000000000001df29      0x57f hd.o
+                0x000000000001df29                TaskHD
+                0x000000000001e001                init_hd
+                0x000000000001e09a                hd_cmd_out
+                0x000000000001e197                get_hd_info
+                0x000000000001e1d2                disp_hd_info
+                0x000000000001e345                hd_open
+                0x000000000001e37f                hd_write
+                0x000000000001e3ff                hd_read
+                0x000000000001e47f                hd_handler
+ .text          0x000000000001e4a8       0xbf console.o
+                0x000000000001e4a8                select_console
+                0x000000000001e4f9                scroll_screen
+ *fill*         0x000000000001e567        0x9 
+ .text          0x000000000001e570      0x21e klib.o
+                0x000000000001e570                memcpy
+                0x000000000001e593                memset
+                0x000000000001e5ae                memcmp
+                0x000000000001e5d7                println
+                0x000000000001e616                print
+                0x000000000001e651                printmsg
+                0x000000000001e69b                printchar
+                0x000000000001e6c9                backspace
+                0x000000000001e6e1                itoa
+                0x000000000001e720                in_byte
+                0x000000000001e72a                out_byte
+                0x000000000001e736                port_read
+                0x000000000001e74e                port_write
+                0x000000000001e766                disable_int
+                0x000000000001e768                enable_int
+                0x000000000001e76a                sys_disable_paging
+                0x000000000001e776                sys_enable_paging
+                0x000000000001e782                sys_reload_cr3
+                0x000000000001e78a                sys_getcr3
+ *fill*         0x000000000001e78e        0x2 
+ .text          0x000000000001e790       0x50 string.o
+                0x000000000001e790                strlen
+                0x000000000001e7a5                strcpy
+                0x000000000001e7be                strncmp
+ .text          0x000000000001e7e0       0x7c printf.o
+                0x000000000001e7e0                printf
+                0x000000000001e835                sprintf
+ .text          0x000000000001e85c      0x289 vsprintf.o
+                0x000000000001e85c                pow
+                0x000000000001e895                tohex
+                0x000000000001e93a                vsprintf
+ .text          0x000000000001eae5      0x122 io.o
+                0x000000000001eae5                set_cursor_pos
+                0x000000000001eb4d                set_video_start
+                0x000000000001ebb5                init_video
+ .text          0x000000000001ec07      0x4d3 fs_main.o
+                0x000000000001ec07                TaskFS
+                0x000000000001ecbb                init_fs
+                0x000000000001ed51                mkfs
+                0x000000000001f062                write_hd
+                0x000000000001f09e                read_hd
+ .text          0x000000000001f0da      0x855 open.o
+                0x000000000001f0da                open
+                0x000000000001f11c                do_open
+                0x000000000001f3d3                create_file
+                0x000000000001f42e                alloc_imap_bit
+                0x000000000001f553                alloc_smap_bits
+                0x000000000001f6a0                alloc_inode
+                0x000000000001f7ad                alloc_dir_entry
+                0x000000000001f87d                get_inode
+ .text          0x000000000001f92f       0x81 misc.o
+                0x000000000001f92f                find_file
+ .text          0x000000000001f9b0      0x101 close.o
+                0x000000000001f9b0                close
+                0x000000000001f9db                do_close
+                0x000000000001fa57                clear_inode
+ .text          0x000000000001fab1      0x374 rdwt.o
+                0x000000000001fab1                write
+                0x000000000001fae8                read
+                0x000000000001fb1f                do_rdwt
+ .text          0x000000000001fe25      0x467 unlink.o
+                0x000000000001fe25                unlink
+                0x000000000001fe61                do_unlink
+ .text          0x000000000002028c      0x38f mm_main.o
+                0x000000000002028c                TaskMM
+                0x000000000002031d                init_mm
+ .text          0x000000000002061b      0x379 vmalloc.o
+                0x000000000002061b                vm_alloc
+                0x0000000000020652                do_vm_alloc
+ .text          0x0000000000020994      0x26c vmfree.o
+                0x0000000000020994                vm_free
+                0x00000000000209c3                do_vm_free
+ .text          0x0000000000020c00       0xc5 exe_main.o
+                0x0000000000020c00                TaskEXE
+                0x0000000000020c7c                alloc_mem
+ .text          0x0000000000020cc5      0x2e2 fork.o
+                0x0000000000020cc5                fork
+                0x0000000000020d0a                do_fork
  *(.gnu.warning)
 
 .fini
@@ -415,30 +421,31 @@ LOAD fork.o
                 [!provide]                        PROVIDE (_etext, .)
                 [!provide]                        PROVIDE (etext, .)
 
-.rodata         0x0000000000020b8c      0xccb
+.rodata         0x0000000000020fa8      0xe17
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x0000000000020b8c       0xe7 start.o
- *fill*         0x0000000000020c73        0x1 
- .rodata        0x0000000000020c74      0x260 main.o
- .rodata        0x0000000000020ed4       0x1e clock.o
- *fill*         0x0000000000020ef2        0x2 
- .rodata        0x0000000000020ef4      0x109 proc.o
- .rodata        0x0000000000020ffd        0xd tty.o
- *fill*         0x000000000002100a        0x2 
- .rodata        0x000000000002100c      0x13f hd.o
- *fill*         0x000000000002114b        0x1 
- .rodata        0x000000000002114c       0xeb fs_main.o
- *fill*         0x0000000000021237        0x1 
- .rodata        0x0000000000021238      0x1a2 open.o
- .rodata        0x00000000000213da       0x1e close.o
- .rodata        0x00000000000213f8       0x17 rdwt.o
- *fill*         0x000000000002140f        0x1 
- .rodata        0x0000000000021410      0x17f unlink.o
- *fill*         0x000000000002158f        0x1 
- .rodata        0x0000000000021590       0xf8 mm_main.o
- .rodata        0x0000000000021688       0x90 vmalloc.o
- .rodata        0x0000000000021718       0x64 exe_main.o
- .rodata        0x000000000002177c       0xdb fork.o
+ .rodata        0x0000000000020fa8       0xe7 start.o
+ *fill*         0x000000000002108f        0x1 
+ .rodata        0x0000000000021090      0x372 main.o
+ .rodata        0x0000000000021402       0x1e clock.o
+ .rodata        0x0000000000021420      0x109 proc.o
+ .rodata        0x0000000000021529        0xd tty.o
+ *fill*         0x0000000000021536        0x2 
+ .rodata        0x0000000000021538      0x13f hd.o
+ *fill*         0x0000000000021677        0x1 
+ .rodata        0x0000000000021678       0xeb fs_main.o
+ *fill*         0x0000000000021763        0x1 
+ .rodata        0x0000000000021764      0x1a2 open.o
+ .rodata        0x0000000000021906       0x1e close.o
+ .rodata        0x0000000000021924       0x17 rdwt.o
+ *fill*         0x000000000002193b        0x1 
+ .rodata        0x000000000002193c      0x17f unlink.o
+ *fill*         0x0000000000021abb        0x1 
+ .rodata        0x0000000000021abc       0xf8 mm_main.o
+ .rodata        0x0000000000021bb4       0x90 vmalloc.o
+ .rodata        0x0000000000021c44       0x3b vmfree.o
+ *fill*         0x0000000000021c7f        0x1 
+ .rodata        0x0000000000021c80       0x64 exe_main.o
+ .rodata        0x0000000000021ce4       0xdb fork.o
 
 .rodata1
  *(.rodata1)
@@ -447,52 +454,54 @@ LOAD fork.o
  *(.eh_frame_hdr)
  *(.eh_frame_entry .eh_frame_entry.*)
 
-.eh_frame       0x0000000000021858      0xdd4
+.eh_frame       0x0000000000021dc0      0xe14
  *(.eh_frame)
- .eh_frame      0x0000000000021858       0x78 start.o
- .eh_frame      0x00000000000218d0       0xac main.o
+ .eh_frame      0x0000000000021dc0       0x78 start.o
+ .eh_frame      0x0000000000021e38       0xac main.o
                                          0xc4 (松开之前的大小)
- .eh_frame      0x000000000002197c       0xc0 protect.o
+ .eh_frame      0x0000000000021ee4       0xc0 protect.o
                                          0xd8 (松开之前的大小)
- .eh_frame      0x0000000000021a3c       0x90 clock.o
-                                         0xa8 (松开之前的大小)
- .eh_frame      0x0000000000021acc      0x328 proc.o
-                                        0x340 (松开之前的大小)
- .eh_frame      0x0000000000021df4       0x68 irq.o
+ .eh_frame      0x0000000000021fa4       0x70 clock.o
+                                         0x88 (松开之前的大小)
+ .eh_frame      0x0000000000022014      0x348 proc.o
+                                        0x360 (松开之前的大小)
+ .eh_frame      0x000000000002235c       0x68 irq.o
                                          0x80 (松开之前的大小)
- .eh_frame      0x0000000000021e5c       0x60 keyboard.o
+ .eh_frame      0x00000000000223c4       0x60 keyboard.o
                                          0x78 (松开之前的大小)
- .eh_frame      0x0000000000021ebc      0x140 tty.o
+ .eh_frame      0x0000000000022424      0x140 tty.o
                                         0x158 (松开之前的大小)
- .eh_frame      0x0000000000021ffc      0x11c hd.o
+ .eh_frame      0x0000000000022564      0x11c hd.o
                                         0x134 (松开之前的大小)
- .eh_frame      0x0000000000022118       0x40 console.o
+ .eh_frame      0x0000000000022680       0x40 console.o
                                          0x58 (松开之前的大小)
- .eh_frame      0x0000000000022158       0x44 printf.o
+ .eh_frame      0x00000000000226c0       0x44 printf.o
                                          0x5c (松开之前的大小)
- .eh_frame      0x000000000002219c       0x64 vsprintf.o
+ .eh_frame      0x0000000000022704       0x64 vsprintf.o
                                          0x7c (松开之前的大小)
- .eh_frame      0x0000000000022200       0x60 io.o
+ .eh_frame      0x0000000000022768       0x60 io.o
                                          0x78 (松开之前的大小)
- .eh_frame      0x0000000000022260       0xa0 fs_main.o
+ .eh_frame      0x00000000000227c8       0xa0 fs_main.o
                                          0xb8 (松开之前的大小)
- .eh_frame      0x0000000000022300      0x10c open.o
+ .eh_frame      0x0000000000022868      0x10c open.o
                                         0x124 (松开之前的大小)
- .eh_frame      0x000000000002240c       0x20 misc.o
+ .eh_frame      0x0000000000022974       0x20 misc.o
                                          0x38 (松开之前的大小)
- .eh_frame      0x000000000002242c       0x60 close.o
+ .eh_frame      0x0000000000022994       0x60 close.o
                                          0x78 (松开之前的大小)
- .eh_frame      0x000000000002248c       0x60 rdwt.o
+ .eh_frame      0x00000000000229f4       0x60 rdwt.o
                                          0x78 (松开之前的大小)
- .eh_frame      0x00000000000224ec       0x44 unlink.o
+ .eh_frame      0x0000000000022a54       0x44 unlink.o
                                          0x5c (松开之前的大小)
- .eh_frame      0x0000000000022530       0x3c mm_main.o
+ .eh_frame      0x0000000000022a98       0x3c mm_main.o
                                          0x54 (松开之前的大小)
- .eh_frame      0x000000000002256c       0x40 vmalloc.o
+ .eh_frame      0x0000000000022ad4       0x40 vmalloc.o
                                          0x58 (松开之前的大小)
- .eh_frame      0x00000000000225ac       0x3c exe_main.o
+ .eh_frame      0x0000000000022b14       0x40 vmfree.o
+                                         0x58 (松开之前的大小)
+ .eh_frame      0x0000000000022b54       0x3c exe_main.o
                                          0x54 (松开之前的大小)
- .eh_frame      0x00000000000225e8       0x44 fork.o
+ .eh_frame      0x0000000000022b90       0x44 fork.o
                                          0x5c (松开之前的大小)
  *(.eh_frame.*)
 
@@ -615,6 +624,7 @@ LOAD fork.o
  .data          0x0000000000024270        0x0 unlink.o
  .data          0x0000000000024270        0x0 mm_main.o
  .data          0x0000000000024270        0x0 vmalloc.o
+ .data          0x0000000000024270        0x0 vmfree.o
  .data          0x0000000000024270        0x0 exe_main.o
  .data          0x0000000000024270        0x0 fork.o
 
@@ -650,6 +660,7 @@ LOAD fork.o
  .bss           0x0000000000024a80        0x0 unlink.o
  .bss           0x0000000000024a80        0x0 mm_main.o
  .bss           0x0000000000024a80        0x0 vmalloc.o
+ .bss           0x0000000000024a80        0x0 vmfree.o
  .bss           0x0000000000024a80        0x0 exe_main.o
  .bss           0x0000000000024a80        0x0 fork.o
  *(COMMON)
@@ -752,6 +763,7 @@ LOAD fork.o
  .comment       0x0000000000000034       0x35 unlink.o
  .comment       0x0000000000000034       0x35 mm_main.o
  .comment       0x0000000000000034       0x35 vmalloc.o
+ .comment       0x0000000000000034       0x35 vmfree.o
  .comment       0x0000000000000034       0x35 exe_main.o
  .comment       0x0000000000000034       0x35 fork.o
 

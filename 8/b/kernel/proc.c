@@ -42,8 +42,8 @@ SYSCALL syscall_table[NR_SYSCALL] = { sys_get_ticks,
                                       sys_getcr3 };
 
 /**
- * see `sys_disable_paging`, `sys_enable_paging`,
- * `sys_reload_cr3`, `sys_getcr3` in lib/klib.asm
+ * see `sys_disable_paging', `sys_enable_paging',
+ * `sys_reload_cr3', `sys_getcr3' in lib/klib.asm
  */
 
 /***************************************************************
@@ -175,56 +175,44 @@ int sys_sem_wait(struct semaphore* p_sem)
 	return 0;
 }
 
+
 /***************************************************************/
 
-void enqueue(struct proc_queue* queue, struct proc* p_proc)
+
+/**
+ * 调度算法:
+ * <1> 将当前进程(被中断的进程)的 ticks 减 1;
+ * <2> 遍历进程表, 找到 flag = 0 且 ticks 最大的进程 p,
+ *     作为即将被启动或唤醒的进程;
+ * <3> 如果所有进程的 ticks 都已被减至 0, 则恢复为初值.
+ *     (ticks 的初值由 priority 保存)
+ *
+ * 在该调度算法下, 进程的运行时间比接近 priority 之比
+ */
+void schedule()
 {
-	if (queue->count < NR_PROCS)
+	struct proc* p_proc;
+	int max_ticks = 0;
+	
+	for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++) 
 	{
-		*queue->p_tail++ = p_proc;
-		queue->count++;
-		
-		assert(queue->count <= NR_PROCS);
-		
-		if (queue->p_tail > &queue->procs[NR_PROCS - 1])
+		if (p_proc->flag == 0) 
 		{
-			queue->p_tail = queue->procs;
+			if (p_proc->ticks > max_ticks) 
+			{
+				max_ticks = p_proc->ticks;
+				p_current_proc = p_proc;
+			}
 		}
+	}
+	
+	if (max_ticks == 0) 
+	{
+		for (p_proc = &FIRST_PROC; p_proc <= &LAST_PROC; p_proc++)
+			p_proc->ticks = p_proc->priority;
 	}
 }
 
-struct proc* dequeue(struct proc_queue* queue)
-{
-	struct proc* p_proc = NULL;
-	
-	if (queue->count > 0)
-	{
-		p_proc = *queue->p_head++;
-		queue->count--;
-		
-		assert(queue->count >= 0);
-		
-		if (queue->p_head > &queue->procs[NR_PROCS - 1])
-		{
-			queue->p_head = queue->procs;
-		}
-	}
-	return p_proc;
-}
-
-
-/* 由 virtual address 求 linear address */
-/* selector:offset 形式的地址称为 logical address, */
-/* 其中的`offset`称为 virtual address. */
-void* va2la(struct proc* proc, void* va)
-{
-	uint8_t* p_desc = &proc->LDT[INDEX_LDT_RW * DESC_SIZE]; /* Data segment descriptor */
-
-	uint32_t base = get_base(p_desc);
-	uint32_t la = base + (uint32_t) va; /* linear address */
-	
-	return (void*) la;
-}
 
 int msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg)
 {
@@ -412,9 +400,6 @@ void inform_int(int pid)
 	}
 }
 
-/**
- * 等待硬件中断的到来
- */
 void interrupt_wait()
 {
 	struct message msg;
@@ -432,9 +417,57 @@ void init_send_queue(struct proc* p_proc)
 	p_proc->send_queue.p_head = p_proc->send_queue.p_tail = p_proc->send_queue.procs;
 }
 
+void enqueue(struct proc_queue* queue, struct proc* p_proc)
+{
+	if (queue->count < NR_PROCS)
+	{
+		*queue->p_tail++ = p_proc;
+		queue->count++;
+		
+		assert(queue->count <= NR_PROCS);
+		
+		if (queue->p_tail > &queue->procs[NR_PROCS - 1])
+		{
+			queue->p_tail = queue->procs;
+		}
+	}
+}
+
+struct proc* dequeue(struct proc_queue* queue)
+{
+	struct proc* p_proc = NULL;
+	
+	if (queue->count > 0)
+	{
+		p_proc = *queue->p_head++;
+		queue->count--;
+		
+		assert(queue->count >= 0);
+		
+		if (queue->p_head > &queue->procs[NR_PROCS - 1])
+		{
+			queue->p_head = queue->procs;
+		}
+	}
+	return p_proc;
+}
+
 int empty(struct proc_queue* queue)
 {
 	return (queue->count == 0);
+}
+
+/* 由 virtual address 求 linear address */
+/* selector:offset 形式的地址称为 logical address, */
+/* 其中的`offset`称为 virtual address. */
+void* va2la(struct proc* proc, void* va)
+{
+	uint8_t* p_desc = &proc->LDT[INDEX_LDT_RW * DESC_SIZE]; /* Data segment descriptor */
+
+	uint32_t base = get_base(p_desc);
+	uint32_t la = base + (uint32_t) va; /* linear address */
+	
+	return (void*) la;
 }
 
 /* 保留 p_proc 参数 */

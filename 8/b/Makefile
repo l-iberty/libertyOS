@@ -8,7 +8,7 @@ CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin # -g3 加入符�
 KOBJS=		kernel.o start.o 8259A.o main.o protect.o clock.o syscall.o \
 		proc.o irq.o keyboard.o tty.o hd.o console.o klib.o string.o \
 		printf.o vsprintf.o io.o fs_main.o open.o misc.o close.o \
-		rdwt.o unlink.o mm_main.o vmalloc.o exe_main.o fork.o
+		rdwt.o unlink.o mm_main.o vmalloc.o vmfree.o exe_main.o fork.o
 
 all: boot.bin loader.bin kernel.bin
 
@@ -101,6 +101,9 @@ mm_main.o: mm/mm_main.c
 	gcc $(CFLAGS) $< -o $@
 
 vmalloc.o: mm/vmalloc.c
+	gcc $(CFLAGS) $< -o $@
+
+vmfree.o: mm/vmfree.c
 	gcc $(CFLAGS) $< -o $@
 
 exe_main.o: exe/exe_main.c

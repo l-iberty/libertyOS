@@ -161,6 +161,7 @@ struct semaphore
 #define FILE_UNLINK	1008
 #define FORK            1009
 #define VM_ALLOC	1010
+#define VM_FREE		1011
 #define HARD_INT	2001
 
 extern uint8_t	task_stack_init[TASK_STACK_SIZE];
@@ -200,7 +201,7 @@ void		sys_enable_paging();
 void		sys_reload_cr3(uint32_t cr3);
 uint32_t	sys_getcr3();
 
-void*	    	va2la(struct proc* proc, void* va);
+void		schedule();
 int	    	msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg);
 int	    	msg_recv(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg);
 void	    	block(struct proc* p_proc);
@@ -213,11 +214,11 @@ void	    	init_send_queue(struct proc* p_proc);
 void	    	enqueue(struct proc_queue* queue, struct proc* p_proc);
 struct proc*    dequeue(struct proc_queue* queue);
 int	    	empty(struct proc_queue* queue);
+void*	    	va2la(struct proc* proc, void* va);
 void		dump_proc(struct proc* p_proc);
 void	    	dump_msg(struct message* p_msg);
 void	    	failure(char* exp, char* file, char* base_file, int line);
 void	    	panic(const char* fmt, ...);
-void		schedule();
 
 #define assert(exp) if(exp); \
 			else failure(#exp, __FILE__, __BASE_FILE__, __LINE__)

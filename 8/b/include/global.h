@@ -1,7 +1,3 @@
-/**
- * 全局变量 & 系统调用 & 初始化
- */
-
 #ifndef GLOBAL_H
 #define GLOBAL_H
 #include "proc.h"

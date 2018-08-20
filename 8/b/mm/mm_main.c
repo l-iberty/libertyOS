@@ -27,6 +27,11 @@ void TaskMM()
 				mm_msg.VM_BASE = do_vm_alloc();
 				break;
 			}
+			case VM_FREE:
+			{
+				do_vm_free();
+				break;
+			}
 			default:
 			{
 				printf("\nMM-{unknown message value}");

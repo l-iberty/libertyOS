@@ -127,6 +127,7 @@ void Init()
 	
 	sleep(5000);
 
+#if 0
 	pid = fork();
 	
 	if (pid != 0) 
@@ -147,6 +148,7 @@ void Init()
 	{
 		printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
 	}
+#endif
 
 	for (;;) 
 	{
@@ -192,70 +194,6 @@ void TaskB()
 	sem_post(&sem_mutex);
 	printf("\n");
 
-	for (;;)
-	{
-		
-	}
-}
-
-void TaskC()
-{
-	printf("\n{Task-C}");
-	
-	void *la;
-	
-	/* 11M ~ 13M */
-	la = vm_alloc((void*)0xb00080, 0x200000, PAGE_READWRITE);
-	if (la)
-	{
-		printf("\n(1) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
-		memset(la, 0xcd, 0x200000);
-		memset(la, 0x12, 8);
-	}
-	else
-	{
-		printf("\n(1) vm_alloc failed: laddr = 0x%.8x\n", 0xb00080);
-	}
-
-	/* 8M ~ 12M */
-	la = vm_alloc((void*)0x800600, 0x400000, PAGE_READWRITE);
-	if (la)
-	{
-		printf("\n(2) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
-		memset(la, 0xcc, 0x400000);
-		memset(la, 0x34, 8);
-	}
-	else
-	{
-		printf("\n(2) vm_alloc failed: laddr = 0x%.8x\n", 0x800600);
-	}
-	
-	/* 28M ~ 28M + 7K */
-	la = vm_alloc((void*)0x1c00000, 7 * 1024, PAGE_READWRITE);
-	if (la)
-	{
-		printf("\n(3) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
-		memset(la, 0xdd, 4096 * 2);
-		memset(la, 0x56, 8);
-	}
-	else
-	{
-		printf("\n(3) vm_alloc failed: laddr = 0x%.8x\n", 0x1c00000);
-	}
-	
-
-	/* 9M ~ 12M */
-	la = vm_alloc((void*)0x900000, 0x300000, PAGE_READWRITE);
-	if (la)
-	{
-		printf("\n(4) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la);
-		memset(la, 0xdd, 0x300000);
-	}
-	else
-	{
-		printf("\n(4) vm_alloc failed: laddr = 0x%.8x\n", 0x900000);
-	}
-	
 	int fd;
 	char s[32];
 	fd = open("/test1", O_CREAT | O_RDWR);
@@ -269,13 +207,135 @@ void TaskC()
 	fd = open("/test1", O_RDWR);
 	read(fd, s, sizeof(s));
 	close(fd);
-	printf("\ntest1: %s",s);
+	printf("\nTaskB file test1: %s",s);
 
 	fd = open("/test2", O_RDWR);
 	read(fd, s, sizeof(s));
 	close(fd);
-	printf("\ntest2: %s",s);
+	printf("\nTaskB file test2: %s",s);
 
+	for (;;)
+	{
+		
+	}
+}
+
+void TaskC()
+{
+	printf("\n{Task-C}");
+	
+	void *la1, *la2, *la3, *la4, *la5;
+	
+	/* 11M ~ 13M */
+	la1 = vm_alloc((void*)0xb00080, 0x200000, PAGE_READWRITE);
+	if (la1)
+	{
+		printf("\n(1) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la1);
+		memset(la1, 0xcd, 0x200000);
+		memset(la1, 0x12, 8);
+	}
+	else
+	{
+		printf("\n(1) vm_alloc failed: laddr = 0x%.8x\n", 0xb00080);
+	}
+
+	/* 8M ~ 12M */
+	la2 = vm_alloc((void*)0x800600, 0x400000, PAGE_READWRITE);
+	if (la2)
+	{
+		printf("\n(2) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la2);
+		memset(la2, 0xcc, 0x400000);
+		memset(la2, 0x34, 8);
+	}
+	else
+	{
+		printf("\n(2) vm_alloc failed: laddr = 0x%.8x\n", 0x800600);
+	}
+	
+	/* 28M ~ 28M + 7K */
+	la3 = vm_alloc((void*)0x1c00000, 7 * 1024, PAGE_READWRITE);
+	if (la3)
+	{
+		printf("\n(3) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la3);
+		memset(la3, 0xdd, 4096 * 2);
+		memset(la3, 0x56, 8);
+	}
+	else
+	{
+		printf("\n(3) vm_alloc failed: laddr = 0x%.8x\n", 0x1c00000);
+	}
+	
+	/* 9M ~ 12M */
+	la4 = vm_alloc((void*)0x900000, 0x300000, PAGE_READWRITE);
+	if (la4)
+	{
+		printf("\n(4) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la4);
+		memset(la4, 0xdd, 0x300000);
+		memset(la4, 0x99, 8);
+	}
+	else
+	{
+		printf("\n(4) vm_alloc failed: laddr = 0x%.8x\n", 0x900000);
+	}
+
+	/* Free: 11M ~ 13M */
+	vm_free(la1, 0x200000);
+
+	/* Allocate: 8M ~ 12M */
+	la2 = vm_alloc((void*)0x800600, 0x400000, PAGE_READWRITE);
+	if (la2)
+	{
+		printf("\n(5) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la2);
+		memset(la2, 0xcc, 0x400000);
+		memset(la2, 0x34, 8);
+	}
+	else
+	{
+		printf("\n(5) vm_alloc failed: laddr = 0x%.8x\n", 0x800600);
+	}
+
+	/* Allocate: 9M ~ 12M */
+	la4 = vm_alloc((void*)0x900000, 0x300000, PAGE_READWRITE);
+	if (la4)
+	{
+		printf("\n(6) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la4);
+		memset(la4, 0xdd, 0x300000);
+	}
+	else
+	{
+		printf("\n(6) vm_alloc failed: laddr = 0x%.8x\n", 0x900000);
+	}
+
+	/* Free: 8M ~ 12M */
+	vm_free(la2, 0x400000);
+
+	/* Allocate: 9M ~ 12M */
+	la4 = vm_alloc((void*)0x900000, 0x300000, PAGE_READWRITE);
+	if (la4)
+	{
+		printf("\n(7) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la4);
+		memset(la4, 0xdd, 0x300000);
+		memset(la4, 0x99, 8);
+	}
+	else
+	{
+		printf("\n(7) vm_alloc failed: laddr = 0x%.8x\n", 0x900000);
+	}
+	
+	/* Allocate: 15M ~ 17M */
+	la5 = vm_alloc((void*)0xF00000, 0x200000, PAGE_READWRITE);
+	if (la5)
+	{
+		printf("\n(8) vm_alloc succeeded: laddr = 0x%.8x\n",(uint32_t)la5);
+		memset(la5, 0xff, 0x200000);
+		memset(la5, 0x00, 8);
+	}
+	else
+	{
+		printf("\n(8) vm_alloc failed: laddr = 0x%.8x\n", 0xF00000);
+	}
+
+	
 	for (;;)
 	{
 

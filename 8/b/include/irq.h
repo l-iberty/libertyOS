@@ -22,7 +22,6 @@ void	put_irq_handler(int irq, IRQ_HANDLER handler);
 void	enable_irq(int irq);
 void	disable_irq(int irq);
 
-/* handlers */
 void	clock_handler(int irq);
 void	keyboard_handler(int irq);
 void	hd_handler(int irq);
