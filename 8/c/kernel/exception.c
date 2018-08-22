@@ -45,7 +45,7 @@ void do_page_fault(int vecno, uint32_t err_code, uint32_t eip, uint16_t cs, uint
 	
 	if (PG_ERR_CODE_P(err_code) == 0)
 	{
-		if (pte[pte_idx] == 0) /* PTE全为0, 目标页帧不存在, 给未被映射的地址映射上物理页 */
+		if (pte[pte_idx] == 0) /* CASE-1: PTE全为0, 目标页帧不存在, 给未被映射的地址映射上物理页 */
 		{
 			/* Search for a free page frame */
 			p = pf_list;
@@ -96,12 +96,12 @@ void do_page_fault(int vecno, uint32_t err_code, uint32_t eip, uint16_t cs, uint
 #endif				
 			}
 		}
-		else /* PTE非空, 相应的物理页帧不在内存中, 需要执行页面置换 */
+		else /* CASE-2: PTE非空, 相应的物理页帧不在内存中, 需要执行页面置换 */
 		{
 		
 		}
 	}
-	else
+	else /* CASE-3: 访问权限非法（只考虑读写权限） */
 	{
 		if (PG_ERR_CODE_WR(err_code) == 1)
 		{
