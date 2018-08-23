@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "fs.h"
+#include "hd.h"
 #include "type.h"
 #include "sysconst.h"
 #include "stdio.h"
@@ -99,7 +100,7 @@ size_t do_rdwt()
 	for (int i = 0; i < nr_sectors && nr_bytes < len; i++) 
 	{
 		/* read file data from disk */
-		read_hd(start_sector + i, fsbuf, SECTOR_SIZE);
+		READ_HD(start_sector + i, fsbuf, SECTOR_SIZE);
 		
 		int offset = pfd->fd_pos % SECTOR_SIZE;
 		
@@ -112,7 +113,7 @@ size_t do_rdwt()
 		{
 			/* write file data */
             		memcpy(fsbuf + offset, buf, chunk);
-            		write_hd(start_sector + i, fsbuf, SECTOR_SIZE);
+            		WRITE_HD(start_sector + i, fsbuf, SECTOR_SIZE);
 		}
 		else if (type == FILE_READ) 
 		{
@@ -136,13 +137,13 @@ size_t do_rdwt()
 		pin->i_size = pfd->fd_pos;
 
 		/* write inode_array back to the disk */
-		read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+		READ_HD(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 		assert(nr_inode > 0);
 		memcpy(inode_buf + INODE_DISK_SIZE * (nr_inode - 1),
 		    va2la(pcaller, pcaller->filp[fd]->fd_inode),
 		    INODE_DISK_SIZE);
 
-		write_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+		WRITE_HD(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 		memset(inode_buf, 0, sizeof(inode_buf));
 	}
 	

@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "fs.h"
+#include "hd.h"
 #include "type.h"
 #include "sysconst.h"
 #include "stdio.h"
@@ -18,7 +19,7 @@ int find_file(char* filename)
 	int nr_inode = 0;
 	
 	/* 读入根目录 ( 1 个扇区 ) */
-	read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
+	READ_HD(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 	
 	struct dir_entry* pde = (struct dir_entry*) dirent_buf;
 	for (int i = 0; i < NR_FILES; i++, pde++) 

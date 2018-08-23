@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "fs.h"
+#include "hd.h"
 #include "type.h"
 #include "sysconst.h"
 #include "stdio.h"

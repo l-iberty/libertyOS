@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "fs.h"
+#include "hd.h"
 #include "sysconst.h"
 #include "global.h"
 #include "stdio.h"
@@ -68,9 +69,7 @@ void init_fs()
 
 	/* open hd driver */	
 	printf("\n{FS}    opening hard-disk driver...");
-	struct message msg;
-	msg.value = DEV_OPEN;
-	sendrecv(BOTH, PID_TASK_HD, &msg);
+	hd_open();
 	
 	printf("\n{FS}    making file system...");
 	mkfs();
@@ -183,40 +182,7 @@ void mkfs()
 		sprintf(pde->name, "dev_tty%.1x", i);		
 	}
 	
-	write_hd(0, fsbuf, BUFSIZE);
+	WRITE_HD(0, fsbuf, BUFSIZE);
 }
 
-/**
- * @param sector	绝对扇区号
- * @param buf		缓冲区, 待写入的数据存放在此
- * @param len		写入多少字节数据
- */
-void write_hd(int sector, void* buf, int len)
-{
-	struct message msg;
-	msg.value = DEV_WRITE;
-	msg.DRIVE = 0;
-	msg.SECTOR = sector;
-	msg.LEN = len;
-	msg.BUF = buf;
-	
-	sendrecv(BOTH, PID_TASK_HD, &msg);
-}
-
-/**
- * @param sector	绝对扇区号
- * @param buf		缓冲区, 数据读入到此
- * @param len		读入多少字节数据
- */
-void read_hd(int sector, void* buf, int len)
-{
-	struct message msg;
-	msg.value = DEV_READ;
-	msg.DRIVE = 0;
-	msg.SECTOR = sector;
-	msg.LEN = len;
-	msg.BUF = buf;
-	
-	sendrecv(BOTH, PID_TASK_HD, &msg);
-}
 

@@ -27,6 +27,10 @@
 					     ((drv) << 4)  | \
 					     ((lba_highest) & 0xF) | 0xA0)
 
+
+#define READ_HD(sector, buf, len)	hd_read(0, sector, buf, len)
+#define WRITE_HD(sector, buf, len)	hd_write(0, sector, buf, len)
+
 struct hd_cmd
 {
 	uint8_t	features;
@@ -47,5 +51,8 @@ void disp_hd_info();
 void hd_open();
 void hd_write(int drive, int sector, void* buf, int len);
 void hd_read(int drive, int sector, void* buf, int len);
+void do_hd_open();
+void do_hd_write();
+void do_hd_read();
 
 #endif /* HD_H */

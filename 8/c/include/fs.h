@@ -86,8 +86,6 @@ extern struct message   fs_msg;
 /* fs/fs_main.c */
 void		init_fs();
 void		mkfs();
-void		write_hd(int sector, void* buf, int len);
-void		read_hd(int sector, void* buf, int len);
 
 /* fs/misc.c */
 int		find_file(char* filename);

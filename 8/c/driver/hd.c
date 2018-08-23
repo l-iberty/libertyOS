@@ -28,17 +28,17 @@ void TaskHD()
 		{
 			case DEV_OPEN:
 			{
-				hd_open();
+				do_hd_open();
 				break;
 			}
 			case DEV_READ:
 			{
-				hd_read(hd_msg.DRIVE, hd_msg.SECTOR, hd_msg.BUF, hd_msg.LEN);
+				do_hd_read();
 				break;
 			}
 			case DEV_WRITE:
 			{
-				hd_write(hd_msg.DRIVE, hd_msg.SECTOR, hd_msg.BUF, hd_msg.LEN);
+				do_hd_write();
 				break;
 			}
 			default:
@@ -130,40 +130,13 @@ void disp_hd_info()
 		(cmd_set_supported & 0x0400) ? "YES" : "NO");
 }
 
-/**
- * This is a dummy routine, it only get information
- * of hard disk and display it.
- */
+
 void hd_open()
 {
-	get_hd_info(0);
-	interrupt_wait();
-	port_read(REG_DATA, hd_buf, SECTOR_SIZE);
-	disp_hd_info();
-}
-
-/**
- * @param	drive	0 = Master, 1 = Slave
- * @param	sector	扇区号
- * @param	buf	缓冲区
- * @param	len	字节数
- */
-void hd_write(int drive, int sector, void* buf, int len)
-{
-	struct hd_cmd cmd;
-	cmd.features	= 0;
-	cmd.nr_sectors	= (len + SECTOR_SIZE - 1) >> SECTOR_SIZE_SHIFT;
-	cmd.lba_low	= sector & 0xFF;
-	cmd.lba_mid	= (sector >> 8) & 0xFF;
-	cmd.lba_high	= (sector >> 16) & 0xFF;
-	cmd.device	= MAKE_DEVICE_REG(1, drive, (sector >> 24) & 0x0F);
-	cmd.command	= ATA_WRITE;
-	hd_cmd_out(&cmd);
+	struct message msg;
 	
-	port_write(REG_DATA, buf, len >> 1);
-	
-	/* 写硬盘结束后会产生一个硬盘中断, 必须等待之 */
-	interrupt_wait();
+	msg.value = DEV_OPEN;
+	sendrecv(BOTH, PID_TASK_HD, &msg);
 }
 
 /**
@@ -174,14 +147,60 @@ void hd_write(int drive, int sector, void* buf, int len)
  */
 void hd_read(int drive, int sector, void* buf, int len)
 {
+	struct message msg;
+	
+	msg.value	= DEV_READ;
+	msg.DRIVE	= drive;
+	msg.SECTOR	= sector;
+	msg.BUF		= buf;
+	msg.LEN		= len;
+	
+	sendrecv(BOTH, PID_TASK_HD, &msg);
+}
+
+/**
+ * @param	drive	0 = Master, 1 = Slave
+ * @param	sector	扇区号
+ * @param	buf	缓冲区
+ * @param	len	字节数
+ */
+void hd_write(int drive, int sector, void* buf, int len)
+{
+	struct message msg;
+	
+	msg.value	= DEV_WRITE;
+	msg.DRIVE	= drive;
+	msg.SECTOR	= sector;
+	msg.BUF		= buf;
+	msg.LEN		= len;
+	
+	sendrecv(BOTH, PID_TASK_HD, &msg);
+}
+
+/**
+ * This is a dummy routine, it only get information
+ * of hard disk and display it.
+ */
+void do_hd_open()
+{
+	get_hd_info(0);
+	interrupt_wait();
+	port_read(REG_DATA, hd_buf, SECTOR_SIZE);
+	disp_hd_info();
+}
+
+void do_hd_read()
+{
 	struct hd_cmd cmd;
+	
 	cmd.features	= 0;
-	cmd.nr_sectors	= (len + SECTOR_SIZE - 1) >> SECTOR_SIZE_SHIFT;
-	cmd.lba_low	= sector & 0xFF;
-	cmd.lba_mid	= (sector >> 8) & 0xFF;
-	cmd.lba_high	= (sector >> 16) & 0xFF;
-	cmd.device	= MAKE_DEVICE_REG(1, drive, (sector >> 24) & 0x0F);
+	cmd.nr_sectors	= (hd_msg.LEN + SECTOR_SIZE - 1) >> SECTOR_SIZE_SHIFT;
+	cmd.lba_low	= hd_msg.SECTOR & 0xFF;
+	cmd.lba_mid	= (hd_msg.SECTOR >> 8) & 0xFF;
+	cmd.lba_high	= (hd_msg.SECTOR >> 16) & 0xFF;
+	cmd.device	= MAKE_DEVICE_REG(1, hd_msg.DRIVE, (hd_msg.SECTOR >> 24) & 0x0F);
 	cmd.command	= ATA_READ;
+	
 	hd_cmd_out(&cmd);
 	
 	/**
@@ -190,7 +209,26 @@ void hd_read(int drive, int sector, void* buf, int len)
 	 */
 	interrupt_wait();
 	
-	port_read(REG_DATA, buf, len >> 1);
+	port_read(REG_DATA, hd_msg.BUF, hd_msg.LEN >> 1);
+}
+
+void do_hd_write()
+{
+	struct hd_cmd cmd;
+	
+	cmd.features	= 0;
+	cmd.nr_sectors	= (hd_msg.LEN + SECTOR_SIZE - 1) >> SECTOR_SIZE_SHIFT;
+	cmd.lba_low	= hd_msg.SECTOR & 0xFF;
+	cmd.lba_mid	= (hd_msg.SECTOR >> 8) & 0xFF;
+	cmd.lba_high	= (hd_msg.SECTOR >> 16) & 0xFF;
+	cmd.device	= MAKE_DEVICE_REG(1, hd_msg.DRIVE, (hd_msg.SECTOR >> 24) & 0x0F);
+	cmd.command	= ATA_WRITE;
+	
+	hd_cmd_out(&cmd);
+	port_write(REG_DATA, hd_msg.BUF, hd_msg.LEN >> 1);
+	
+	/* 写硬盘结束后会产生一个硬盘中断, 必须等待之 */
+	interrupt_wait();
 }
 
 /* Ring0 */

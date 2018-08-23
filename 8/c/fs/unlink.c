@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "fs.h"
+#include "hd.h"
 #include "type.h"
 #include "sysconst.h"
 #include "stdio.h"
@@ -106,17 +107,17 @@ int do_unlink()
 		/****************************/
 		/* clear bit  in inode_map  */
 		/****************************/
-		read_hd(INODE_MAP_SEC, imap_buf, sizeof(imap_buf));
+		READ_HD(INODE_MAP_SEC, imap_buf, sizeof(imap_buf));
 		byte_idx = inode_idx / 8;
 		bit_idx = inode_idx % 8;
 		imap_buf[byte_idx] &= ~(1 << bit_idx);
-		write_hd(INODE_MAP_SEC, imap_buf, sizeof(imap_buf));
+		WRITE_HD(INODE_MAP_SEC, imap_buf, sizeof(imap_buf));
 		
 		
 		/****************************/
 		/* clear bits in sector_map */
 		/****************************/
-		read_hd(SECTOR_MAP_SEC, smap_buf, sizeof(smap_buf));
+		READ_HD(SECTOR_MAP_SEC, smap_buf, sizeof(smap_buf));
 		byte_idx = sec_idx / 8;
 		
 		for (i = 0; i < nr_sectors / 8; i++)
@@ -125,20 +126,20 @@ int do_unlink()
 		for (i = 0; i < sec_idx % 8; i++)
 			smap_buf[byte_idx] &= ~(1 << i);
 		
-		write_hd(SECTOR_MAP_SEC, smap_buf, sizeof(smap_buf));
+		WRITE_HD(SECTOR_MAP_SEC, smap_buf, sizeof(smap_buf));
 		
 		
 		/****************************/
 		/* clear inode_array entry  */
 		/****************************/
-		read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+		READ_HD(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 		uint8_t* pch = inode_buf;
 		for (i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) 
 		{
 			if (!memcmp(pch, pin, INODE_DISK_SIZE)) /* i-node found! */
 			{ 
 				memset(pch, 0, INODE_DISK_SIZE);
-				write_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+				WRITE_HD(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 				break;
 			}
 		}
@@ -147,14 +148,14 @@ int do_unlink()
 		/****************************/
 		/* clear root_dir entry     */
 		/****************************/
-		read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
+		READ_HD(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 		struct dir_entry* pde = (struct dir_entry*) dirent_buf;
 		for (i = 0; i < NR_FILES; i++, pde++) 
 		{
 			if (pde->nr_inode == nr_inode) /* dir entry found! */
 			{ 
 				memset(pde, 0, sizeof(struct dir_entry));
-				write_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
+				WRITE_HD(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 				break;
 			}
 		}

@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "fs.h"
+#include "hd.h"
 #include "type.h"
 #include "sysconst.h"
 #include "stdio.h"
@@ -183,7 +184,7 @@ int alloc_imap_bit()
 
 	for (i = 0; i < NR_IMAP_SECTORS; i++) 
 	{
-		read_hd(INODE_MAP_SEC + i, imap_buf, SECTOR_SIZE);
+		READ_HD(INODE_MAP_SEC + i, imap_buf, SECTOR_SIZE);
 		
 		for (j = 0; j < SECTOR_SIZE; j++) 
 		{
@@ -196,7 +197,7 @@ int alloc_imap_bit()
 			
 			idx = (i * SECTOR_SIZE + j) * 8 + k; /* 1 Byte = 8 bit */
 			
-			write_hd(INODE_MAP_SEC + i, imap_buf, SECTOR_SIZE);
+			WRITE_HD(INODE_MAP_SEC + i, imap_buf, SECTOR_SIZE);
 			
 			/* clear imap_buf */
 			memset(imap_buf, 0, sizeof(imap_buf));
@@ -223,7 +224,7 @@ int alloc_smap_bits(int nr_sectors)
 
     for (i = 0; i < NR_SMAP_SECTORS && nr_sectors > 0; i++) 
     {
-        read_hd(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
+        READ_HD(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
         
         for (j = 0; j < SECTOR_SIZE && nr_sectors > 0; j++) 
         {
@@ -248,7 +249,7 @@ int alloc_smap_bits(int nr_sectors)
 			}
         }
         
-		write_hd(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
+		WRITE_HD(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
 		
 		/* clear smap_buf */
 		memset(smap_buf, 0, sizeof(smap_buf));
@@ -265,7 +266,7 @@ struct i_node* alloc_inode(int nr_inode, uint32_t mode, uint32_t size, uint32_t 
 {
 	struct i_node *pin, *pin2;
 	
-	read_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+	READ_HD(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 	
 	/* find a free slot in inode_array */
 	uint8_t* pch = inode_buf;
@@ -288,7 +289,7 @@ struct i_node* alloc_inode(int nr_inode, uint32_t mode, uint32_t size, uint32_t 
 			pin2->i_nr_inode = nr_inode;
 			pin2->i_cnt = 1;
 			
-			write_hd(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
+			WRITE_HD(INODE_ARRAY_SEC, inode_buf, sizeof(inode_buf));
 			
 			/* clear inode_buf */
 			memset(inode_buf, 0, sizeof(inode_buf));
@@ -306,7 +307,7 @@ void alloc_dir_entry(int nr_inode, char* filename)
 {
 	struct dir_entry* pde;
 	
-	read_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
+	READ_HD(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 	
 	/* find a free slot in root dir */
 	pde = (struct dir_entry*) dirent_buf;
@@ -319,7 +320,7 @@ void alloc_dir_entry(int nr_inode, char* filename)
 			assert(strlen(filename) < MAX_FILENAME_LEN);
 			strcpy(pde->name, filename);
 			
-			write_hd(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
+			WRITE_HD(ROOTDIR_SEC, dirent_buf, sizeof(dirent_buf));
 			
 			/* clear dirent_buf */
 			memset(dirent_buf, 0, sizeof(dirent_buf));
