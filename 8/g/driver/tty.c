@@ -12,7 +12,7 @@
 
 STATIC void	init_console(struct tty* p_tty);
 STATIC int	is_current_console(struct tty* p_tty);
-STATIC uint8_t	tty_dev_read(struct tty* p_tty);
+STATIC void	tty_dev_read(struct tty* p_tty, uint8_t *key);
 STATIC void	tty_dev_write(struct tty* p_tty, uint8_t key);
 
 struct tty tty_table[NR_CONSOLE];
@@ -39,7 +39,7 @@ void TaskTTY()
 	{
 		for (p_tty = tty_table; p_tty < tty_table + NR_CONSOLE; p_tty++) 
 		{
-			key = tty_dev_read(p_tty);
+			tty_dev_read(p_tty, &key);
 			tty_dev_write(p_tty, key);
 		}
 	}
@@ -161,15 +161,13 @@ STATIC int is_current_console(struct tty* p_tty)
 	return (nr_console == nr_current_console);
 }
 
-STATIC uint8_t tty_dev_read(struct tty* p_tty)
+STATIC void tty_dev_read(struct tty* p_tty, uint8_t *key)
 {
-	uint8_t key = 0;
-	
+	*key = 0;
 	if (is_current_console(p_tty))
 	{
-		key = keyboard_read(p_tty);
+		keyboard_read(p_tty, key);
 	}
-	return key;
 }
 
 STATIC void tty_dev_write(struct tty* p_tty, uint8_t key)

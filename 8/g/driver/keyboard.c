@@ -102,25 +102,24 @@ void keyboard_handler(int irq)
 			{
 				/* 队列已满, 回绕 */
 				p_current_tty->kb_in.p_rear = p_current_tty->kb_in.buf_queue;
+				p_current_tty->kb_in.count  = 0;
 			}
 		}
 	}
 }
 
-uint8_t keyboard_read(struct tty* p_tty)
+void keyboard_read(struct tty* p_tty, uint8_t *key)
 {
-	uint8_t key = 0;
-	
+	*key = 0;	
 	if (p_tty->kb_in.count > 0) 
 	{
-		key = *(p_tty->kb_in.p_head++);
+		*key = *(p_tty->kb_in.p_head++);
 		p_tty->kb_in.count--;
 		if (p_tty->kb_in.p_head == p_tty->kb_in.buf_queue + KB_BUFSIZE) 
 		{
 			p_tty->kb_in.p_head = p_tty->kb_in.buf_queue;
 		}
 	}
-	return key;
 }
 
 void init_keyboard()

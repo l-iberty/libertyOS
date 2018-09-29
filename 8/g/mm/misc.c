@@ -33,19 +33,16 @@ struct page_list *alloc_frame(int nr_pages)
 	return NULL; /* failed */
 }
 
-struct page_list *find_item(uint32_t base)
+struct page_list *find_pf_list_item(uint32_t base)
 {
 	struct page_list *p = pf_list;
 	do
 	{
-		if (p->BASE == base) break;
+		if (p->BASE == base) return p;
 		p = p->NEXT;
 	} while (p != pf_list);
 	
-	if (p == pf_list)
-		return NULL;
-	else
-		return p;
+	return NULL;
 }
 
 /* 在页表中找 nr_pages 个空闲的 PTE */
@@ -100,6 +97,10 @@ int check_free_frame(struct page_list *p, int n)
 	return (i == n && p->TYPE == PAGE_FREE);
 }
 
+/**
+ * 从 p 指向的页框开始, 将 nr_pages 个页框映射到虚拟地址 vm_base,
+ * page_dir_base 是本次操作使用的页目录物理基地址.
+ */
 void map_frame(struct page_list *p,
 	       uint32_t page_dir_base,
 	       uint32_t vm_base,
@@ -159,6 +160,10 @@ void map_frame(struct page_list *p,
 	}
 }
 
+/**
+ * 解除虚页到页框的映射.
+ * page_dir_base 是本次操作使用的页目录物理基地址
+ */
 void unmap_frame(uint32_t page_dir_base,
 	         uint32_t vm_base,
 	         uint32_t vm_size)
@@ -202,7 +207,7 @@ void unmap_frame(uint32_t page_dir_base,
 	}
 	
 	/* Free occupied page frames */
-	struct page_list *p = find_item(pm_base);
+	struct page_list *p = find_pf_list_item(pm_base);
 	
 	/* p 所指向的节点对应于第一个需要被 free 的页框. */
 	for (i = 0; i < nr_pages; i++, p = p->NEXT)

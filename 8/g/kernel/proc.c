@@ -181,7 +181,12 @@ int sys_sem_wait(struct semaphore* p_sem)
 	return 0;
 }
 
-
+uint32_t va2pa(uint32_t va, uint32_t page_dir_base)
+{
+	uint32_t *pde = (uint32_t*)page_dir_base;
+	uint32_t *pte = (uint32_t*)(GET_BASE(pde[PDE_INDEX(va)]));
+	return GET_BASE(pte[PTE_INDEX(va)]);
+}
 
 /**
  * @param p_dst 目标进程地址空间内的虚拟地址
@@ -191,11 +196,26 @@ int sys_sem_wait(struct semaphore* p_sem)
  */
 void sys_write_process_memory(uint32_t pid, void *p_dst, void *p_src, uint32_t len)
 {
-	uint32_t old_cr3;
+	uint32_t old_cr3, base;
 
 	old_cr3 = sys_getcr3();
+	
+/*	base = va2pa((uint32_t)p_src, old_cr3);*/
+/*	struct page_list *p = find_pf_list_item(base);*/
+/*	if (p)*/
+/*	{*/
+/*		int nr_pages = (len + PAGE_SIZE - 1) / PAGE_SIZE;*/
+/*		map_frame(p, proc_table[pid].page_dir_base, (uint32_t)p_src, nr_pages, PAGE_READWRITE);*/
+/*	}*/
+	
 	load_cr3(proc_table[pid].page_dir_base);
 	memcpy(p_dst, p_src, len);
+	
+/*	if (p)*/
+/*	{*/
+/*		unmap_frame(proc_table[pid].page_dir_base, (uint32_t)p_src, len);*/
+/*	}*/
+
 	load_cr3(old_cr3);
 }
 
@@ -334,7 +354,10 @@ STATIC int msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* 
 	struct proc* sender = proc_table + pid_sender;
 	struct proc* receiver = proc_table + pid_receiver;
 
-	while (deadlock(pid_sender, pid_receiver)) { } /* 等待死锁解除 */
+	if (deadlock(pid_sender, pid_receiver))
+	{
+		panic("DEADLOCK msg %d -> %d", pid_sender, pid_receiver);
+	}
 	
 	p_msg->source = pid_sender;
 	p_msg->dest = pid_receiver;
@@ -514,6 +537,7 @@ STATIC void enqueue(struct proc_queue* queue, struct proc* p_proc)
 		if (queue->p_rear > &queue->procs[NR_PROCS - 1])
 		{
 			queue->p_rear = queue->procs;
+			queue->count  = 0;
 		}
 	}
 }
@@ -532,6 +556,7 @@ STATIC struct proc* dequeue(struct proc_queue* queue)
 		if (queue->p_head > &queue->procs[NR_PROCS - 1])
 		{
 			queue->p_head = queue->procs;
+			queue->count  = 0;
 		}
 	}
 	return p_proc;

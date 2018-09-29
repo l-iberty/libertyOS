@@ -92,7 +92,7 @@ void	vm_free(void *vm_addr, uint32_t vm_size);
 void	do_vm_free();
 
 struct page_list *alloc_frame(int nr_pages);
-struct page_list *find_item(uint32_t base);
+struct page_list *find_pf_list_item(uint32_t base);
 int alloc_page(int nr_pages, uint32_t *pte, uint32_t *pde_idx, uint32_t *pte_idx);
 int check_free_page(uint32_t *pte, uint32_t idx, int n);
 int check_free_frame(struct page_list *p, int n);

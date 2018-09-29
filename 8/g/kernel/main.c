@@ -126,20 +126,17 @@ void sleep(int ms)
 void Init()
 {
 	sleep(5000);
+	struct message msg;
 
 //#if 0
-	for (int i = 0; i < 3; i++)
+	int pid = fork();
+	if (pid != 0)
 	{
-		int pid = fork();
-		if (pid != 0)
-		{
-			printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
-		}
-		else
-		{
-			printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
-			for (;;) {}
-		}
+		printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
+	}
+	else
+	{
+		printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
 	}	
 //#endif
 

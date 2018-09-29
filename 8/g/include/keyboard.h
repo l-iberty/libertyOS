@@ -19,7 +19,7 @@ struct kb_input
 	uint8_t buf_text[KB_BUFSIZE];	/* 可打印字符缓冲 */
 };
 
-uint8_t	keyboard_read(struct tty* p_tty);
+void	keyboard_read(struct tty* p_tty, uint8_t *key);
 void	init_keyboard();
 
 #endif /* KEYBOARD_H */

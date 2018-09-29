@@ -51,7 +51,6 @@ void do_page_fault(int vecno, uint32_t err_code, uint32_t eip, uint16_t cs, uint
 	{
 		if (pte[pte_idx] == 0) /* CASE-1: PTE全为0, 目标页帧不存在, 给未被映射的地址映射上物理页 */
 		{
-			/* Search for a free page frame */
 			p = alloc_frame(1);
 			if (p == NULL)
 			{
