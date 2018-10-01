@@ -126,24 +126,29 @@ void sleep(int ms)
 void Init()
 {
 	sleep(5000);
-	struct message msg;
+	struct message msg1, msg2;
 
 //#if 0
-	int pid = fork();
-	if (pid != 0)
+	for (int i = 0; i < 3; i++)
 	{
-		printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
+		int pid = fork();
+		if (pid != 0)
+		{
+			printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
+			//sendrecv(RECEIVE, pid, &msg1);
+			//printf("\nmessage from child %d : %d", pid, msg1.value);
+		}
+		else
+		{
+			printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
+			//msg2.value = 123;
+			//sendrecv(SEND, PID_INIT, &msg2);
+			for(;;) {}
+		}
 	}
-	else
-	{
-		printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
-	}	
 //#endif
 
-	for (;;) 
-	{
-	
-	}
+	for (;;) {}
 }
 
 void TaskA()
@@ -226,7 +231,7 @@ void TaskB()
 		*p_mem = 0xC0007F00;
 		printf("0x%.8x", *p_mem);
 		
-		//vm_free(p_mem, 32);
+		vm_free(p_mem, 32);
 	}
 
 	for (;;)
@@ -267,7 +272,7 @@ void TaskC()
 		*p_mem = 0x12345678;
 		printf("0x%.8x", *p_mem);
 		
-		vm_free(p_mem, 1000);
+		//vm_free(p_mem, 1000);
 	}
 	
 	p_mem = (uint32_t*) vm_alloc(NULL, 500, PAGE_READWRITE);
@@ -277,8 +282,14 @@ void TaskC()
 		*p_mem = 0x12345678;
 		printf("0x%.8x", *p_mem);
 		
-		vm_free(p_mem, 4096 * 5);
+		//vm_free(p_mem, 4096 * 5);
 	}
+	
+/*	p_mem = (uint32_t*) vm_alloc(NULL, 500, PAGE_READ);*/
+/*	if (p_mem)*/
+/*	{*/
+/*		*p_mem = 0xff;*/
+/*	}*/
 
 	for (;;)
 	{

@@ -87,8 +87,8 @@ extern struct meminfo   *mi;
 void	init_mm();
 void	*vm_alloc(void *vm_addr, uint32_t vm_size, uint32_t vm_protect);
 void	*vm_alloc_ex(uint32_t pid, void *vm_addr, uint32_t vm_size, uint32_t vm_protect);
-void	*do_vm_alloc();
 void	vm_free(void *vm_addr, uint32_t vm_size);
+void	*do_vm_alloc();
 void	do_vm_free();
 
 struct page_list *alloc_frame(int nr_pages);
@@ -96,6 +96,7 @@ struct page_list *find_pf_list_item(uint32_t base);
 int alloc_page(int nr_pages, uint32_t *pte, uint32_t *pde_idx, uint32_t *pte_idx);
 int check_free_page(uint32_t *pte, uint32_t idx, int n);
 int check_free_frame(struct page_list *p, int n);
+void relocate_pde(uint32_t *pde);
 
 void map_frame(struct page_list *p,
 	       uint32_t page_dir_base,

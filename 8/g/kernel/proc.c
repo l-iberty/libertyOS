@@ -202,7 +202,7 @@ void sys_write_process_memory(uint32_t pid, void *p_dst, void *p_src, uint32_t l
 	
 /*	base = va2pa((uint32_t)p_src, old_cr3);*/
 /*	struct page_list *p = find_pf_list_item(base);*/
-/*	if (p)*/
+/*	if (p != NULL)*/
 /*	{*/
 /*		int nr_pages = (len + PAGE_SIZE - 1) / PAGE_SIZE;*/
 /*		map_frame(p, proc_table[pid].page_dir_base, (uint32_t)p_src, nr_pages, PAGE_READWRITE);*/
@@ -211,7 +211,7 @@ void sys_write_process_memory(uint32_t pid, void *p_dst, void *p_src, uint32_t l
 	load_cr3(proc_table[pid].page_dir_base);
 	memcpy(p_dst, p_src, len);
 	
-/*	if (p)*/
+/*	if (p != NULL)*/
 /*	{*/
 /*		unmap_frame(proc_table[pid].page_dir_base, (uint32_t)p_src, len);*/
 /*	}*/

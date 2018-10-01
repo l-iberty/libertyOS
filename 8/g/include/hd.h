@@ -44,12 +44,12 @@ struct hd_cmd
 
 extern struct message hd_msg;
 
-void init_hd();
-void hd_open();
-void hd_write(int drive, int sector, void* buf, int len);
-void hd_read(int drive, int sector, void* buf, int len);
-void do_hd_open();
-void do_hd_write();
-void do_hd_read();
+void	init_hd();
+void	hd_open();
+void	hd_write(int drive, int sector, void* buf, int len);
+void	hd_read(int drive, int sector, void* buf, int len);
+void	do_hd_open();
+void	do_hd_write();
+void	do_hd_read();
 
 #endif /* HD_H */

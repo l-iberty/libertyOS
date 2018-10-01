@@ -145,24 +145,12 @@ void init_mm()
 		}
 	}
 	
-	/* 拷贝0号页表 */
-	uint32_t offset;
+	/* 将0号页表拷贝给其他进程 */
 	pde = (uint32_t*) (mi->page_dir_base + PAGE_TABLE_PAGES * PAGE_SIZE);
-	for (i = 0; i < NR_PROCS - 1; i++)
+	for (i = 0; i < NR_NATIVE_PROCS + NR_TASKS - 1; i++)
 	{
 		memcpy(pde, (void*)mi->page_dir_base, PAGE_TABLE_PAGES * PAGE_SIZE);
-		
-		/* 调整页目录中的页表地址值 */
-		pte = pde + MAX_PAGE_ITEM; 
-		offset = (uint32_t)pde - mi->page_dir_base;
-		for (j = 0; j < MAX_PAGE_ITEM; j++)
-		{
-			if (pde[j] != 0)
-			{
-				pde[j] = pde[j] + offset;
-			}
-		}
-		
+		relocate_pde(pde); /* 重定位页目录中的页表地址值 */
 		pde += PAGE_TABLE_PAGES * MAX_PAGE_ITEM;
 	}
 	

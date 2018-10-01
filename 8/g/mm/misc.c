@@ -38,7 +38,7 @@ struct page_list *find_pf_list_item(uint32_t base)
 	struct page_list *p = pf_list;
 	do
 	{
-		if (p->BASE == base) return p;
+		if (p->BASE == base) { return p; }
 		p = p->NEXT;
 	} while (p != pf_list);
 	
@@ -71,14 +71,9 @@ int alloc_page(int nr_pages, uint32_t *pte, uint32_t *pde_idx, uint32_t *pte_idx
 /* 从 pte[idx] 开始是否有连续 n 个空闲的 PTE ? */
 int check_free_page(uint32_t *pte, uint32_t idx, int n)
 {
-	int i;
-	
-	for (i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
-		if (pte[idx + i] != 0)
-		{
-			return 0;
-		}
+		if (pte[idx + i] != 0) { return 0; }
 	}
 	return 1;
 }
@@ -87,14 +82,26 @@ int check_free_page(uint32_t *pte, uint32_t idx, int n)
 int check_free_frame(struct page_list *p, int n)
 {
 	int i = 0;
-
+	
 	do
 	{
-		if (++i == n || p->TYPE != PAGE_FREE) break;
+		if (++i == n || p->TYPE != PAGE_FREE) { break; }
 		p = p->NEXT;
 	} while (p != pf_list);
 
 	return (i == n && p->TYPE == PAGE_FREE);
+}
+
+/**
+ * 对 pde 指向的页目录中的 PDE 进行重定位
+ */
+void relocate_pde(uint32_t *pde)
+{
+	uint32_t offset = (uint32_t)pde - mi->page_dir_base;
+	for (int i = 0; i < MAX_PAGE_ITEM; i++)
+	{
+		if (pde[i] != 0) { pde[i] += offset; }
+	}
 }
 
 /**

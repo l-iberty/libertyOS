@@ -83,28 +83,20 @@ extern struct file_desc	f_desc_table[NR_FILES];
 extern struct i_node	inode_table[NR_INODES];
 extern struct message   fs_msg;
 
-/* fs/fs_main.c */
-void init_fs();
+void	init_fs();
+int	open(const char* pathname, int flags);
+size_t	read(int fd, void* buf, size_t len);
+size_t	write(int fd, void* buf, size_t len);
+int	close(int fd);
+int	unlink(const char* pathname);
 
-/* fs/misc.c */
-int find_file(char* filename);
-struct i_node* get_inode(int nr_inode);
+int	do_open();
+int	do_close();
+size_t	do_rdwt();
+int	do_unlink();
 
-/* fs/open.c */
-int open(const char* pathname, int flags);
-int do_open();
-
-/* fs/close.c */
-int close(int fd);
-int do_close();
-
-/* fs/rdwt.c */
-size_t read(int fd, void* buf, size_t len);
-size_t write(int fd, void* buf, size_t len);
-size_t do_rdwt();
-
-/* fs/unlink.c */
-int unlink(const char* pathname);
-int do_unlink();
+int	find_file(char* filename);
+struct	i_node* get_inode(int nr_inode);
 
 #endif /* FS_H */
+
