@@ -181,13 +181,6 @@ int sys_sem_wait(struct semaphore* p_sem)
 	return 0;
 }
 
-uint32_t va2pa(uint32_t va, uint32_t page_dir_base)
-{
-	uint32_t *pde = (uint32_t*)page_dir_base;
-	uint32_t *pte = (uint32_t*)(GET_BASE(pde[PDE_INDEX(va)]));
-	return GET_BASE(pte[PTE_INDEX(va)]);
-}
-
 /**
  * @param p_dst 目标进程地址空间内的虚拟地址
  * @param p_src 当前进程地址空间内的虚拟地址
@@ -200,7 +193,7 @@ void sys_write_process_memory(uint32_t pid, void *p_dst, void *p_src, uint32_t l
 
 	old_cr3 = sys_getcr3();
 	
-/*	base = va2pa((uint32_t)p_src, old_cr3);*/
+/*	base = GET_BASE(va2pa(old_cr3, p_src));*/
 /*	struct page_list *p = find_pf_list_item(base);*/
 /*	if (p != NULL)*/
 /*	{*/
@@ -294,7 +287,6 @@ void init_send_queue(struct proc* p_proc)
 	p_proc->send_queue.p_head = p_proc->send_queue.p_rear = p_proc->send_queue.procs;
 }
 
-/* 由 virtual address 求 linear address */
 void* va2la(struct proc* proc, void* va)
 {
 	uint8_t* p_desc = &proc->LDT[INDEX_LDT_RW * DESC_SIZE]; /* Data segment descriptor */
@@ -305,18 +297,12 @@ void* va2la(struct proc* proc, void* va)
 	return (void*) la;
 }
 
-/* 由 linear address 求 physical address */
-void* la2pa(uint32_t cr3_val, void* la)
+void* va2pa(uint32_t page_dir_base, void *va)
 {
-	uint32_t *pd_base, *pt_base;
-	uint32_t pde, pte;
-	
-	pd_base = (uint32_t*) cr3_val;
-	pde     = pd_base[PDE_INDEX(la)];
-	pt_base = (uint32_t*) GET_BASE(pde);
-	pte     = pt_base[PTE_INDEX(la)];
-	
-	return (void*) (GET_BASE(pte) | PAGE_OFFSET(la));
+	void *la = va2la(p_current_proc, va);
+	uint32_t *pde = (uint32_t*)page_dir_base;
+	uint32_t *pte = (uint32_t*)(GET_BASE(pde[PDE_INDEX(la)]));
+	return (void*) (GET_BASE(pte[PTE_INDEX(la)]) | PAGE_OFFSET(la));
 }
 
 void dump_msg(struct message* p_msg)

@@ -209,7 +209,7 @@ void	inform_int(int pid);
 void	interrupt_wait();
 void	init_send_queue(struct proc* p_proc);
 void*	va2la(struct proc* proc, void* va);
-void*	la2pa(uint32_t cr3_val, void* la);
+void*	va2pa(uint32_t page_dir_base, void *va);
 void	dump_msg(struct message* p_msg);
 void	failure(char* exp, char* file, char* base_file, int line);
 void	panic(const char* fmt, ...);
