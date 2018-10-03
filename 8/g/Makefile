@@ -143,3 +143,4 @@ image:
 clean:
 	rm `find . -name "*.o"`
 	rm `find . -name "*.bin"`	
+	rm *.txt

@@ -52,7 +52,7 @@ int do_unlink()
 	int nr_inode = find_file(filename);
 	if (nr_inode == 0) 
 	{
-		printf("\n#ERROR#-do_unlink: file \"%s\" does not exist {PID:0x%.8x}",
+		printf("\n#ERROR#-do_unlink: file \"%s\" does not exist {PID:%d}",
 				fs_msg.PATHNAME, pcaller->pid);
 		return -1;
 	}
@@ -63,23 +63,23 @@ int do_unlink()
 		if (pin->i_nr_inode == nr_inode)
 			break;
 	}
-	if (pin >= inode_table + NR_INODES) 
+	if (pin >= inode_table + NR_INODES)
 	{
-		printf("\n#ERROR#-do_unlink: invalid i-node {PID:0x%.8x}",
+		printf("\n#ERROR#-do_unlink: invalid i-node {PID:%d}",
 			pcaller->pid);
 		return -1;
 	}
 	
 	if (pin->i_mode & I_MODE_DIR)
 	{
-		printf("\n#ERROR#-do_unlink: cannot remove a dir {PID:0x%.8x}",
+		printf("\n#ERROR#-do_unlink: cannot remove a dir {PID:%d}",
 			pcaller->pid);
 		return -1;
 	}
 	
 	if (pin->i_mode & I_MODE_CHARDEV) 
 	{
-		printf("\n#ERROR#-do_unlink: cannot remove a char-device {PID:0x%.8x}",
+		printf("\n#ERROR#-do_unlink: cannot remove a char-device {PID:%d}",
 			pcaller->pid);
 		return -1;
 	}
@@ -88,7 +88,7 @@ int do_unlink()
 	{
 		if (pin->i_cnt > 0) 
 		{
-			printf("\n#ERROR#-do_unlink: file \"%s\" is being used by some procs {PID:0x%.8x}",
+			printf("\n#ERROR#-do_unlink: file \"%s\" is being used by some procs {PID:%d}",
 				fs_msg.PATHNAME, pcaller->pid);
 			return -1;
 		}

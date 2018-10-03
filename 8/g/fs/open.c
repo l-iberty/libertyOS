@@ -69,7 +69,7 @@ int do_open()
 		}
 	}
 	if (fd < 0 || fd >= NR_FILES)
-		panic("\n#ERROR#-do_open: No available slot in struct proc::filp[] {PID:0x%.8x}", pcaller->pid);
+		panic("\n#ERROR#-do_open: No available slot in struct proc::filp[] {PID:%d}", pcaller->pid);
 	
 	/* find a free slot in f_desc_table[] */
 	for (i = 0; i < NR_FILES; i++) 
@@ -78,7 +78,7 @@ int do_open()
 			break;
 	}
 	if (i < 0 || i >= NR_FILES)
-		panic("\n#ERROR#-do_open: No available slot in f_desc_table[] {PID:0x%.8x}", pcaller->pid);
+		panic("\n#ERROR#-do_open: No available slot in f_desc_table[] {PID:%d}", pcaller->pid);
 
 	/* Now, `i` is the index of a free slot in f_desc_table[] */		
 	
@@ -96,7 +96,7 @@ int do_open()
 			{
 				if (pin->i_nr_inode == nr_inode) 
 				{
-					printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:0x%.8x}",
+					printf("\n#ERROR#-do_open: the file \"%s\" has already been opened {PID:%d}",
 						fs_msg.PATHNAME, pcaller->pid);
 					return -1;
 				}
@@ -162,10 +162,10 @@ STATIC struct i_node* create_file(char* filename, int flags)
 	sec_idx = alloc_smap_bits(NR_DEFAULT_FILE_SECS);
 	
 	pin = alloc_inode(nr_inode,
-					I_MODE_NORMAL,			/* normal file */
-					0,						/* file size*/
-					sec_idx,				/* start_sector */
-					NR_DEFAULT_FILE_SECS);	/* num of sectors occupied */
+			 I_MODE_NORMAL,		/* normal file */
+			 0,			/* file size*/
+			 sec_idx,		/* start_sector */
+			 NR_DEFAULT_FILE_SECS);	/* num of sectors occupied */
 	
 	alloc_dir_entry(nr_inode, filename);
 	
@@ -234,28 +234,27 @@ STATIC int alloc_smap_bits(int nr_sectors)
         	if (smap_buf[j] == 0xFF)
 				continue; /* skip "1111_1111" */
 		
-			/* skip "1" bit */
-			for (k = 0; (smap_buf[j] >> k) & 0x1; k++) {}
-			
-			if (idx == -1) 
-			{
-				/* set `idx`, and lock it */
-				idx = (i * SECTOR_SIZE + j) * 8 + k; /* 1 Byte = 8 bit */
-			}
-			
-			/* fill each byte bit by bit */
-			for (; k < 8; k++) 
-			{
-				smap_buf[j] |= (1 << k);
-				if (--nr_sectors == 0)
-					break;
-			}
-        }
-        
-		WRITE_HD(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
+		/* skip "1" bit */
+		for (k = 0; (smap_buf[j] >> k) & 0x1; k++) {}
 		
-		/* clear smap_buf */
-		memset(smap_buf, 0, sizeof(smap_buf));
+		if (idx == -1) 
+		{
+			/* set `idx`, and lock it */
+			idx = (i * SECTOR_SIZE + j) * 8 + k; /* 1 Byte = 8 bit */
+		}
+		
+		/* fill each byte bit by bit */
+		for (; k < 8; k++) 
+		{
+			smap_buf[j] |= (1 << k);
+			if (--nr_sectors == 0)
+				break;
+		}
+        }
+	WRITE_HD(SECTOR_MAP_SEC + i, smap_buf, SECTOR_SIZE);
+	
+	/* clear smap_buf */
+	memset(smap_buf, 0, sizeof(smap_buf));
     }
     return idx;
 }
@@ -275,7 +274,7 @@ STATIC struct i_node* alloc_inode(int nr_inode, uint32_t mode, uint32_t size, ui
 	uint8_t* pch = inode_buf;
 	for (int i = 0; i < NR_INODES; i++, pch += INODE_DISK_SIZE) 
 	{
-        pin = (struct i_node*) pch;
+		pin = (struct i_node*) pch;
 		/* if struct i_node::i_mode == 0, it's a free slot in inode_array */
 		if (pin->i_mode == 0) 
 		{

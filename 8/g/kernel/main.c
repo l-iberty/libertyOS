@@ -284,6 +284,28 @@ void TaskC()
 		
 		//vm_free(p_mem, 4096 * 5);
 	}
+
+/* Test file operation */
+
+	int fd;
+	char s[32];
+	fd = open("/test3", O_CREAT | O_RDWR);
+	write(fd, "testfile2333", 13);
+	close(fd);
+	
+	fd = open("/test4", O_CREAT | O_RDWR);
+	write(fd, "hello, world4444", 17);
+	close(fd);
+
+	fd = open("/test3", O_RDWR);
+	read(fd, s, sizeof(s));
+	close(fd);
+	printf("\nTaskC file test3: %s",s);
+
+	fd = open("/test4", O_RDWR);
+	read(fd, s, sizeof(s));
+	close(fd);
+	printf("\nTaskC file test4: %s",s);
 	
 /*	p_mem = (uint32_t*) vm_alloc(NULL, 500, PAGE_READ);*/
 /*	if (p_mem)*/
