@@ -23,10 +23,13 @@
 #define ATA_READ	0x20
 #define ATA_WRITE	0x30
 
+/* status */
+#define ATA_STATUS_BSY	0x80
+
+/* macro functions */
 #define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) | \
 					     ((drv) << 4)  | \
 					     ((lba_highest) & 0xF) | 0xA0)
-
 
 #define READ_HD(sector, buf, len)	hd_read(0, sector, buf, len)
 #define WRITE_HD(sector, buf, len)	hd_write(0, sector, buf, len)

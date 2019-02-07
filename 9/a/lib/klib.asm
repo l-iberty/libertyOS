@@ -360,8 +360,8 @@ itoa:
 ; uint8_t in_byte(uint16_t port)
 ;-------------------------------------------------------------------------------
 in_byte:
-	xor	eax, eax
 	mov	edx, [esp + 4]	; port
+	xor	eax, eax
 	in	al, dx
 	nop
 	nop
@@ -373,14 +373,11 @@ in_byte:
 ; void out_byte(uint16_t port, uint8_t byte)
 ;-------------------------------------------------------------------------------
 out_byte:
-	push	ebp
-	mov	ebp, esp
-	
-	mov	edx, [ebp + 8]		; port
-	mov	al, byte [ebp + 12]	; byte
+	mov	edx, [esp + 4]	; port
+	mov	al, [esp + 8]	; byte
 	out	dx, al
-	
-	pop	ebp
+	nop
+	nop
 	ret
 ;-------------------------------------------------------------------------------
 

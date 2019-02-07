@@ -6,6 +6,7 @@
 #include "global.h"
 #include "irq.h"
 
+STATIC void wait_disk();
 STATIC void hd_cmd_out(struct hd_cmd* cmd);
 STATIC void get_hd_info(int drive);
 STATIC void disp_hd_info();
@@ -183,10 +184,15 @@ void hd_handler(int irq)
 	inform_int(PID_TASK_HD);
 }
 
+STATIC void wait_disk()
+{
+	while ((in_byte(REG_STATUS) & ATA_STATUS_BSY)) ; /* do nothing */
+}
+
 STATIC void hd_cmd_out(struct hd_cmd* cmd)
 {
 	/* 只有当 Status Register 的 BSY 位为 0, 才能继续 */
-	while ((in_byte(REG_STATUS) & 0x80)) {printf("-");}
+	wait_disk();
 
 	/* 通过 Control Block Register 打开中断 */
 	out_byte(REG_DEV_CTRL, 0);
@@ -194,10 +200,10 @@ STATIC void hd_cmd_out(struct hd_cmd* cmd)
 	/* 写入命令参数 */
 	out_byte(REG_FEATURES, cmd->features);
 	out_byte(REG_NRSECTOR, cmd->nr_sectors);
-	out_byte(REG_LBA_LOW, cmd->lba_low);
-	out_byte(REG_LBA_MID, cmd->lba_mid);
+	out_byte(REG_LBA_LOW,  cmd->lba_low);
+	out_byte(REG_LBA_MID,  cmd->lba_mid);
 	out_byte(REG_LBA_HIGH, cmd->lba_high);
-	out_byte(REG_DEVICE, cmd->device);
+	out_byte(REG_DEVICE,   cmd->device);
 	/* 发送命令 */
 	out_byte(REG_CMD, cmd->command);
 }
