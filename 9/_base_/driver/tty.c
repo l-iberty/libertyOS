@@ -115,7 +115,7 @@ void parse_input(struct tty* p_tty)
 	char *input = p_tty->kb_in.buf_text;
 	
 	char s[] = "hello";
-	if (!strncmp(s, input, max(strlen(s), strlen(input)))) 
+	if (!strcmp(s, input)) 
 	{
 		tty_printstr(p_tty, "hello,world!");
 	}

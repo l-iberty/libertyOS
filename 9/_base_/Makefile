@@ -84,8 +84,8 @@ driver/console.o: driver/console.c
 lib/klib.o: lib/klib.asm
 	nasm $(ASMKFLAGS) $< -o $@
 
-lib/string.o: lib/string.asm
-	nasm $(ASMKFLAGS) $< -o $@
+lib/string.o: lib/string.c
+	gcc $(CFLAGS) $< -o $@
 
 lib/printf.o: lib/printf.c
 	gcc $(CFLAGS) $< -o $@

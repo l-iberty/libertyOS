@@ -3,8 +3,12 @@
 
 #include "type.h"
 
-size_t	strlen(const char* s);
-void	strcpy(char* dst, const char* src);
-int	strncmp(const char* s1, const char* s2, int len);
+int	strlen(char* str);
+void	strcpy(char* str1, char* str2);
+int	strcmp(char* str1, char* str2);
+void	memcpy(void* dst, void* src, int size);
+void	memset(void* p, char val, int size);
+int	memcmp(void* p1, void* p2, int size);
 
 #endif /* STRING_H */
+
