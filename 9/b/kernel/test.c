@@ -219,19 +219,110 @@ void TaskE()
 	buf[nr] = 0;
 	close(fd);
 	printf("\nTaskE open \"test3\" to read: %s", buf);
-	
+
+/* test for `brk()' and `sbrk()' */
+
+/** test1 */
+	printf("\n\n===TaskE test1===");
 	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
-	brk(sbrk(0) + 4096 * 2 + 1);
+	brk(sbrk(0) + 0x3000 + 0xc);
 	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: 分配4页, mlimit被对齐到第4页末尾(即第5页的首字节位置)
+//
+//  start_brk                                brk     mlimit
+//     |                                      |        |      
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//     |           |           |           |           |           |           |
+//     |           |           |           |           |           |           |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+
+/** test2 */
+	printf("\n\n===TaskE test2===");
+	sbrk(0x100);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk增长0x100, 未超过mlimit, 无需映射新的页面
+//
+//  start_brk                                  brk   mlimit
+//     |                                        |      |      
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//     |           |           |           |           |           |           |
+//     |           |           |           |           |           |           |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+
+/** test3 */
+	printf("\n\n===TaskE test3===");
+	sbrk(0x2000);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk增长0x2000后超过mlimit, 需要映射2个页面, mlimit被对齐到第6页末尾
+//
+//  start_brk                                                          brk   mlimit
+//     |                                                                |      |      
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//     |           |           |           |           |           |           |
+//     |           |           |           |           |           |           |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+
+/** test4 */
+	printf("\n\n===TaskE test4===");
+	brk(sbrk(0) - 0x3005);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk减去0x3005后需要解除3个页面的映射, mlimit被对齐到第3页末尾
+//
+//  start_brk                    brk     mlimit
+//     |                          |        |      
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//     |           |           |           |           |           |           |
+//     |           |           |           |           |           |           |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+
+/** test5 */
+	printf("\n\n===TaskE test5===");
+	sbrk(-0x108);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk减去0x108后刚好需要解除1个页面的映射, mlimit被对齐到第2页末尾
+//
+//  start_brk                brk
+//     |                      |   
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//     |           |           |           |           |           |           |
+//     |           |           |           |           |           |           |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//                             |
+//                           mlimit
+
+/** test6 */
+	printf("\n\n===TaskE test6===");
+	sbrk(2);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk增加2后刚好越过第2页, 需要解除1个页面的映射, mlimit被对齐到第3页末尾
+//
+//  start_brk                  brk       mlimit
+//     |                        |          |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+//     |           |           |           |           |           |           |
+//     |           |           |           |           |           |           |
+//     +-----------+-----------+-----------+-----------+-----------+-----------+
+
+/** test7 */
+	printf("\n\n===TaskE test7===");
+	sbrk(-0x4000);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk减去0x4000后将越过下界start_brk, 属于非法操作, 不会修改brk和mlimit
+
+/** test8 */
+	printf("\n\n===TaskE test8===");
+	sbrk(PROC_DATA_SEG_MAXSIZE);
+	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
+
+// Result: brk将越过上界, 非法操作
 	
-	void *old_brk = sbrk(0);
-	sbrk(5000);
-	void *new_brk = sbrk(0);
-	printf("\nTaskE old_brk = 0x%.8x, new_brk = %.8x", old_brk, new_brk);
-	
-	for (;;)
-	{
-		
-	}
+	for (;;) {}
 }
 

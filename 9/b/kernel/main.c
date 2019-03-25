@@ -96,8 +96,9 @@ void kernel_main()
 		p_proc->pid_recvfrom =	NONE;
 		p_proc->has_int_msg =	0;
 		p_proc->interval_ms =	0;
-		p_proc->start_brk = 	PROC_START_BRK;
-		p_proc->brk = 		PROC_START_BRK;
+		p_proc->mm.start_brk = 	PROC_START_BRK;
+		p_proc->mm.brk = 	PROC_START_BRK;
+		p_proc->mm.mlimit = 	PROC_START_BRK;
 		
 		init_send_queue(p_proc);
 		

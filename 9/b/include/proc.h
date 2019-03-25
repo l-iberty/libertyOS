@@ -98,6 +98,13 @@ struct proc_queue
 	struct proc*	procs[NR_PROCS];
 };
 
+struct mm_desc
+{
+	uint32_t	start_brk;
+	uint32_t	brk;
+	uint32_t	mlimit;
+};
+
 struct proc 
 {
 /**********************************************************************/
@@ -122,8 +129,7 @@ struct proc
 	int			has_int_msg;	/* Does the process have a message from INTERRUPT to handle? */
 	
 	struct file_desc*	filp[NR_FILES];
-	
-	uint32_t		start_brk, brk;
+	struct mm_desc		mm;
 };
 
 struct task

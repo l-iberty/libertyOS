@@ -13,15 +13,15 @@
 ## 具体实现
 在每个进程表中增设两个成员: `start_brk`和`brk`, 初始化时二者都相等, 即`start_brk`和`brk`之间还没有内存可用. 两个函数通过调整`brk`来实现堆内存的分配和释放, 这需要调用`do_vm_alloc()`和`do_vm_free()`, 所以在我的系统中堆内存的分配与释放本质上就是虚页的分配与释放.
 
-`brk()`和`sbrk()`的实现基本遵循`man`手册中的描述, 参见[mm/brk.c](mm/brk.c).
+`brk()`和`sbrk()`的实现见[mm/brk.c](mm/brk.c).
 
 ## 测试
-测试代码放在[kernel/test.c](kernel/test.c)的`TaskE`中:
-
-![](screenshot/code.png)
+8个test见[kernel/test.c](kernel/test.c)
 
 输出:
 
-![](screenshot/output.png)
+![](screenshot/out1.png)
 
-首先, 通过给`sbrk()`传入参数`0`获得当前*program break*的位置`0x0c000000`, 然后通过`brk()`将其向上增长3页(`4096 * 2 + 1`被向上取整为3页), 再次调用`sbrk(0)`得到新的`program break`的位置也符合预期. 随后通过`sbrk()`来修改`program break`, 结果也正确. 其他测试，如：通过`brk()`来释放堆内存, 参数不合法会怎么样, 以及虚拟内存的具体映射情况, 均已通过, 不再展示.
+![](screenshot/out2.png)
+
+8个test的输出结果符合预期.

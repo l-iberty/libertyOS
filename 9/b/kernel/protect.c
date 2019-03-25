@@ -2,6 +2,7 @@
 #include "sysconst.h"
 #include "global.h"
 #include "stdlib.h"
+#include "string.h"
 
 
 /**
