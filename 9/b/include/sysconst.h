@@ -39,7 +39,7 @@
 #define	DESC_SIZE		8	/* 8　字节描述符 */
 #define TSS_SIZE		104
 #define INDEX_TSS_DESC		4	/* GDT 中索引为 4 的描述符是 TSS 描述符 */
-#define INDEX_LDT_DESC_FIRST	5	/* GDT 中索引为 5 的描述符是第一个进程 TaskA 的 LDT 描述符 */
+#define INDEX_LDT_DESC_FIRST	5	/* GDT 中索引为 5 的描述符是第一个进程 Init 的 LDT 描述符 */
 #define	NR_PROCS		16	/* 系统允许的最大进程数 */
 #define NR_NATIVE_PROCS		6	/* 系统初启动时的进程数 */
 #define NR_TASKS		5	/* 任务数 */

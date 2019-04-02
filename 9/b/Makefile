@@ -2,7 +2,7 @@
 
 ASMBFLAGS=	-I boot/include/
 ASMKFLAGS=	-I include/ -f elf
-LDKFLAGS=	-s -melf_i386 -Ttext 0x1b400 -Map kernel.map # -s 剔除符号信息
+LDKFLAGS=	-melf_i386 -Ttext 0x1b400 -Map kernel.map -s # -s 剔除符号信息
 CFLAGS=		-I include/ -c -m32 -fno-stack-protector -fno-builtin -std=c99 # -g 加入符号信息
 
 KRNLOBJS=	kernel/kernel.o kernel/start.o kernel/8259A.o kernel/main.o \

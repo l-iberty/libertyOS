@@ -19,21 +19,23 @@
 void Init()
 {
 	int i, pid;
-	
-	for (int i = 0; i < 3; i++)
+	struct message msg;
+
+	for (i = 0; i < 3; i++)
 	{
 		pid = fork();
 		if (pid != 0)
 		{
 			printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
+			//sendrecv(RECEIVE, pid, &msg);
 		}
 		else
 		{
 			printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
+			//sendrecv(SEND, PID_INIT, &msg);
 			for(;;) {}
 		}
 	}
-	
 	for (;;) {}
 }
 
@@ -65,10 +67,7 @@ void TaskA()
 	
 	sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 
-	for (;;)
-	{
-		
-	}
+	for (;;) {}
 }
 
 void TaskB()
@@ -98,11 +97,8 @@ void TaskB()
 	printf("\nTaskB file test2: %s", buf);
 	
 	sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
-	
-	for (;;)
-	{
-		
-	}
+
+	for (;;) {}
 }
 
 void TaskC()
@@ -115,7 +111,7 @@ void TaskC()
 	struct message msg;
 	
 	printf("\n---------{Task-C} Page Dir Base: 0x%.8x---------", getcr3());
-	
+
 /* vm system test -- copy on write */
 
 	vm_base = (uint32_t*)vm_alloc(0x70000000, 4096 * 3, PAGE_READWRITE);
@@ -149,10 +145,7 @@ void TaskC()
 
 	sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 
-	for (;;)
-	{
-
-	}
+	for (;;) {}
 }
 
 void TaskD()
@@ -176,11 +169,8 @@ void TaskD()
 	printf("\nTaskD read 2 ==> %.8x %.8x", vm_base[0], vm_base[1]);
 	
 	sendrecv(SEND, PID_TASK_C, &msg); /* tell TaskC to read */
-	
-	for (;;)
-	{
 
-	}
+	for (;;) {}
 }
 
 void TaskE()
@@ -191,7 +181,7 @@ void TaskE()
 	struct message msg;
 	
 	printf("\n---------{Task-E} Page Dir Base: 0x%.8x---------", getcr3());
-	
+
 	sendrecv(RECEIVE, PID_TASK_A, &msg);
 	sendrecv(RECEIVE, PID_TASK_B, &msg);
 	sendrecv(RECEIVE, PID_TASK_C, &msg);
@@ -322,7 +312,6 @@ void TaskE()
 	printf("\nTaskE prg break = 0x%.8x", sbrk(0));
 
 // Result: brk将越过上界, 非法操作
-	
 	for (;;) {}
 }
 

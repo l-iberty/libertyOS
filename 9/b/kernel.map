@@ -202,7 +202,7 @@ LOAD exe/fork.o
  *(.iplt)
  .iplt          0x0000000000000000        0x0 kernel/kernel.o
 
-.text           0x000000000001b400     0x7504
+.text           0x000000000001b400     0x7509
  *(.text.unlikely .text.*_unlikely .text.unlikely.*)
  *(.text.exit .text.exit.*)
  *(.text.startup .text.startup.*)
@@ -418,76 +418,76 @@ LOAD exe/fork.o
  .text          0x00000000000210d7      0x4e6 fs/unlink.o
                 0x00000000000210d7                unlink
                 0x0000000000021118                do_unlink
- .text          0x00000000000215bd      0x39d mm/main.o
+ .text          0x00000000000215bd      0x3a2 mm/main.o
                 0x00000000000215bd                TaskMM
                 0x000000000002167d                init_mm
- .text          0x000000000002195a      0x22f mm/vmalloc.o
-                0x000000000002195a                vm_alloc
-                0x00000000000219af                vm_alloc_ex
-                0x0000000000021a0c                do_vm_alloc
- .text          0x0000000000021b89      0x102 mm/vmfree.o
-                0x0000000000021b89                vm_free
-                0x0000000000021bd5                do_vm_free
- .text          0x0000000000021c8b      0x5fb mm/misc.o
-                0x0000000000021c8b                alloc_frame
-                0x0000000000021d09                find_pf_list_item
-                0x0000000000021d41                alloc_page
-                0x0000000000021dd7                check_free_page
-                0x0000000000021e1a                check_free_frame
-                0x0000000000021e7a                relocate_pde
-                0x0000000000021ee5                map_frame
-                0x00000000000220cd                unmap_frame
- .text          0x0000000000022286      0x2bf mm/brk.o
-                0x0000000000022286                brk
-                0x00000000000222b9                sbrk
-                0x00000000000222ec                do_brk
-                0x00000000000224f9                do_sbrk
- .text          0x0000000000022545       0x86 exe/main.o
-                0x0000000000022545                TaskEXE
- .text          0x00000000000225cb      0x339 exe/fork.o
-                0x00000000000225cb                fork
-                0x0000000000022623                do_fork
-                0x00000000000228da                alloc_mem
+ .text          0x000000000002195f      0x22f mm/vmalloc.o
+                0x000000000002195f                vm_alloc
+                0x00000000000219b4                vm_alloc_ex
+                0x0000000000021a11                do_vm_alloc
+ .text          0x0000000000021b8e      0x102 mm/vmfree.o
+                0x0000000000021b8e                vm_free
+                0x0000000000021bda                do_vm_free
+ .text          0x0000000000021c90      0x5fb mm/misc.o
+                0x0000000000021c90                alloc_frame
+                0x0000000000021d0e                find_pf_list_item
+                0x0000000000021d46                alloc_page
+                0x0000000000021ddc                check_free_page
+                0x0000000000021e1f                check_free_frame
+                0x0000000000021e7f                relocate_pde
+                0x0000000000021eea                map_frame
+                0x00000000000220d2                unmap_frame
+ .text          0x000000000002228b      0x2bf mm/brk.o
+                0x000000000002228b                brk
+                0x00000000000222be                sbrk
+                0x00000000000222f1                do_brk
+                0x00000000000224fe                do_sbrk
+ .text          0x000000000002254a       0x86 exe/main.o
+                0x000000000002254a                TaskEXE
+ .text          0x00000000000225d0      0x339 exe/fork.o
+                0x00000000000225d0                fork
+                0x0000000000022628                do_fork
+                0x00000000000228df                alloc_mem
  *(.gnu.warning)
 
 .fini
  *(SORT(.fini))
-                0x0000000000022904                PROVIDE (__etext, .)
-                0x0000000000022904                PROVIDE (_etext, .)
-                0x0000000000022904                PROVIDE (etext, .)
+                0x0000000000022909                PROVIDE (__etext, .)
+                0x0000000000022909                PROVIDE (_etext, .)
+                0x0000000000022909                PROVIDE (etext, .)
 
-.rodata         0x0000000000022904      0xea7
+.rodata         0x000000000002290c      0xea7
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x0000000000022904       0x25 kernel/start.o
- *fill*         0x0000000000022929        0x3 
- .rodata        0x000000000002292c       0x26 kernel/main.o
- .rodata        0x0000000000022952       0x1e kernel/clock.o
- .rodata        0x0000000000022970       0xda kernel/proc.o
- *fill*         0x0000000000022a4a        0x2 
- .rodata        0x0000000000022a4c       0xdd kernel/exception.o
- *fill*         0x0000000000022b29        0x3 
- .rodata        0x0000000000022b2c      0x38a kernel/test.o
- .rodata        0x0000000000022eb6        0xd driver/tty.o
- *fill*         0x0000000000022ec3        0x1 
- .rodata        0x0000000000022ec4      0x15b driver/hd.o
- *fill*         0x000000000002301f        0x1 
- .rodata        0x0000000000023020      0x10b fs/main.o
- *fill*         0x000000000002312b        0x1 
- .rodata        0x000000000002312c      0x16c fs/open.o
- .rodata        0x0000000000023298       0x2a fs/misc.o
- .rodata        0x00000000000232c2       0x1e fs/close.o
- .rodata        0x00000000000232e0       0x17 fs/rdwt.o
- *fill*         0x00000000000232f7        0x1 
- .rodata        0x00000000000232f8      0x16b fs/unlink.o
- *fill*         0x0000000000023463        0x1 
- .rodata        0x0000000000023464       0x64 mm/main.o
- .rodata        0x00000000000234c8       0x9b mm/vmalloc.o
- .rodata        0x0000000000023563       0x31 mm/vmfree.o
- .rodata        0x0000000000023594       0x34 mm/misc.o
- .rodata        0x00000000000235c8       0xc6 mm/brk.o
- *fill*         0x000000000002368e        0x2 
- .rodata        0x0000000000023690       0x50 exe/main.o
- .rodata        0x00000000000236e0       0xcb exe/fork.o
+ .rodata        0x000000000002290c       0x25 kernel/start.o
+ *fill*         0x0000000000022931        0x3 
+ .rodata        0x0000000000022934       0x26 kernel/main.o
+ .rodata        0x000000000002295a       0x1e kernel/clock.o
+ .rodata        0x0000000000022978       0xda kernel/proc.o
+ *fill*         0x0000000000022a52        0x2 
+ .rodata        0x0000000000022a54       0xdd kernel/exception.o
+ *fill*         0x0000000000022b31        0x3 
+ .rodata        0x0000000000022b34      0x38a kernel/test.o
+ .rodata        0x0000000000022ebe        0xd driver/tty.o
+ *fill*         0x0000000000022ecb        0x1 
+ .rodata        0x0000000000022ecc      0x15b driver/hd.o
+ *fill*         0x0000000000023027        0x1 
+ .rodata        0x0000000000023028      0x10b fs/main.o
+ *fill*         0x0000000000023133        0x1 
+ .rodata        0x0000000000023134      0x16c fs/open.o
+ .rodata        0x00000000000232a0       0x2a fs/misc.o
+ .rodata        0x00000000000232ca       0x1e fs/close.o
+ .rodata        0x00000000000232e8       0x17 fs/rdwt.o
+ *fill*         0x00000000000232ff        0x1 
+ .rodata        0x0000000000023300      0x16b fs/unlink.o
+ *fill*         0x000000000002346b        0x1 
+ .rodata        0x000000000002346c       0x64 mm/main.o
+ .rodata        0x00000000000234d0       0x9b mm/vmalloc.o
+ .rodata        0x000000000002356b       0x31 mm/vmfree.o
+ .rodata        0x000000000002359c       0x34 mm/misc.o
+ .rodata        0x00000000000235d0       0xc6 mm/brk.o
+ *fill*         0x0000000000023696        0x2 
+ .rodata        0x0000000000023698       0x50 exe/main.o
+ .rodata        0x00000000000236e8       0xcb exe/fork.o
 
 .rodata1
  *(.rodata1)
@@ -495,64 +495,64 @@ LOAD exe/fork.o
 .eh_frame_hdr
  *(.eh_frame_hdr)
 
-.eh_frame       0x00000000000237ac     0x11b0
+.eh_frame       0x00000000000237b4     0x11b0
  *(.eh_frame)
- .eh_frame      0x00000000000237ac       0x38 kernel/start.o
- .eh_frame      0x00000000000237e4       0x1c kernel/main.o
+ .eh_frame      0x00000000000237b4       0x38 kernel/start.o
+ .eh_frame      0x00000000000237ec       0x1c kernel/main.o
                                          0x34 (size before relaxing)
- .eh_frame      0x0000000000023800       0xc0 kernel/protect.o
+ .eh_frame      0x0000000000023808       0xc0 kernel/protect.o
                                          0xd8 (size before relaxing)
- .eh_frame      0x00000000000238c0       0x70 kernel/clock.o
+ .eh_frame      0x00000000000238c8       0x70 kernel/clock.o
                                          0x88 (size before relaxing)
- .eh_frame      0x0000000000023930      0x374 kernel/proc.o
+ .eh_frame      0x0000000000023938      0x374 kernel/proc.o
                                         0x38c (size before relaxing)
- .eh_frame      0x0000000000023ca4       0x68 kernel/irq.o
+ .eh_frame      0x0000000000023cac       0x68 kernel/irq.o
                                          0x80 (size before relaxing)
- .eh_frame      0x0000000000023d0c       0x78 kernel/exception.o
+ .eh_frame      0x0000000000023d14       0x78 kernel/exception.o
                                          0x90 (size before relaxing)
- .eh_frame      0x0000000000023d84       0xa8 kernel/test.o
+ .eh_frame      0x0000000000023d8c       0xa8 kernel/test.o
                                          0xc0 (size before relaxing)
- .eh_frame      0x0000000000023e2c       0x60 driver/keyboard.o
+ .eh_frame      0x0000000000023e34       0x60 driver/keyboard.o
                                          0x78 (size before relaxing)
- .eh_frame      0x0000000000023e8c      0x19c driver/tty.o
+ .eh_frame      0x0000000000023e94      0x19c driver/tty.o
                                         0x1b4 (size before relaxing)
- .eh_frame      0x0000000000024028      0x1ac driver/hd.o
+ .eh_frame      0x0000000000024030      0x1ac driver/hd.o
                                         0x1c4 (size before relaxing)
- .eh_frame      0x00000000000241d4       0x40 driver/console.o
+ .eh_frame      0x00000000000241dc       0x40 driver/console.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000024214       0xc0 lib/string.o
+ .eh_frame      0x000000000002421c       0xc0 lib/string.o
                                          0xd8 (size before relaxing)
- .eh_frame      0x00000000000242d4       0x48 lib/printf.o
+ .eh_frame      0x00000000000242dc       0x48 lib/printf.o
                                          0x60 (size before relaxing)
- .eh_frame      0x000000000002431c       0x64 lib/vsprintf.o
+ .eh_frame      0x0000000000024324       0x64 lib/vsprintf.o
                                          0x7c (size before relaxing)
- .eh_frame      0x0000000000024380       0x60 lib/io.o
+ .eh_frame      0x0000000000024388       0x60 lib/io.o
                                          0x78 (size before relaxing)
- .eh_frame      0x00000000000243e0       0x64 fs/main.o
+ .eh_frame      0x00000000000243e8       0x64 fs/main.o
                                          0x7c (size before relaxing)
- .eh_frame      0x0000000000024444       0xf8 fs/open.o
+ .eh_frame      0x000000000002444c       0xf8 fs/open.o
                                         0x110 (size before relaxing)
- .eh_frame      0x000000000002453c       0x40 fs/misc.o
+ .eh_frame      0x0000000000024544       0x40 fs/misc.o
                                          0x58 (size before relaxing)
- .eh_frame      0x000000000002457c       0x60 fs/close.o
+ .eh_frame      0x0000000000024584       0x60 fs/close.o
                                          0x78 (size before relaxing)
- .eh_frame      0x00000000000245dc       0x60 fs/rdwt.o
+ .eh_frame      0x00000000000245e4       0x60 fs/rdwt.o
                                          0x78 (size before relaxing)
- .eh_frame      0x000000000002463c       0x48 fs/unlink.o
+ .eh_frame      0x0000000000024644       0x48 fs/unlink.o
                                          0x60 (size before relaxing)
- .eh_frame      0x0000000000024684       0x3c mm/main.o
+ .eh_frame      0x000000000002468c       0x3c mm/main.o
                                          0x54 (size before relaxing)
- .eh_frame      0x00000000000246c0       0x60 mm/vmalloc.o
+ .eh_frame      0x00000000000246c8       0x60 mm/vmalloc.o
                                          0x78 (size before relaxing)
- .eh_frame      0x0000000000024720       0x40 mm/vmfree.o
+ .eh_frame      0x0000000000024728       0x40 mm/vmfree.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000024760      0x100 mm/misc.o
+ .eh_frame      0x0000000000024768      0x100 mm/misc.o
                                         0x118 (size before relaxing)
- .eh_frame      0x0000000000024860       0x80 mm/brk.o
+ .eh_frame      0x0000000000024868       0x80 mm/brk.o
                                          0x98 (size before relaxing)
- .eh_frame      0x00000000000248e0       0x1c exe/main.o
+ .eh_frame      0x00000000000248e8       0x1c exe/main.o
                                          0x34 (size before relaxing)
- .eh_frame      0x00000000000248fc       0x60 exe/fork.o
+ .eh_frame      0x0000000000024904       0x60 exe/fork.o
                                          0x78 (size before relaxing)
 
 .gcc_except_table
@@ -560,7 +560,7 @@ LOAD exe/fork.o
 
 .exception_ranges
  *(.exception_ranges .exception_ranges*)
-                0x000000000002495c                . = (ALIGN (0x1000) - ((0x1000 - .) & 0xfff))
+                0x0000000000024964                . = (ALIGN (0x1000) - ((0x1000 - .) & 0xfff))
                 0x0000000000025000                . = DATA_SEGMENT_ALIGN (0x1000, 0x1000)
 
 .eh_frame

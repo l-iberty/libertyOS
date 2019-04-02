@@ -3,6 +3,7 @@
 #include "protect.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 #include "global.h"
 
 STATIC int msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg);
@@ -194,26 +195,9 @@ int sys_sem_wait(struct semaphore* p_sem)
  */
 void sys_write_process_memory(uint32_t pid, void *p_dst, void *p_src, uint32_t len)
 {
-	uint32_t old_cr3, base;
-
-	old_cr3 = sys_getcr3();
-	
-/*	base = GET_BASE(va2pa(old_cr3, p_src));*/
-/*	struct page_list *p = find_pf_list_item(base);*/
-/*	if (p != NULL)*/
-/*	{*/
-/*		int nr_pages = (len + PAGE_SIZE - 1) / PAGE_SIZE;*/
-/*		map_frame(p, proc_table[pid].page_dir_base, (uint32_t)p_src, nr_pages, PAGE_READWRITE);*/
-/*	}*/
-	
+	uint32_t old_cr3 = sys_getcr3();
 	load_cr3(proc_table[pid].page_dir_base);
 	memcpy(p_dst, p_src, len);
-	
-/*	if (p != NULL)*/
-/*	{*/
-/*		unmap_frame(proc_table[pid].page_dir_base, (uint32_t)p_src, len);*/
-/*	}*/
-
 	load_cr3(old_cr3);
 }
 

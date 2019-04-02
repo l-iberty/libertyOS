@@ -106,7 +106,7 @@ void init_mm()
 	
 	reserved_pages += (sizeof(struct page_list) * avail_pm_pages + PAGE_SIZE - 1) / PAGE_SIZE; /* `pf_list'占据的页面数 */
 	
-	for (i = 0; i < avail_pm_pages - 1; i++)
+	for (i = 0; i < avail_pm_pages; i++)
 	{
 		if (i < reserved_pages)
 		{
@@ -126,6 +126,7 @@ void init_mm()
 		next->PREV = current;
 		current = next;
 	}
+	current = next->PREV;
 	current->NEXT = pf_list;
 	pf_list->PREV = current;
 	

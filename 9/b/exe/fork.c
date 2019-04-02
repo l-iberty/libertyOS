@@ -70,7 +70,7 @@ uint32_t do_fork()
 	
 	/* Prepare page table for child */
 	uint32_t *pde = (uint32_t*) (mi->page_dir_base + child_pid * PAGE_TABLE_PAGES * PAGE_SIZE);
-	memcpy(pde, mi->page_dir_base, PAGE_TABLE_PAGES * PAGE_SIZE);
+	memcpy(pde, (void*) mi->page_dir_base, PAGE_TABLE_PAGES * PAGE_SIZE);
 	relocate_pde(pde);
 	
 	/* Allocate memory for child process */
@@ -86,7 +86,7 @@ uint32_t do_fork()
 		  (uint32_t) child_base,
 		  caller_D_limit,
 		  DA_D32 | DPL_3);
-	
+
 	write_process_memory(child_pid, child_base, (void*) caller_D_base, caller_D_size);
 	
 	/* return child's PID to parent */

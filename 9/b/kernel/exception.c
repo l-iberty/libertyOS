@@ -22,7 +22,6 @@ void do_invalid_opcode(int vecno, uint32_t err_code, uint32_t eip, uint16_t cs, 
 	while (1) {}
 }
 
-
 /* #GP */
 void do_general_protection(int vecno, uint32_t err_code, uint32_t eip, uint16_t cs, uint32_t eflags)
 {
