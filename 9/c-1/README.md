@@ -21,4 +21,4 @@
 ## More
 ### 针对`free()`的错误测试将在后面给出
 ### BUG修复——中断重入导致进程调度上的BUG
-详见[kernel/test.c=>schedule()的注释](./kernel/test.c)
+详见[kernel/proc.c=>schedule()的注释](./kernel/proc.c)
