@@ -347,7 +347,8 @@ STATIC int msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* 
         panic("DEADLOCK msg %d -> %d", pid_sender, pid_receiver);
     }
 
-    _BEGIN_PHY_MEM_RW_((struct message*)va2pa(sender, p_msg))->source = pid_sender;
+    _BEGIN_PHY_MEM_RW_
+    ((struct message*)va2pa(sender, p_msg))->source = pid_sender;
     ((struct message*)va2pa(sender, p_msg))->dest = pid_receiver;
     _END_PHY_MEM_RW_
 
