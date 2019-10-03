@@ -318,11 +318,9 @@ void failure(char* exp, char* file, char* base_file, int line)
     char buf[256] = { 0 };
     sprintf(buf, "{exp: %s, file: %s, base_file: %s, line: %d}",
             exp, file, base_file, line);
-    /* 蓝底黄字, 1 行 0 列 */
-    printmsg(buf, 0x1E, (80 * 1 + 0) * 2);
+    printmsg(buf, 0x1E, (80 * 1 + 0) * 2); /* 蓝底黄字, 1 行 0 列 */
     //disable_int(); // 若禁止用户进程(ring3)的IO权限，该调用会失败
-    for (;;) {
-    }
+    while (1);
 }
 
 void panic(const char* fmt, ...)
@@ -331,11 +329,9 @@ void panic(const char* fmt, ...)
     va_list arg = (va_list)((char*)&fmt + 4); /* 4 是参数 fmt 所占堆栈的大小 */
 
     vsprintf(buf, fmt, arg);
-    /* 蓝底黄字, 0 行 0 列 */
-    printmsg(buf, 0x1E, (80 * 0 + 0) * 2);
+    printmsg(buf, 0x1E, (80 * 0 + 0) * 2); /* 蓝底黄字, 0 行 0 列 */
     //disable_int(); // 若禁止用户进程(ring3)的IO权限，该调用会失败
-    for (;;) {
-    }
+    while (1);
 }
 
 STATIC int msg_send(uint32_t pid_sender, uint32_t pid_receiver, struct message* p_msg)

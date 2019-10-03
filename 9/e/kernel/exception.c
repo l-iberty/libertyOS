@@ -20,8 +20,7 @@ void do_invalid_opcode(int vecno, uint32_t err_code, uint32_t eip, uint16_t cs, 
           va2la(proc_table + p_current_proc->pid, eip));
 
     disable_int();
-    while (1) {
-    }
+    while (1);
 }
 
 /* #GP */
@@ -31,8 +30,7 @@ void do_general_protection(int vecno, uint32_t err_code, uint32_t eip, uint16_t 
           p_current_proc->pid, err_code, cs, eip, eflags);
 
     disable_int();
-    while (1) {
-    }
+    while (1);
 }
 
 /* #PF */

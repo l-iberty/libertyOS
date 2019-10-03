@@ -101,6 +101,5 @@ void kernel_main()
     p_current_proc = proc_table;
     proc_begin();
 
-    while (1) {
-    }
+    while (1);
 }

@@ -34,8 +34,7 @@ void Init()
             printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
             sendrecv(RECEIVE, PID_INIT, &msg);
             dump_msg(&msg);
-            for (;;) {
-            }
+            while (1);
         }
     }
 #else
@@ -116,8 +115,7 @@ void TaskA()
 
     sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 #endif
-    for (;;) {
-    }
+    while (1);
 }
 
 void TaskB()
@@ -150,8 +148,7 @@ void TaskB()
 
     sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 #endif
-    for (;;) {
-    }
+    while (1);
 }
 
 void TaskC()
@@ -184,8 +181,7 @@ void TaskC()
 
     sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 #endif
-    for (;;) {
-    }
+    while (1);
 }
 
 void TaskD()
@@ -224,8 +220,7 @@ void TaskD()
 	printf("\nTaskD brk:%.8x", sbrk(0));
 	print_chunks();
 #endif
-    for (;;) {
-    }
+    while (1);
 }
 
 void TaskE()
@@ -370,6 +365,5 @@ void TaskE()
 
 // Result: brk将越过上界, 非法操作
 #endif
-    for (;;) {
-    }
+    while (1);
 }
