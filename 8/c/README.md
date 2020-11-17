@@ -36,7 +36,7 @@
 ### 2. 从线性地址`0xF0017000`读出4字节后再写入4字节
 根据`do_page_fault()`的处理策略，页面被赋予了写权限，因此写操作不会出错. PDE，PTE，及内存内容如下：
 
-![](screenshot/pf-1.png)
+![](screenshot/pf-2.png)
 
 ***
 
