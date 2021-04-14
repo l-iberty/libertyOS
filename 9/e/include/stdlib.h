@@ -8,8 +8,8 @@ extern uint32_t main_print_pos;
 
 uint8_t in_byte(uint16_t port);
 void out_byte(uint16_t port, uint8_t byte);
-void port_read(uint16_t port, void* buf, int len);
-void port_write(uint16_t port, void* buf, int len);
+void port_read(uint16_t port, void *buf, int len);
+void port_write(uint16_t port, void *buf, int len);
 void disable_int();
 void enable_int();
 void disable_paging();

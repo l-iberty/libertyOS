@@ -1,14 +1,14 @@
-#include "type.h"
 #include "keyboard.h"
-#include "keymap.h"
-#include "tty.h"
 #include "console.h"
+#include "global.h"
+#include "irq.h"
+#include "keymap.h"
 #include "proc.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "global.h"
-#include "irq.h"
+#include "tty.h"
+#include "type.h"
 
 char keymap[KEYMAP_SIZE] = {
     // Make Code
@@ -80,46 +80,42 @@ char keymap[KEYMAP_SIZE] = {
     /* 0x41 */ F7,
     /* 0x42 */ F8,
     /* 0x43 */ F9,
-    /* 0x44 */ F10
-};
+    /* 0x44 */ F10};
 
-struct tty* p_current_tty;
+struct tty *p_current_tty;
 
-void keyboard_handler(int irq)
-{
-    uint8_t scan_code = in_byte(0x60);
+void keyboard_handler(int irq) {
+  uint8_t scan_code = in_byte(0x60);
 
-    p_current_tty = tty_table + nr_current_console;
+  p_current_tty = tty_table + nr_current_console;
 
-    if (scan_code & BREAK_MASK) /* 仅接收 Break Code */
-    {
-        if (p_current_tty->kb_in.count < KB_BUFSIZE) {
-            *(p_current_tty->kb_in.p_rear++) = scan_code;
-            p_current_tty->kb_in.count++;
-            if (p_current_tty->kb_in.p_rear >= p_current_tty->kb_in.buf_queue + KB_BUFSIZE) {
-                /* 队列已满, 回绕 */
-                p_current_tty->kb_in.p_rear = p_current_tty->kb_in.buf_queue;
-                p_current_tty->kb_in.count = 0;
-            }
-        }
+  if (scan_code & BREAK_MASK) /* 仅接收 Break Code */
+  {
+    if (p_current_tty->kb_in.count < KB_BUFSIZE) {
+      *(p_current_tty->kb_in.p_rear++) = scan_code;
+      p_current_tty->kb_in.count++;
+      if (p_current_tty->kb_in.p_rear >= p_current_tty->kb_in.buf_queue + KB_BUFSIZE) {
+        /* 队列已满, 回绕 */
+        p_current_tty->kb_in.p_rear = p_current_tty->kb_in.buf_queue;
+        p_current_tty->kb_in.count = 0;
+      }
     }
+  }
 }
 
-void keyboard_read(struct tty* p_tty, uint8_t* key)
-{
-    *key = 0;
-    if (p_tty->kb_in.count > 0) {
-        *key = *(p_tty->kb_in.p_head++);
-        p_tty->kb_in.count--;
-        if (p_tty->kb_in.p_head == p_tty->kb_in.buf_queue + KB_BUFSIZE) {
-            p_tty->kb_in.p_head = p_tty->kb_in.buf_queue;
-        }
+void keyboard_read(struct tty *p_tty, uint8_t *key) {
+  *key = 0;
+  if (p_tty->kb_in.count > 0) {
+    *key = *(p_tty->kb_in.p_head++);
+    p_tty->kb_in.count--;
+    if (p_tty->kb_in.p_head == p_tty->kb_in.buf_queue + KB_BUFSIZE) {
+      p_tty->kb_in.p_head = p_tty->kb_in.buf_queue;
     }
+  }
 }
 
-void init_keyboard()
-{
-    p_current_tty = NULL;
-    put_irq_handler(IRQ_KEYBOARD, keyboard_handler);
-    enable_irq(IRQ_KEYBOARD);
+void init_keyboard() {
+  p_current_tty = NULL;
+  put_irq_handler(IRQ_KEYBOARD, keyboard_handler);
+  enable_irq(IRQ_KEYBOARD);
 }

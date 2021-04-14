@@ -1,195 +1,194 @@
-#include "type.h"
-#include "proc.h"
-#include "tty.h"
-#include "fs.h"
-#include "mm.h"
 #include "exe.h"
-#include "sysconst.h"
-#include "protect.h"
+#include "fs.h"
+#include "global.h"
+#include "irq.h"
 #include "keyboard.h"
+#include "malloc.h"
+#include "mm.h"
+#include "proc.h"
+#include "protect.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "global.h"
-#include "irq.h"
-#include "malloc.h"
+#include "sysconst.h"
+#include "tty.h"
+#include "type.h"
 
 #define N 8
 
 /******************************** process entry ********************************/
 
-void Init()
-{
-    int i, pid;
-    struct message msg;
-    msg.value = 1;
+void Init() {
+  int i, pid;
+  struct message msg;
+  msg.value = 1;
 #if 1
-    for (i = 0; i < 3; i++) {
-        pid = fork();
-        if (pid != 0) {
-            printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
-            msg.value++;
-            sendrecv(SEND, pid, &msg);
-        } else {
-            printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
-            sendrecv(RECEIVE, PID_INIT, &msg);
-            dump_msg(&msg);
-            while (1);
-        }
+  for (i = 0; i < 3; i++) {
+    pid = fork();
+    if (pid != 0) {
+      printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
+      msg.value++;
+      sendrecv(SEND, pid, &msg);
+    } else {
+      printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
+      sendrecv(RECEIVE, PID_INIT, &msg);
+      dump_msg(&msg);
+      while (1)
+        ;
     }
+  }
 #else
-    for (i = 0; i < 3; i++) {
-        pid = fork();
-        if (pid != 0) {
-            printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
-            sendrecv(RECEIVE, PID_INIT, &msg);
-            dump_msg(&msg);
-        } else {
-            printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
-            msg.value++;
-            sendrecv(SEND, pid, &msg);
-            for (;;) {
-            }
-        }
+  for (i = 0; i < 3; i++) {
+    pid = fork();
+    if (pid != 0) {
+      printf("\n{Init} parent %d running, child pid: %d", getpid(), pid);
+      sendrecv(RECEIVE, PID_INIT, &msg);
+      dump_msg(&msg);
+    } else {
+      printf("\n{Init} child %d running, parent pid: %d", getpid(), getppid());
+      msg.value++;
+      sendrecv(SEND, pid, &msg);
+      for (;;) {
+      }
     }
+  }
 #endif
-    for (;;) {
-    }
+  for (;;) {
+  }
 }
 
-void TaskA()
-{
-    int fd;
-    size_t nr;
-    char buf[32];
-    char* str = "hello,world!";
-    struct message msg;
+void TaskA() {
+  int fd;
+  size_t nr;
+  char buf[32];
+  char *str = "hello,world!";
+  struct message msg;
 
-//printf("\n---------{Task-A} Page Dir Base: 0x%.8x---------", getcr3());
+// printf("\n---------{Task-A} Page Dir Base: 0x%.8x---------", getcr3());
 
 /* malloc-free test */
 #if 1
-    int i;
-    size_t s[N] = { 13, 100, 45, 20, 5, 28, 200, 33 };
-    void* p[N];
+  int i;
+  size_t s[N] = {13, 100, 45, 20, 5, 28, 200, 33};
+  void *p[N];
 
-    sbrk(3); // 先将program break设置为一个未对齐的地址
-    printf("\nTaskA brk:%.8x", sbrk(0));
-    printf("\nTaskA malloc-free test: ");
-    for (i = 0; i < N - 1; i++) {
-        p[i] = malloc(s[i]);
-        printf("%.8x,", p[i]);
-    }
-    p[N - 1] = malloc(s[N - 1]);
-    printf("%.8x", p[N - 1]);
+  sbrk(3); // 先将program break设置为一个未对齐的地址
+  printf("\nTaskA brk:%.8x", sbrk(0));
+  printf("\nTaskA malloc-free test: ");
+  for (i = 0; i < N - 1; i++) {
+    p[i] = malloc(s[i]);
+    printf("%.8x,", p[i]);
+  }
+  p[N - 1] = malloc(s[N - 1]);
+  printf("%.8x", p[N - 1]);
 
-    /* 验证进程地址空间的独立性 */
-    /*printf("\nTaskA read a dword from %.8x: %.8x", p[0], *(uint32_t*)p[0]);
-	*(uint32_t*)p[0] = 0xabab1234;
-	printf("\nTaskA read a dword from %.8x AGAIN: %.8x", p[0], *(uint32_t*)p[0]);*/
+  /* 验证进程地址空间的独立性 */
+  /*printf("\nTaskA read a dword from %.8x: %.8x", p[0], *(uint32_t*)p[0]);
+      *(uint32_t*)p[0] = 0xabab1234;
+      printf("\nTaskA read a dword from %.8x AGAIN: %.8x", p[0], *(uint32_t*)p[0]);*/
 
-    //print_chunks();
+  // print_chunks();
 
-    free(p[0]), free(p[1]), free(p[3]), free(p[2]);
-    free(p[6]), free(p[7]), free(p[4]);
-    printf("\nTaskA brk:%.8x", sbrk(0));
-    free(p[5]);
-    printf("\nTaskA brk:%.8x", sbrk(0));
-    //print_chunks();
+  free(p[0]), free(p[1]), free(p[3]), free(p[2]);
+  free(p[6]), free(p[7]), free(p[4]);
+  printf("\nTaskA brk:%.8x", sbrk(0));
+  free(p[5]);
+  printf("\nTaskA brk:%.8x", sbrk(0));
+  // print_chunks();
 
-    /* file system test */
+  /* file system test */
 
-    fd = open("/test1", O_CREAT | O_RDWR);
-    assert(fd != -1);
-    write(fd, str, strlen(str));
-    close(fd);
+  fd = open("/test1", O_CREAT | O_RDWR);
+  assert(fd != -1);
+  write(fd, str, strlen(str));
+  close(fd);
 
-    fd = open("/test1", O_RDWR);
-    assert(fd != -1);
-    nr = read(fd, buf, sizeof(buf));
-    assert(nr != -1);
-    buf[nr] = 0;
-    close(fd);
+  fd = open("/test1", O_RDWR);
+  assert(fd != -1);
+  nr = read(fd, buf, sizeof(buf));
+  assert(nr != -1);
+  buf[nr] = 0;
+  close(fd);
 
-    printf("\nTaskA file test1: %s", buf);
+  printf("\nTaskA file test1: %s", buf);
 
-    sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
+  sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 #endif
-    while (1);
+  while (1)
+    ;
 }
 
-void TaskB()
-{
+void TaskB() {
 
 #if 1
-    int fd;
-    size_t nr;
-    char buf[32];
-    char* str = "hello,unix!";
-    struct message msg;
+  int fd;
+  size_t nr;
+  char buf[32];
+  char *str = "hello,unix!";
+  struct message msg;
 
-    //printf("\n---------{Task-B} Page Dir Base: 0x%.8x---------", getcr3());
+  // printf("\n---------{Task-B} Page Dir Base: 0x%.8x---------", getcr3());
 
-    /* file system test */
+  /* file system test */
 
-    fd = open("/test2", O_CREAT | O_RDWR);
-    assert(fd != -1);
-    write(fd, str, strlen(str));
-    close(fd);
+  fd = open("/test2", O_CREAT | O_RDWR);
+  assert(fd != -1);
+  write(fd, str, strlen(str));
+  close(fd);
 
-    fd = open("/test2", O_RDWR);
-    assert(fd != -1);
-    nr = read(fd, buf, sizeof(buf));
-    assert(nr != -1);
-    buf[nr] = 0;
-    close(fd);
+  fd = open("/test2", O_RDWR);
+  assert(fd != -1);
+  nr = read(fd, buf, sizeof(buf));
+  assert(nr != -1);
+  buf[nr] = 0;
+  close(fd);
 
-    printf("\nTaskB file test2: %s", buf);
+  printf("\nTaskB file test2: %s", buf);
 
-    sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
+  sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 #endif
-    while (1);
+  while (1)
+    ;
 }
 
-void TaskC()
-{
+void TaskC() {
 #if 1
-    int fd;
-    char buf[32];
-    size_t nr;
-    char* str = "hello,libertyOS!";
-    uint32_t* vm_base;
-    struct message msg;
+  int fd;
+  char buf[32];
+  size_t nr;
+  char *str = "hello,libertyOS!";
+  uint32_t *vm_base;
+  struct message msg;
 
-    //printf("\n---------{Task-C} Page Dir Base: 0x%.8x---------", getcr3());
+  // printf("\n---------{Task-C} Page Dir Base: 0x%.8x---------", getcr3());
 
-    /* file system test */
+  /* file system test */
 
-    fd = open("/test3", O_CREAT | O_RDWR);
-    assert(fd != -1);
-    write(fd, str, strlen(str));
-    close(fd);
+  fd = open("/test3", O_CREAT | O_RDWR);
+  assert(fd != -1);
+  write(fd, str, strlen(str));
+  close(fd);
 
-    fd = open("/test3", O_RDWR);
-    assert(fd != -1);
-    nr = read(fd, buf, sizeof(buf));
-    assert(nr != -1);
-    buf[nr] = 0;
-    close(fd);
+  fd = open("/test3", O_RDWR);
+  assert(fd != -1);
+  nr = read(fd, buf, sizeof(buf));
+  assert(nr != -1);
+  buf[nr] = 0;
+  close(fd);
 
-    printf("\nTaskC file test3: %s", buf);
+  printf("\nTaskC file test3: %s", buf);
 
-    sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
+  sendrecv(SEND, PID_TASK_E, &msg); /* tell TaskE to open/read file */
 #endif
-    while (1);
+  while (1)
+    ;
 }
 
-void TaskD()
-{
-    struct message msg;
-    uint32_t* vm_base;
+void TaskD() {
+  struct message msg;
+  uint32_t *vm_base;
 
-//printf("\n---------{Task-D} Page Dir Base: 0x%.8x---------", getcr3());
+// printf("\n---------{Task-D} Page Dir Base: 0x%.8x---------", getcr3());
 
 /* malloc-free test */
 #if 0
@@ -220,46 +219,46 @@ void TaskD()
 	printf("\nTaskD brk:%.8x", sbrk(0));
 	print_chunks();
 #endif
-    while (1);
+  while (1)
+    ;
 }
 
-void TaskE()
-{
+void TaskE() {
 #if 1
-    int fd;
-    size_t nr;
-    char buf[32];
-    struct message msg;
+  int fd;
+  size_t nr;
+  char buf[32];
+  struct message msg;
 
-    //printf("\n---------{Task-E} Page Dir Base: 0x%.8x---------", getcr3());
+  // printf("\n---------{Task-E} Page Dir Base: 0x%.8x---------", getcr3());
 
-    sendrecv(RECEIVE, PID_TASK_A, &msg);
-    sendrecv(RECEIVE, PID_TASK_B, &msg);
-    sendrecv(RECEIVE, PID_TASK_C, &msg);
+  sendrecv(RECEIVE, PID_TASK_A, &msg);
+  sendrecv(RECEIVE, PID_TASK_B, &msg);
+  sendrecv(RECEIVE, PID_TASK_C, &msg);
 
-    fd = open("/test1", O_RDWR);
-    assert(fd != -1);
-    nr = read(fd, buf, sizeof(buf));
-    assert(nr != -1);
-    buf[nr] = 0;
-    close(fd);
-    printf("\nTaskE open \"test1\" to read: %s", buf);
+  fd = open("/test1", O_RDWR);
+  assert(fd != -1);
+  nr = read(fd, buf, sizeof(buf));
+  assert(nr != -1);
+  buf[nr] = 0;
+  close(fd);
+  printf("\nTaskE open \"test1\" to read: %s", buf);
 
-    fd = open("/test2", O_RDWR);
-    assert(fd != -1);
-    nr = read(fd, buf, sizeof(buf));
-    assert(nr != -1);
-    buf[nr] = 0;
-    close(fd);
-    printf("\nTaskE open \"test2\" to read: %s", buf);
+  fd = open("/test2", O_RDWR);
+  assert(fd != -1);
+  nr = read(fd, buf, sizeof(buf));
+  assert(nr != -1);
+  buf[nr] = 0;
+  close(fd);
+  printf("\nTaskE open \"test2\" to read: %s", buf);
 
-    fd = open("/test3", O_RDWR);
-    assert(fd != -1);
-    nr = read(fd, buf, sizeof(buf));
-    assert(nr != -1);
-    buf[nr] = 0;
-    close(fd);
-    printf("\nTaskE open \"test3\" to read: %s", buf);
+  fd = open("/test3", O_RDWR);
+  assert(fd != -1);
+  nr = read(fd, buf, sizeof(buf));
+  assert(nr != -1);
+  buf[nr] = 0;
+  close(fd);
+  printf("\nTaskE open \"test3\" to read: %s", buf);
 #endif
 
 /* test for `brk()' and `sbrk()' */
@@ -365,5 +364,6 @@ void TaskE()
 
 // Result: brk将越过上界, 非法操作
 #endif
-    while (1);
+  while (1)
+    ;
 }
